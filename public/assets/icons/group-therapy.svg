@@ -1,0 +1,15 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer circle - olive green -->
+  <circle cx="50" cy="50" r="48" fill="#6B7D4F"/>
+  <!-- Inner white circle -->
+  <circle cx="50" cy="50" r="38" fill="white"/>
+  <!-- Icon - dark olive -->
+  <g fill="#4A5A35">
+    <circle cx="32" cy="40" r="7" />
+    <circle cx="50" cy="38" r="7.5" />
+    <circle cx="68" cy="40" r="7" />
+    <ellipse cx="32" cy="60" rx="10" ry="11" />
+    <ellipse cx="50" cy="62" rx="11" ry="12" />
+    <ellipse cx="68" cy="60" rx="10" ry="11" />
+  </g>
+</svg>

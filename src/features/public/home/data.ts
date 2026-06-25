@@ -1,0 +1,117 @@
+export const homeServices = [
+  {
+    icon: "/assets/icons/individual-therapy.svg",
+    title: "Individual therapy",
+    body: "One-on-one psychotherapy for anxiety, depression, life transitions and personal growth.",
+    serviceKey: "individual",
+  },
+  {
+    icon: "/assets/icons/family-therapy.svg",
+    title: "Family Therapy",
+    body: "Strengthen bonds and resolve conflict through compassionate clinical guidance.",
+    serviceKey: "family",
+  },
+  {
+    icon: "/assets/icons/couples-therapy.svg",
+    title: "Couples Therapy",
+    body: "Rebuild trust, intimacy, and partnership for couples navigating transition or rupture.",
+    serviceKey: "couples",
+  },
+  {
+    icon: "/assets/icons/group-therapy.svg",
+    title: "Group Therapy",
+    body: "Healing through shared experience in small, facilitated, confidential groups.",
+    serviceKey: "group",
+  },
+  {
+    icon: "/assets/icons/grief-camp.svg",
+    title: "Grief Camp",
+    body: "Safe, play-based support for children processing loss, change and big emotions.",
+    serviceKey: "children",
+  },
+  {
+    icon: "/assets/icons/corporate-speaking.svg",
+    title: "Corporate Speaking",
+    body: "Workshops, EAP programs and team check-ins that protect your people's wellbeing.",
+    serviceKey: "corporate",
+  },
+] as const;
+
+export const homeStats = [
+  { k: "7+", v: "Years of care" },
+  { k: "2.4k", v: "Sessions a year" },
+  { k: "9", v: "Camp cohorts" },
+] as const;
+
+export const homeApproachPoints = [
+  "Licensed psychotherapists and counsellors",
+  "Confidential by default, always",
+  "Flexible in-person and virtual sessions",
+  "Sliding-scale options for those in need",
+] as const;
+
+export const homeTrustFeatures = [
+  {
+    title: "Confidential by design",
+    body: "All sessions and records are handled in line with the Kenya Data Protection Act.",
+  },
+  {
+    title: "Therapist–client fit",
+    body: "We match you with a clinician suited to your goals — and you can change at any time.",
+  },
+  {
+    title: "Evidence-based care",
+    body: "Modern approaches — CBT, EFT, trauma-informed care — adapted to your context.",
+  },
+] as const;
+
+export const homeVideos = [
+  {
+    title: "Benefits of Therapy",
+    desc: "Why talking helps — and what changes inside us when it does.",
+    duration: "12:40",
+    videoId: "yrtRlE6HlUU",
+    thumbnail: "https://i.ytimg.com/vi/yrtRlE6HlUU/hqdefault.jpg",
+  },
+  {
+    title: "Forgiveness",
+    desc: "Understanding the emotional architecture of letting go.",
+    duration: "9:08",
+    videoId: "f3omumMGIw0",
+    thumbnail: "https://i.ytimg.com/vi/f3omumMGIw0/hqdefault.jpg",
+  },
+  {
+    title: "Expectations in Relationships",
+    desc: "Where unspoken expectations come from and how to name them.",
+    duration: "14:22",
+    videoId: "6yd3gLyuR_0",
+    thumbnail: "https://i.ytimg.com/vi/6yd3gLyuR_0/hqdefault.jpg",
+  },
+] as const;
+
+export const homeBlogPosts = [
+  {
+    category: "Therapy",
+    title: "What to expect from your first therapy session",
+    desc: "A gentle walkthrough of what really happens in a first session — and what doesn't.",
+    read: "6 min read",
+  },
+  {
+    category: "Grief",
+    title: "Supporting a grieving child: a guide for parents",
+    desc: "Practical, age-appropriate ways to be with a child after loss — without rushing the healing.",
+    read: "9 min read",
+  },
+  {
+    category: "Workplace wellness",
+    title: "Recognising burnout before it breaks you",
+    desc: "The early signals most of us miss — and what to do once you spot them.",
+    read: "7 min read",
+  },
+] as const;
+
+export const homeBookingPerks = [
+  "M-Pesa & bank transfer supported",
+  "In-person, online or phone",
+  "Free 15-min orientation call available",
+] as const;

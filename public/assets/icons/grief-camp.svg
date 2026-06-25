@@ -1,0 +1,11 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer circle - olive green -->
+  <circle cx="50" cy="50" r="48" fill="#6B7D4F"/>
+  <!-- Inner white circle -->
+  <circle cx="50" cy="50" r="38" fill="white"/>
+  <!-- Icon - dark olive (two mountain/tent shapes) -->
+  <g fill="#4A5A35">
+    <path d="M 35 42 L 43 60 L 27 60 Z" />
+    <path d="M 50 35 L 65 65 L 35 65 Z" />
+  </g>
+</svg>
