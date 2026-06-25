@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { UserRole } from "@prisma/client";
+import type { AppRole } from "@/features/portal/lib/roles";
 
 import { Button } from "@/components/ui/button";
 import { isStaff } from "@/features/portal/lib/roles";
@@ -8,7 +8,7 @@ import { isStaff } from "@/features/portal/lib/roles";
 import { PortalSidebar } from "./portal-sidebar";
 
 type PortalShellProps = {
-  role: UserRole;
+  role: AppRole;
   children: ReactNode;
 };
 

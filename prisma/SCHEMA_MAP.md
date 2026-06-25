@@ -1,15 +1,34 @@
-# Maps Prisma models → portal sections (see `src/features/portal/lib/permissions.ts`)
+# Data model map (Better Auth + Recro domain)
 
-| Portal section | Models | Roles |
-|----------------|--------|-------|
-| Overview (staff) | aggregates across Booking, Payment, Inquiry, GriefApplication | ADMIN, RECEPTIONIST |
-| Overview (customer) | User, Booking, Appointment, Payment, SavedResource, GriefApplication (own) | CUSTOMER |
-| Bookings | Booking, Appointment, Service, Therapist | ADMIN, RECEPTIONIST |
-| Payments | Payment, Booking | ADMIN, RECEPTIONIST |
-| Programs | GriefApplication | ADMIN, RECEPTIONIST |
-| Content | Service, BlogPost, MediaItem, Faq, Testimonial | ADMIN |
-| People | User, Therapist | ADMIN |
-| Inquiries | Inquiry, NewsletterSubscriber | ADMIN, RECEPTIONIST |
-| Settings | SiteSetting | ADMIN |
+## Auth (Better Auth)
 
-Public site (no login): reads published Service, BlogPost, MediaItem, Faq, Testimonial; creates Booking, Inquiry, GriefApplication, NewsletterSubscriber.
+| Table | Purpose |
+|-------|---------|
+| `user` | Identity, profile, app role (`admin` \| `customer` \| `receptionist`) |
+| `session` | Active sessions (+ `impersonatedBy` from admin plugin) |
+| `account` | OAuth providers + `credential` password hash |
+| `verification` | Email verification & password reset tokens |
+
+### `user` fields
+
+| Field | Source |
+|-------|--------|
+| `name`, `email`, `emailVerified`, `image` | Better Auth core |
+| `role`, `banned`, `banReason`, `banExpires` | Admin plugin |
+| `phone`, `accountType`, `commsEmail`, `commsSms` | Recro `additionalFields` |
+
+## App roles
+
+| Role | Portal access |
+|------|----------------|
+| `customer` | `/dashboard` tabbed self-service |
+| `receptionist` | Operations: bookings, payments, programs, inquiries |
+| `admin` | Full portal including content, people, settings |
+
+Set roles via Better Auth admin plugin (`setRole`) or on signup default `customer`.
+
+## Domain tables
+
+Unchanged business models: `therapists`, `services`, `blog_posts`, `media_items`, `faqs`, `testimonials`, `bookings`, `appointments`, `payments`, `grief_applications`, `inquiries`, `newsletter_subscribers`, `saved_resources`, `site_settings`.
+
+All `userId` foreign keys reference `user.id` (Better Auth user table).

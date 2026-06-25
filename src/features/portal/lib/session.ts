@@ -1,26 +1,40 @@
-import type { UserRole } from "@prisma/client";
+import { headers } from "next/headers";
+
+import { auth } from "@/lib/auth";
+
+import type { AppRole } from "./roles";
+import { parseAppRole } from "./roles";
 
 export type PortalSession = {
   userId: string;
   email: string;
-  fullName: string | null;
-  role: UserRole;
+  name: string | null;
+  role: AppRole;
 };
 
-/**
- * Temporary session stub until auth API is wired.
- * Replace with real session from cookies / JWT.
- */
 export async function getPortalSession(): Promise<PortalSession | null> {
-  return null;
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
+    return null;
+  }
+
+  return {
+    userId: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+    role: parseAppRole(session.user.role),
+  };
 }
 
-/** Dev helper — remove once auth is live */
-export function getDevPortalSession(role: UserRole = "ADMIN"): PortalSession {
+/** Dev helper when no session cookie is present */
+export function getDevPortalSession(role: AppRole = "admin"): PortalSession {
   return {
     userId: "dev-user",
     email: "dev@recrogroup.org",
-    fullName: "Dev User",
+    name: "Dev User",
     role,
   };
 }

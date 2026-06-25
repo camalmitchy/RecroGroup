@@ -5,7 +5,7 @@ import { getRequiredSession } from "@/features/portal/lib/portal-guard";
 export default async function DashboardPage() {
   const session = await getRequiredSession("/dashboard");
 
-  if (session.role === "CUSTOMER") {
+  if (session.role === "customer") {
     return <CustomerDashboard />;
   }
 

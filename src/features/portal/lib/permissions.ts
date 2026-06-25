@@ -1,4 +1,4 @@
-import type { UserRole } from "@prisma/client";
+import type { AppRole } from "./roles";
 import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
@@ -15,76 +15,75 @@ export type PortalNavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
-  roles: UserRole[];
+  roles: AppRole[];
   group: string;
 };
 
-/** Staff sidebar — admin + receptionist share `/dashboard` sub-routes */
 export const PORTAL_NAV: PortalNavItem[] = [
   {
     href: "/dashboard",
     label: "Overview",
     icon: LayoutDashboard,
-    roles: ["ADMIN", "RECEPTIONIST"],
+    roles: ["admin", "receptionist"],
     group: "Overview",
   },
   {
     href: "/dashboard/bookings",
     label: "Bookings",
     icon: CalendarDays,
-    roles: ["ADMIN", "RECEPTIONIST"],
+    roles: ["admin", "receptionist"],
     group: "Operations",
   },
   {
     href: "/dashboard/payments",
     label: "Payments",
     icon: CreditCard,
-    roles: ["ADMIN", "RECEPTIONIST"],
+    roles: ["admin", "receptionist"],
     group: "Operations",
   },
   {
     href: "/dashboard/programs",
     label: "Programs",
     icon: HeartHandshake,
-    roles: ["ADMIN", "RECEPTIONIST"],
+    roles: ["admin", "receptionist"],
     group: "Programs",
   },
   {
     href: "/dashboard/content",
     label: "Content",
     icon: BookOpen,
-    roles: ["ADMIN"],
+    roles: ["admin"],
     group: "Content",
   },
   {
     href: "/dashboard/people",
     label: "People",
     icon: UserCog,
-    roles: ["ADMIN"],
+    roles: ["admin"],
     group: "People",
   },
   {
     href: "/dashboard/inquiries",
     label: "Inquiries",
     icon: Inbox,
-    roles: ["ADMIN", "RECEPTIONIST"],
+    roles: ["admin", "receptionist"],
     group: "Engagement",
   },
   {
     href: "/dashboard/settings",
     label: "Settings",
     icon: Settings,
-    roles: ["ADMIN"],
+    roles: ["admin"],
     group: "System",
   },
 ];
 
-export function getNavForRole(role: UserRole) {
+export function getNavForRole(role: AppRole) {
   return PORTAL_NAV.filter((item) => item.roles.includes(role));
 }
 
-export function canAccessRoute(role: UserRole, pathname: string) {
-  if (role === "CUSTOMER") {
+export function canAccessRoute(role: AppRole, pathname: string) {
+  if (role === "customer") {
     return pathname === "/dashboard";
   }
 
@@ -95,13 +94,9 @@ export function canAccessRoute(role: UserRole, pathname: string) {
   );
 
   if (pathname === "/dashboard") {
-    return isStaffRole(role);
+    return role === "admin" || role === "receptionist";
   }
 
   if (!item) return false;
   return item.roles.includes(role);
-}
-
-function isStaffRole(role: UserRole) {
-  return role === "ADMIN" || role === "RECEPTIONIST";
 }

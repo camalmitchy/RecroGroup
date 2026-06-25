@@ -9,8 +9,9 @@ import {
 export async function getRequiredSession(pathname?: string) {
   const session =
     (await getPortalSession()) ??
-    (process.env.NODE_ENV === "development"
-      ? getDevPortalSession("ADMIN")
+    (process.env.NODE_ENV === "development" &&
+    !process.env.BETTER_AUTH_SECRET
+      ? getDevPortalSession("admin")
       : null);
 
   if (!session) {

@@ -1,5 +1,7 @@
-// Recro Group — Neon PostgreSQL schema
-// Roles: ADMIN (full), RECEPTIONIST (operations), CUSTOMER (self-service portal)
+// Recro Group — Neon PostgreSQL + Better Auth
+// Core auth tables map to Better Auth (`user`, `session`, `account`, `verification`).
+// Admin plugin adds: role, banned, banReason, banExpires on user; impersonatedBy on session.
+// App roles (string): admin | customer | receptionist
 
 generator client {
   provider = "prisma-client-js"
@@ -7,36 +9,34 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// ─── Auth & identity ─────────────────────────────────────────────────────────
-
-enum UserRole {
-  ADMIN
-  RECEPTIONIST
-  CUSTOMER
-}
-
-enum AccountType {
-  CUSTOMER
-  GUARDIAN
-  CORPORATE
-}
+// ─── Better Auth (core) ──────────────────────────────────────────────────────
 
 model User {
-  id           String      @id @default(cuid())
-  email        String      @unique
-  passwordHash String?
-  role         UserRole    @default(CUSTOMER)
-  fullName     String?
-  phone        String?
-  accountType  AccountType @default(CUSTOMER)
-  avatarUrl    String?
-  commsEmail   Boolean     @default(true)
-  commsSms     Boolean     @default(false)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id            String   @id
+  name          String
+  email         String
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
+  // Admin plugin
+  role       String?   @default("customer")
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
+
+  // Recro profile (additionalFields in auth.ts)
+  phone       String?
+  accountType AccountType @default(CUSTOMER)
+  commsEmail  Boolean     @default(true)
+  commsSms    Boolean     @default(false)
+
+  sessions          Session[]
+  accounts          Account[]
   bookings          Booking[]
   appointments      Appointment[]
   payments          Payment[]
@@ -44,11 +44,68 @@ model User {
   griefApplications GriefApplication[]
   savedResources    SavedResource[]
 
+  @@unique([email])
   @@index([role])
-  @@map("users")
+  @@map("user")
 }
 
-// ─── People (admin › people) ─────────────────────────────────────────────────
+model Session {
+  id             String   @id
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impersonatedBy String?
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ─── App enums ───────────────────────────────────────────────────────────────
+
+enum AccountType {
+  CUSTOMER
+  GUARDIAN
+  CORPORATE
+}
+
+// ─── People (portal › people) ────────────────────────────────────────────────
 
 model Therapist {
   id          String   @id @default(cuid())
@@ -69,7 +126,7 @@ model Therapist {
   @@map("therapists")
 }
 
-// ─── Content (admin › content) ───────────────────────────────────────────────
+// ─── Content (portal › content) ──────────────────────────────────────────────
 
 model Service {
   id          String   @id @default(cuid())
@@ -151,7 +208,7 @@ model Testimonial {
   @@map("testimonials")
 }
 
-// ─── Operations (admin/receptionist › bookings, payments) ────────────────────
+// ─── Operations (portal › bookings, payments) ────────────────────────────────
 
 enum BookingStatus {
   REQUESTED
@@ -265,7 +322,7 @@ model Payment {
   @@map("payments")
 }
 
-// ─── Programs (admin/receptionist › programs) ────────────────────────────────
+// ─── Programs (portal › programs) ────────────────────────────────────────────
 
 enum GriefApplicationStatus {
   PENDING
@@ -295,7 +352,7 @@ model GriefApplication {
   @@map("grief_applications")
 }
 
-// ─── Engagement (admin/receptionist › inquiries) ─────────────────────────────
+// ─── Engagement (portal › inquiries) ─────────────────────────────────────────
 
 enum InquiryType {
   CONTACT
@@ -339,7 +396,7 @@ model NewsletterSubscriber {
   @@map("newsletter_subscribers")
 }
 
-// ─── Customer portal (dashboard › saved resources) ───────────────────────────
+// ─── Customer portal ─────────────────────────────────────────────────────────
 
 enum SavedResourceType {
   BLOG
@@ -360,7 +417,7 @@ model SavedResource {
   @@map("saved_resources")
 }
 
-// ─── System (admin › settings) ─────────────────────────────────────────────────
+// ─── System (portal › settings) ──────────────────────────────────────────────
 
 model SiteSetting {
   id        String   @id @default(cuid())

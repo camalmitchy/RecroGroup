@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { UserRole } from "@prisma/client";
+import type { AppRole } from "@/features/portal/lib/roles";
 
 import { cn } from "@/lib/utils";
 import { getNavForRole } from "@/features/portal/lib/permissions";
 import { ROLE_LABELS } from "@/features/portal/lib/roles";
 
 type PortalSidebarProps = {
-  role: UserRole;
+  role: AppRole;
 };
 
 export function PortalSidebar({ role }: PortalSidebarProps) {
