@@ -17,6 +17,14 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <Button
             asChild
+            variant="ghost"
+            className="hidden rounded-full sm:inline-flex"
+            size="lg"
+          >
+            <Link href="/login">Sign in</Link>
+          </Button>
+          <Button
+            asChild
             className="hidden rounded-full sm:inline-flex"
             size="lg"
           >

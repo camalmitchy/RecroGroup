@@ -15,7 +15,7 @@ export async function getRequiredSession(pathname?: string) {
       : null);
 
   if (!session) {
-    redirect("/join-us");
+    redirect("/login");
   }
 
   if (pathname && !canAccessRoute(session.role, pathname)) {

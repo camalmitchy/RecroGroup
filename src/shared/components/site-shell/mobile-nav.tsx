@@ -128,7 +128,17 @@ export function MobileNav() {
               />
             ))}
 
-          <Button asChild className="mt-4 w-full rounded-full" size="lg">
+          <Button
+            asChild
+            variant="outline"
+            className="mt-4 w-full rounded-full"
+            size="lg"
+          >
+            <Link href="/login" onClick={close}>
+              Sign in
+            </Link>
+          </Button>
+          <Button asChild className="w-full rounded-full" size="lg">
             <Link href="/join-us" onClick={close}>
               Join Us
             </Link>
