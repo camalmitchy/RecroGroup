@@ -3,10 +3,12 @@ import type { LucideIcon } from "lucide-react";
 import {
   CalendarDays,
   CreditCard,
+  FileText,
   HeartHandshake,
   Inbox,
   LayoutDashboard,
   Settings,
+  Users,
 } from "lucide-react";
 
 export type PortalNavItem = {
@@ -23,7 +25,7 @@ export const PORTAL_NAV: PortalNavItem[] = [
     href: "/dashboard",
     label: "Overview",
     icon: LayoutDashboard,
-    roles: ["admin", "receptionist"],
+    roles: ["admin", "receptionist", "customer"],
     group: "Overview",
   },
   {
@@ -53,6 +55,20 @@ export const PORTAL_NAV: PortalNavItem[] = [
     icon: Inbox,
     roles: ["admin", "receptionist"],
     group: "Engagement",
+  },
+  {
+    href: "/dashboard/content",
+    label: "Content",
+    icon: FileText,
+    roles: ["admin"],
+    group: "Management",
+  },
+  {
+    href: "/dashboard/people",
+    label: "People",
+    icon: Users,
+    roles: ["admin"],
+    group: "Management",
   },
   {
     href: "/dashboard/settings",

@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 import {
   Sidebar,
@@ -16,19 +18,28 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import type { PortalSession } from "@/features/portal/lib/session";
+import { useSignOut } from "@/features/auth/lib/queries";
 import { getNavForRole } from "@/features/portal/lib/permissions";
 import { ROLE_LABELS, type AppRole } from "@/features/portal/lib/roles";
+import type { PortalSession } from "@/features/portal/lib/session";
 
-type PortalAppSidebarProps = {
+type AppSidebarProps = {
   role: AppRole;
   session: PortalSession;
 };
 
-export function PortalAppSidebar({ role, session }: PortalAppSidebarProps) {
+export function AppSidebar({ role, session }: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const signOut = useSignOut();
   const items = getNavForRole(role);
   const groups = [...new Set(items.map((item) => item.group))];
+
+  async function handleSignOut() {
+    await signOut.mutateAsync();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -37,9 +48,13 @@ export function PortalAppSidebar({ role, session }: PortalAppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-                  R
-                </span>
+                <Image
+                  src="/assets/icons/logo_icon.png"
+                  alt="Recro Group"
+                  width={32}
+                  height={32}
+                  className="size-8 rounded-lg object-contain"
+                />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Recro Portal</span>
                   <span className="truncate text-xs text-muted-foreground">
@@ -92,7 +107,17 @@ export function PortalAppSidebar({ role, session }: PortalAppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Back to site">
-              <Link href="/">← Back to site</Link>
+              <Link href="/">Back to site</Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Sign out"
+              onClick={handleSignOut}
+              disabled={signOut.isPending}
+            >
+              <LogOut />
+              <span>Sign out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
