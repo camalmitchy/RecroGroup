@@ -1,7 +1,9 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -15,43 +17,50 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  applyServerFieldErrors,
+  getFormErrorMessage,
+} from "@/features/auth/lib/form-errors";
 import { useForgotPassword } from "@/features/auth/lib/queries";
 import {
   forgotPasswordSchema,
   type ForgotPasswordInput,
 } from "@/features/auth/lib/schemas";
 
-const defaultValues: ForgotPasswordInput = {
-  email: "",
-};
-
 export function ForgotPasswordForm() {
   const forgotPassword = useForgotPassword();
-  const [values, setValues] = useState<ForgotPasswordInput>(defaultValues);
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof ForgotPasswordInput, string>>
-  >({});
   const [submitted, setSubmitted] = useState(false);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const form = useForm<ForgotPasswordInput>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
 
-    const parsed = forgotPasswordSchema.safeParse(values);
-    if (!parsed.success) {
-      const errors = parsed.error.flatten().fieldErrors;
-      setFieldErrors({ email: errors.email?.[0] });
-      return;
-    }
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = form;
 
-    setFieldErrors({});
-
+  const onSubmit = handleSubmit(async (data) => {
     try {
-      await forgotPassword.mutateAsync(parsed.data);
+      await forgotPassword.mutateAsync(data);
       setSubmitted(true);
-    } catch {
-      // mutation error is surfaced below
+    } catch (error) {
+      if (!applyServerFieldErrors(error, setError)) {
+        setError("root", {
+          type: "server",
+          message: getFormErrorMessage(error),
+        });
+      }
     }
-  }
+  });
+
+  const rootError =
+    errors.root?.message ?? getFormErrorMessage(forgotPassword.error);
 
   if (submitted) {
     return (
@@ -82,30 +91,26 @@ export function ForgotPasswordForm() {
         </p>
       </div>
 
-      {forgotPassword.error ? (
+      {rootError ? (
         <Alert variant="destructive">
           <AlertCircle />
-          <AlertDescription>{forgotPassword.error.message}</AlertDescription>
+          <AlertDescription>{rootError}</AlertDescription>
         </Alert>
       ) : null}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={onSubmit} className="space-y-6" noValidate>
         <FieldGroup>
-          <Field data-invalid={!!fieldErrors.email}>
+          <Field data-invalid={!!errors.email}>
             <FieldLabel htmlFor="email">Email</FieldLabel>
             <Input
               id="email"
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
-              value={values.email}
-              onChange={(event) => {
-                setValues({ email: event.target.value });
-                setFieldErrors({});
-              }}
-              aria-invalid={!!fieldErrors.email}
+              aria-invalid={!!errors.email}
+              {...register("email")}
             />
-            <FieldError>{fieldErrors.email}</FieldError>
+            <FieldError errors={[errors.email]} />
           </Field>
         </FieldGroup>
 
@@ -113,9 +118,9 @@ export function ForgotPasswordForm() {
           type="submit"
           className="w-full rounded-full"
           size="lg"
-          disabled={forgotPassword.isPending}
+          disabled={isSubmitting || forgotPassword.isPending}
         >
-          {forgotPassword.isPending ? <Spinner /> : null}
+          {isSubmitting || forgotPassword.isPending ? <Spinner /> : null}
           Send reset link
         </Button>
       </form>

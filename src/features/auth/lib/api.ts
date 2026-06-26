@@ -1,74 +1,75 @@
+import { authClient } from "@/lib/auth-client";
+import { AuthApiError } from "@/features/auth/lib/errors";
 import type {
   ForgotPasswordInput,
   SignInInput,
   SignUpInput,
 } from "@/features/auth/lib/schemas";
 
-type AuthErrorBody = {
-  message?: string;
-  errors?: Record<string, string[] | undefined>;
+type AuthClientResult<T> = {
+  data: T | null;
+  error: { message?: string } | null;
 };
 
-async function parseAuthResponse<T>(response: Response): Promise<T> {
-  const data = (await response.json().catch(() => null)) as
-    | (T & AuthErrorBody)
-    | null;
-
-  if (!response.ok) {
-    throw new Error(data?.message ?? "Something went wrong. Please try again.");
+function unwrapAuthResult<T>(result: AuthClientResult<T>): T {
+  if (result.error) {
+    throw new AuthApiError(
+      result.error.message ?? "Something went wrong. Please try again.",
+    );
   }
 
-  return data as T;
+  if (result.data === null || result.data === undefined) {
+    throw new AuthApiError("Something went wrong. Please try again.");
+  }
+
+  return result.data;
 }
 
 export async function getSession() {
-  const response = await fetch("/api/auth/session", {
-    credentials: "include",
-  });
+  const result = await authClient.getSession();
 
-  return parseAuthResponse<{ user: Record<string, unknown> | null }>(response);
+  if (result.error) {
+    throw new AuthApiError(
+      result.error.message ?? "Failed to load session.",
+    );
+  }
+
+  return { user: result.data?.user ?? null };
 }
 
 export async function signIn(input: SignInInput) {
-  const response = await fetch("/api/auth/sign-in", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(input),
-  });
-
-  return parseAuthResponse<{ user: Record<string, unknown> }>(response);
+  return unwrapAuthResult(
+    await authClient.signIn.email({
+      email: input.email,
+      password: input.password,
+      rememberMe: input.rememberMe,
+    }),
+  );
 }
 
 export async function signUp(input: SignUpInput) {
-  const { confirmPassword: _confirmPassword, ...body } = input;
-
-  const response = await fetch("/api/auth/sign-up", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(body),
-  });
-
-  return parseAuthResponse<{ user: Record<string, unknown> }>(response);
+  return unwrapAuthResult(
+    await authClient.signUp.email({
+      name: input.name,
+      email: input.email,
+      password: input.password,
+      phone: input.phone || undefined,
+      accountType: "CUSTOMER",
+      commsEmail: input.commsEmail,
+      commsSms: input.commsSms,
+    }),
+  );
 }
 
 export async function signOut() {
-  const response = await fetch("/api/auth/sign-out", {
-    method: "POST",
-    credentials: "include",
-  });
-
-  return parseAuthResponse<{ success: boolean }>(response);
+  return unwrapAuthResult(await authClient.signOut());
 }
 
 export async function requestPasswordReset(input: ForgotPasswordInput) {
-  const response = await fetch("/api/auth/forgot-password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(input),
-  });
-
-  return parseAuthResponse<{ status: boolean; message: string }>(response);
+  return unwrapAuthResult(
+    await authClient.requestPasswordReset({
+      email: input.email,
+      redirectTo: `${window.location.origin}/reset-password`,
+    }),
+  );
 }

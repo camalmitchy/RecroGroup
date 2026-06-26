@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 
 import type { AppRole } from "./roles";
-import { parseAppRole } from "./roles";
+import { APP_ROLES, parseAppRole } from "./roles";
 
 export type PortalSession = {
   userId: string;
@@ -30,11 +30,16 @@ export async function getPortalSession(): Promise<PortalSession | null> {
 }
 
 /** Dev helper when no session cookie is present */
-export function getDevPortalSession(role: AppRole = "admin"): PortalSession {
+export function getDevPortalSession(role?: AppRole): PortalSession {
+  const devRole =
+    role ??
+    (process.env.DEV_PORTAL_ROLE as AppRole | undefined) ??
+    "admin";
+
   return {
     userId: "dev-user",
     email: "dev@recrogroup.org",
     name: "Dev User",
-    role,
+    role: APP_ROLES.includes(devRole) ? devRole : "admin",
   };
 }

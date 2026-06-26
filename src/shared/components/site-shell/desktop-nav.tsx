@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -47,12 +46,35 @@ function NavLinkItem({
   );
 }
 
+function ServiceListItem({
+  title,
+  href,
+  children,
+}: {
+  title: string;
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <Link href={href}>
+          <div className="flex flex-col gap-1 text-sm">
+            <div className="leading-none font-medium">{title}</div>
+            <div className="line-clamp-2 text-muted-foreground">{children}</div>
+          </div>
+        </Link>
+      </NavigationMenuLink>
+    </li>
+  );
+}
+
 export function DesktopNav() {
   const pathname = usePathname();
   const servicesActive = pathname.startsWith("/services");
 
   return (
-    <NavigationMenu className="hidden lg:flex" viewport={false}>
+    <NavigationMenu className="hidden lg:flex">
       <NavigationMenuList className="gap-0.5">
         <NavLinkItem href="/" label="Home" exact />
         <NavLinkItem href="/grief-camp" label="Grief Camp" />
@@ -66,44 +88,27 @@ export function DesktopNav() {
           >
             Services
           </NavigationMenuTrigger>
-          <NavigationMenuContent className="w-80 p-2">
-            <ul className="grid gap-1">
+          <NavigationMenuContent>
+            <ul className="grid w-[400px] gap-2 p-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
               {serviceNavItems.map((service) => (
-                <li key={service.slug}>
-                  <NavigationMenuLink asChild>
-                    <Link
-                      href={`/services/${service.slug}`}
-                      className="flex items-start gap-3 rounded-xl p-3 hover:bg-muted"
-                    >
-                      <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
-                        <Image
-                          src={service.icon}
-                          alt=""
-                          width={20}
-                          height={20}
-                          className="size-5 object-contain"
-                        />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-foreground">
-                          {service.label}
-                        </span>
-                        <span className="mt-0.5 block text-xs text-muted-foreground">
-                          {service.description}
-                        </span>
-                      </span>
-                    </Link>
-                  </NavigationMenuLink>
-                </li>
+                <ServiceListItem
+                  key={service.slug}
+                  title={service.label}
+                  href={`/services/${service.slug}`}
+                >
+                  {service.description}
+                </ServiceListItem>
               ))}
             </ul>
-            <div className="mt-1 border-t border-border px-3 py-2">
-              <Link
-                href="/services"
-                className="text-xs font-semibold text-primary hover:underline"
-              >
-                View all services →
-              </Link>
+            <div className="border-t border-border px-4 py-2.5">
+              <NavigationMenuLink asChild>
+                <Link
+                  href="/services"
+                  className="text-xs font-semibold text-primary hover:underline"
+                >
+                  View all services →
+                </Link>
+              </NavigationMenuLink>
             </div>
           </NavigationMenuContent>
         </NavigationMenuItem>

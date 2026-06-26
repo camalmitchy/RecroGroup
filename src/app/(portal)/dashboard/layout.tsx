@@ -8,5 +8,5 @@ type PortalLayoutProps = {
 export default async function PortalLayout({ children }: PortalLayoutProps) {
   const session = await getRequiredSession();
 
-  return <PortalShell role={session.role}>{children}</PortalShell>;
+  return <PortalShell session={session}>{children}</PortalShell>;
 }

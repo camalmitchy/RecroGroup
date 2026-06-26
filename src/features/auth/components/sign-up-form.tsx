@@ -1,8 +1,9 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { AlertCircle } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -17,61 +18,54 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  applyServerFieldErrors,
+  getFormErrorMessage,
+} from "@/features/auth/lib/form-errors";
 import { useSignUp } from "@/features/auth/lib/queries";
 import { signUpSchema, type SignUpInput } from "@/features/auth/lib/schemas";
-
-const defaultValues: SignUpInput = {
-  name: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
-  phone: "",
-  commsEmail: true,
-  commsSms: false,
-};
 
 export function SignUpForm() {
   const router = useRouter();
   const signUp = useSignUp();
-  const [values, setValues] = useState<SignUpInput>(defaultValues);
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof SignUpInput, string>>
-  >({});
 
-  function updateField<K extends keyof SignUpInput>(
-    key: K,
-    value: SignUpInput[K],
-  ) {
-    setValues((current) => ({ ...current, [key]: value }));
-    setFieldErrors((current) => ({ ...current, [key]: undefined }));
-  }
+  const form = useForm<SignUpInput>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      phone: "",
+      commsEmail: true,
+      commsSms: false,
+    },
+  });
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const {
+    register,
+    control,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = form;
 
-    const parsed = signUpSchema.safeParse(values);
-    if (!parsed.success) {
-      const errors = parsed.error.flatten().fieldErrors;
-      setFieldErrors({
-        name: errors.name?.[0],
-        email: errors.email?.[0],
-        password: errors.password?.[0],
-        confirmPassword: errors.confirmPassword?.[0],
-        phone: errors.phone?.[0],
-      });
-      return;
-    }
-
-    setFieldErrors({});
-
+  const onSubmit = handleSubmit(async (data) => {
     try {
-      await signUp.mutateAsync(parsed.data);
+      await signUp.mutateAsync(data);
       router.push("/dashboard");
       router.refresh();
-    } catch {
-      // mutation error is surfaced below
+    } catch (error) {
+      if (!applyServerFieldErrors(error, setError)) {
+        setError("root", {
+          type: "server",
+          message: getFormErrorMessage(error),
+        });
+      }
     }
-  }
+  });
+
+  const rootError = errors.root?.message ?? getFormErrorMessage(signUp.error);
 
   return (
     <div className="space-y-8">
@@ -83,123 +77,124 @@ export function SignUpForm() {
         </p>
       </div>
 
-      {signUp.error ? (
+      {rootError ? (
         <Alert variant="destructive">
           <AlertCircle />
-          <AlertDescription>{signUp.error.message}</AlertDescription>
+          <AlertDescription>{rootError}</AlertDescription>
         </Alert>
       ) : null}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={onSubmit} className="space-y-6" noValidate>
         <FieldGroup>
-          <Field data-invalid={!!fieldErrors.name}>
+          <Field data-invalid={!!errors.name}>
             <FieldLabel htmlFor="name">Full name</FieldLabel>
             <Input
               id="name"
               autoComplete="name"
               placeholder="Jane Doe"
-              value={values.name}
-              onChange={(event) => updateField("name", event.target.value)}
-              aria-invalid={!!fieldErrors.name}
+              aria-invalid={!!errors.name}
+              {...register("name")}
             />
-            <FieldError>{fieldErrors.name}</FieldError>
+            <FieldError errors={[errors.name]} />
           </Field>
 
-          <Field data-invalid={!!fieldErrors.email}>
+          <Field data-invalid={!!errors.email}>
             <FieldLabel htmlFor="email">Email</FieldLabel>
             <Input
               id="email"
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
-              value={values.email}
-              onChange={(event) => updateField("email", event.target.value)}
-              aria-invalid={!!fieldErrors.email}
+              aria-invalid={!!errors.email}
+              {...register("email")}
             />
-            <FieldError>{fieldErrors.email}</FieldError>
+            <FieldError errors={[errors.email]} />
           </Field>
 
-          <Field data-invalid={!!fieldErrors.phone}>
+          <Field data-invalid={!!errors.phone}>
             <FieldLabel htmlFor="phone">Phone (optional)</FieldLabel>
             <Input
               id="phone"
               type="tel"
               autoComplete="tel"
               placeholder="+254 7XX XXX XXX"
-              value={values.phone}
-              onChange={(event) => updateField("phone", event.target.value)}
-              aria-invalid={!!fieldErrors.phone}
+              aria-invalid={!!errors.phone}
+              {...register("phone")}
             />
-            <FieldError>{fieldErrors.phone}</FieldError>
+            <FieldError errors={[errors.phone]} />
           </Field>
 
-          <Field data-invalid={!!fieldErrors.password}>
+          <Field data-invalid={!!errors.password}>
             <FieldLabel htmlFor="password">Password</FieldLabel>
             <Input
               id="password"
               type="password"
               autoComplete="new-password"
               placeholder="••••••••"
-              value={values.password}
-              onChange={(event) => updateField("password", event.target.value)}
-              aria-invalid={!!fieldErrors.password}
+              aria-invalid={!!errors.password}
+              {...register("password")}
             />
             <FieldDescription>
               At least 8 characters with a letter and a number.
             </FieldDescription>
-            <FieldError>{fieldErrors.password}</FieldError>
+            <FieldError errors={[errors.password]} />
           </Field>
 
-          <Field data-invalid={!!fieldErrors.confirmPassword}>
+          <Field data-invalid={!!errors.confirmPassword}>
             <FieldLabel htmlFor="confirmPassword">Confirm password</FieldLabel>
             <Input
               id="confirmPassword"
               type="password"
               autoComplete="new-password"
               placeholder="••••••••"
-              value={values.confirmPassword}
-              onChange={(event) =>
-                updateField("confirmPassword", event.target.value)
-              }
-              aria-invalid={!!fieldErrors.confirmPassword}
+              aria-invalid={!!errors.confirmPassword}
+              {...register("confirmPassword")}
             />
-            <FieldError>{fieldErrors.confirmPassword}</FieldError>
+            <FieldError errors={[errors.confirmPassword]} />
           </Field>
 
-          <Field orientation="horizontal">
-            <Checkbox
-              id="commsEmail"
-              checked={values.commsEmail}
-              onCheckedChange={(checked) =>
-                updateField("commsEmail", checked === true)
-              }
-            />
-            <FieldLabel htmlFor="commsEmail" className="font-normal">
-              Email me appointment reminders and updates
-            </FieldLabel>
-          </Field>
+          <Controller
+            name="commsEmail"
+            control={control}
+            render={({ field }) => (
+              <Field orientation="horizontal">
+                <Checkbox
+                  id="commsEmail"
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(checked === true)}
+                />
+                <FieldLabel htmlFor="commsEmail" className="font-normal">
+                  Email me appointment reminders and updates
+                </FieldLabel>
+              </Field>
+            )}
+          />
 
-          <Field orientation="horizontal">
-            <Checkbox
-              id="commsSms"
-              checked={values.commsSms}
-              onCheckedChange={(checked) =>
-                updateField("commsSms", checked === true)
-              }
-            />
-            <FieldLabel htmlFor="commsSms" className="font-normal">
-              Send SMS reminders when available
-            </FieldLabel>
-          </Field>
+          <Controller
+            name="commsSms"
+            control={control}
+            render={({ field }) => (
+              <Field orientation="horizontal">
+                <Checkbox
+                  id="commsSms"
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(checked === true)}
+                />
+                <FieldLabel htmlFor="commsSms" className="font-normal">
+                  Send SMS reminders when available
+                </FieldLabel>
+              </Field>
+            )}
+          />
         </FieldGroup>
 
         <Button
           type="submit"
           className="w-full rounded-full"
           size="lg"
-          disabled={signUp.isPending}
+          disabled={isSubmitting || signUp.isPending}
         >
-          {signUp.isPending ? <Spinner /> : null}
+          {isSubmitting || signUp.isPending ? <Spinner /> : null}
           Create account
         </Button>
       </form>

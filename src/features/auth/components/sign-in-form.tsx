@@ -1,11 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -17,54 +17,45 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  applyServerFieldErrors,
+  getFormErrorMessage,
+} from "@/features/auth/lib/form-errors";
 import { useSignIn } from "@/features/auth/lib/queries";
 import { signInSchema, type SignInInput } from "@/features/auth/lib/schemas";
-
-const defaultValues: SignInInput = {
-  email: "",
-  password: "",
-  rememberMe: true,
-};
 
 export function SignInForm() {
   const router = useRouter();
   const signIn = useSignIn();
-  const [values, setValues] = useState<SignInInput>(defaultValues);
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof SignInInput, string>>
-  >({});
 
-  function updateField<K extends keyof SignInInput>(
-    key: K,
-    value: SignInInput[K],
-  ) {
-    setValues((current) => ({ ...current, [key]: value }));
-    setFieldErrors((current) => ({ ...current, [key]: undefined }));
-  }
+  const form = useForm<SignInInput>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: true,
+    },
+  });
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const {
+    register,
+    control,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = form;
 
-    const parsed = signInSchema.safeParse(values);
-    if (!parsed.success) {
-      const errors = parsed.error.flatten().fieldErrors;
-      setFieldErrors({
-        email: errors.email?.[0],
-        password: errors.password?.[0],
-      });
-      return;
-    }
-
-    setFieldErrors({});
-
+  const onSubmit = handleSubmit(async (data) => {
     try {
-      await signIn.mutateAsync(parsed.data);
+      await signIn.mutateAsync(data);
       router.push("/dashboard");
       router.refresh();
-    } catch {
-      // mutation error is surfaced below
+    } catch (error) {
+      if (!applyServerFieldErrors(error, setError)) {
+        toast.error(getFormErrorMessage(error));
+      }
     }
-  }
+  });
 
   return (
     <div className="space-y-8">
@@ -75,30 +66,22 @@ export function SignInForm() {
         </p>
       </div>
 
-      {signIn.error ? (
-        <Alert variant="destructive">
-          <AlertCircle />
-          <AlertDescription>{signIn.error.message}</AlertDescription>
-        </Alert>
-      ) : null}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={onSubmit} className="space-y-6" noValidate>
         <FieldGroup>
-          <Field data-invalid={!!fieldErrors.email}>
+          <Field data-invalid={!!errors.email}>
             <FieldLabel htmlFor="email">Email</FieldLabel>
             <Input
               id="email"
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
-              value={values.email}
-              onChange={(event) => updateField("email", event.target.value)}
-              aria-invalid={!!fieldErrors.email}
+              aria-invalid={!!errors.email}
+              {...register("email")}
             />
-            <FieldError>{fieldErrors.email}</FieldError>
+            <FieldError errors={[errors.email]} />
           </Field>
 
-          <Field data-invalid={!!fieldErrors.password}>
+          <Field data-invalid={!!errors.password}>
             <div className="flex items-center justify-between gap-3">
               <FieldLabel htmlFor="password">Password</FieldLabel>
               <Link
@@ -113,34 +96,37 @@ export function SignInForm() {
               type="password"
               autoComplete="current-password"
               placeholder="••••••••"
-              value={values.password}
-              onChange={(event) => updateField("password", event.target.value)}
-              aria-invalid={!!fieldErrors.password}
+              aria-invalid={!!errors.password}
+              {...register("password")}
             />
-            <FieldError>{fieldErrors.password}</FieldError>
+            <FieldError errors={[errors.password]} />
           </Field>
 
-          <Field orientation="horizontal">
-            <Checkbox
-              id="rememberMe"
-              checked={values.rememberMe}
-              onCheckedChange={(checked) =>
-                updateField("rememberMe", checked === true)
-              }
-            />
-            <FieldLabel htmlFor="rememberMe" className="font-normal">
-              Keep me signed in
-            </FieldLabel>
-          </Field>
+          <Controller
+            name="rememberMe"
+            control={control}
+            render={({ field }) => (
+              <Field orientation="horizontal">
+                <Checkbox
+                  id="rememberMe"
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(checked === true)}
+                />
+                <FieldLabel htmlFor="rememberMe" className="font-normal">
+                  Keep me signed in
+                </FieldLabel>
+              </Field>
+            )}
+          />
         </FieldGroup>
 
         <Button
           type="submit"
           className="w-full rounded-full"
           size="lg"
-          disabled={signIn.isPending}
+          disabled={isSubmitting || signIn.isPending}
         >
-          {signIn.isPending ? <Spinner /> : null}
+          {isSubmitting || signIn.isPending ? <Spinner /> : null}
           Sign in
         </Button>
       </form>

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -87,22 +86,20 @@ export function MobileNav() {
               <AccordionTrigger className="rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-muted hover:no-underline">
                 Services
               </AccordionTrigger>
-              <AccordionContent className="space-y-1 pb-0 pl-2">
+              <AccordionContent className="grid gap-1 pb-0 pl-2 sm:grid-cols-2">
                 {serviceNavItems.map((service) => (
                   <Link
                     key={service.slug}
                     href={`/services/${service.slug}`}
                     onClick={close}
-                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    className="rounded-lg px-3 py-2.5 transition-colors hover:bg-muted"
                   >
-                    <Image
-                      src={service.icon}
-                      alt=""
-                      width={20}
-                      height={20}
-                      className="size-5 object-contain opacity-70"
-                    />
-                    {service.label}
+                    <span className="block text-sm font-medium text-foreground">
+                      {service.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {service.description}
+                    </span>
                   </Link>
                 ))}
                 <Link

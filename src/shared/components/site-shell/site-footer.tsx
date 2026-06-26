@@ -55,7 +55,7 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link href="/faq" className="hover:text-primary">
+              <Link href="/contact#faq" className="hover:text-primary">
                 FAQs
               </Link>
             </li>

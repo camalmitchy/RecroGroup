@@ -16,7 +16,6 @@ export const mainNavLinks: NavLink[] = [
   { href: "/grief-camp", label: "Grief Camp" },
   { href: "/about", label: "About" },
   { href: "/insights", label: "Insights" },
-  { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];
 

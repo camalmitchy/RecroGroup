@@ -44,6 +44,7 @@ export const auth = betterAuth({
     admin({
       defaultRole: "customer",
       adminRoles: ["admin"],
+      // receptionist uses `user.role` string + app RBAC in permissions.ts
     }),
   ],
 });

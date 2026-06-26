@@ -9,5 +9,5 @@ export default async function DashboardPage() {
     return <CustomerDashboard />;
   }
 
-  return <StaffDashboardHome />;
+  return <StaffDashboardHome role={session.role} />;
 }
