@@ -64,9 +64,10 @@ cp .env.example .env
 
 | Variable | Description |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `BETTER_AUTH_SECRET` | Secret for encryption/hashing (min. 32 chars). Generate with `openssl rand -base64 32` |
-| `BETTER_AUTH_URL` | App base URL, e.g. `http://localhost:3000` |
+| `DATABASE_URL` | PostgreSQL connection string (required) |
+| `BETTER_AUTH_SECRET` | Secret for signing sessions/tokens (min. 32 chars). Generate with `openssl rand -base64 32` |
+| `BETTER_AUTH_URL` | App base URL for auth links, e.g. `http://localhost:3000` or production domain |
+| `DEV_PORTAL_ROLE` | *(Optional, dev only)* Forces a fake session role when no `BETTER_AUTH_SECRET` is set in development. One of: `admin`, `receptionist`, `customer` |
 
 ### 3. Database setup
 
