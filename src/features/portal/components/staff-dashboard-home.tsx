@@ -1,78 +1,130 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
+  Clock,
   CreditCard,
   HeartHandshake,
-  Inbox,
-  TrendingDown,
+  MessageSquare,
   TrendingUp,
+  Users,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { PortalPageHeader } from "@/features/portal/components/portal-page-header";
-import { StatusBadge } from "@/features/portal/components/status-badge";
 import {
-  DASHBOARD_ACTIVITY,
-  DASHBOARD_KPIS,
-  DASHBOARD_QUEUE,
+  StatusBadge,
+  bookingStatusTone,
+} from "@/features/portal/components/status-badge";
+import {
+  INITIAL_BOOKINGS,
+  INITIAL_GRIEF_APPLICATIONS,
+  INITIAL_INQUIRIES,
+  INITIAL_PAYMENTS,
+  MOCK_CUSTOMERS,
 } from "@/features/portal/data/mock-portal-data";
-import type { AppRole } from "@/features/portal/lib/roles";
-import { ROLE_LABELS } from "@/features/portal/lib/roles";
 
-type StaffDashboardHomeProps = {
-  role: AppRole;
-};
+const todayIso = new Date().toISOString().slice(0, 10);
 
-export function StaffDashboardHome({ role }: StaffDashboardHomeProps) {
-  const queueTabs = Object.keys(DASHBOARD_QUEUE) as Array<
-    keyof typeof DASHBOARD_QUEUE
-  >;
-  const [tab, setTab] = useState(queueTabs[0]);
+function buildCounts() {
+  const todayBookings = INITIAL_BOOKINGS.filter(
+    (row) => row.preferredDate === todayIso,
+  ).length;
+  const pendingBookings = INITIAL_BOOKINGS.filter(
+    (row) => row.status === "REQUESTED",
+  ).length;
+  const pendingPayments = INITIAL_PAYMENTS.filter(
+    (row) => row.status === "PENDING",
+  ).length;
+  const bankToVerify = INITIAL_PAYMENTS.filter(
+    (row) => row.method === "BANK" && row.status !== "PAID",
+  ).length;
+  const griefApps = INITIAL_GRIEF_APPLICATIONS.filter(
+    (row) => row.status === "PENDING" || row.status === "REVIEWING",
+  ).length;
+  const newInquiries = INITIAL_INQUIRIES.filter(
+    (row) => row.status === "NEW",
+  ).length;
+
+  return {
+    todayBookings,
+    pendingBookings,
+    pendingPayments,
+    bankToVerify,
+    griefApps,
+    newInquiries,
+    customers: MOCK_CUSTOMERS.length,
+  };
+}
+
+export function StaffDashboardHome() {
+  const counts = buildCounts();
+  const pendingList = INITIAL_BOOKINGS.filter((row) => row.status === "REQUESTED");
+  const recent = [...INITIAL_BOOKINGS]
+    .sort((a, b) => b.reference.localeCompare(a.reference))
+    .slice(0, 6);
+
+  const kpis = [
+    {
+      label: "Today's bookings",
+      value: counts.todayBookings,
+      href: "/dashboard/bookings",
+      icon: CalendarDays,
+    },
+    {
+      label: "Awaiting confirmation",
+      value: counts.pendingBookings,
+      href: "/dashboard/bookings",
+      icon: Clock,
+    },
+    {
+      label: "Pending payments",
+      value: counts.pendingPayments,
+      href: "/dashboard/payments",
+      icon: CreditCard,
+    },
+    {
+      label: "Bank transfers to verify",
+      value: counts.bankToVerify,
+      href: "/dashboard/payments",
+      icon: TrendingUp,
+    },
+    {
+      label: "Grief camp applications",
+      value: counts.griefApps,
+      href: "/dashboard/programs",
+      icon: HeartHandshake,
+    },
+    {
+      label: "New messages",
+      value: counts.newInquiries,
+      href: "/dashboard/inquiries",
+      icon: MessageSquare,
+    },
+    {
+      label: "Total customers",
+      value: counts.customers,
+      href: "/dashboard/people",
+      icon: Users,
+    },
+  ];
 
   return (
     <div className="space-y-6">
       <PortalPageHeader
-        title="Control center"
-        description={`${ROLE_LABELS[role]} overview — everything that needs attention today.`}
+        title="Dashboard"
+        description="What needs your attention today."
       />
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
-        {DASHBOARD_KPIS.map((kpi) => (
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+        {kpis.map((kpi) => (
           <Link key={kpi.label} href={kpi.href} className="group">
             <Card className="h-full transition-colors hover:border-primary/40">
               <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <span className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
-                    {kpi.label.includes("booking") ||
-                    kpi.label.includes("appointment") ? (
-                      <CalendarDays className="size-4" />
-                    ) : kpi.label.includes("M-Pesa") ? (
-                      <CreditCard className="size-4" />
-                    ) : kpi.label.includes("Grief") ? (
-                      <HeartHandshake className="size-4" />
-                    ) : (
-                      <Inbox className="size-4" />
-                    )}
-                  </span>
-                  <span
-                    className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ${
-                      kpi.up ? "text-primary" : "text-destructive"
-                    }`}
-                  >
-                    {kpi.up ? (
-                      <TrendingUp className="size-3" />
-                    ) : (
-                      <TrendingDown className="size-3" />
-                    )}
-                    {kpi.delta}
-                  </span>
+                <div className="grid size-9 place-items-center rounded-lg bg-primary-soft text-primary-deep">
+                  <kpi.icon className="size-4" />
                 </div>
                 <p className="mt-3 text-2xl font-semibold tracking-tight">
                   {kpi.value}
@@ -86,139 +138,85 @@ export function StaffDashboardHome({ role }: StaffDashboardHomeProps) {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Live activity</CardTitle>
-          </CardHeader>
-          <CardContent className="px-0 pb-0">
-            <ul className="divide-y divide-border">
-              {DASHBOARD_ACTIVITY.map((item) => (
-                <li key={item.text}>
-                  <Link
-                    href={item.href}
-                    className="flex items-center justify-between gap-4 px-6 py-3 hover:bg-muted/50"
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardContent className="p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Awaiting confirmation</h3>
+              <Link
+                href="/dashboard/bookings"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-primary-deep hover:underline"
+              >
+                View all
+                <ArrowRight className="size-3" />
+              </Link>
+            </div>
+            {pendingList.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nothing pending. Great work.
+              </p>
+            ) : (
+              <ul className="divide-y divide-[var(--admin-border)]">
+                {pendingList.map((row) => (
+                  <li
+                    key={row.id}
+                    className="flex items-center justify-between gap-3 py-2.5"
                   >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span
-                        className={`size-2 shrink-0 rounded-full ${
-                          item.tone === "success"
-                            ? "bg-primary"
-                            : item.tone === "info"
-                              ? "bg-secondary"
-                              : "bg-muted-foreground"
-                        }`}
-                      />
-                      <span className="truncate text-sm">{item.text}</span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {row.clientName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {row.reference} · {row.preferredDate ?? "no date"}
+                      </p>
                     </div>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {item.time}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                    <StatusBadge tone="warning">Confirm</StatusBadge>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Quick actions</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-2">
-            <Button asChild variant="outline" className="justify-start">
-              <Link href="/dashboard/bookings">
-                <CalendarDays className="size-4" />
-                Review bookings
+          <CardContent className="p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Recent bookings</h3>
+              <Link
+                href="/dashboard/bookings"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-primary-deep hover:underline"
+              >
+                View all
+                <ArrowRight className="size-3" />
               </Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link href="/dashboard/payments">
-                <CreditCard className="size-4" />
-                Verify payments
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link href="/dashboard/programs">
-                <HeartHandshake className="size-4" />
-                Grief camp queue
-              </Link>
-            </Button>
-            {role === "admin" && (
-              <Button asChild variant="outline" className="justify-start">
-                <Link href="/dashboard/settings">
-                  Portal settings
-                </Link>
-              </Button>
+            </div>
+            {recent.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No bookings yet.</p>
+            ) : (
+              <ul className="divide-y divide-[var(--admin-border)]">
+                {recent.map((row) => (
+                  <li
+                    key={row.id}
+                    className="flex items-center justify-between gap-3 py-2.5"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {row.clientName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {row.reference}
+                      </p>
+                    </div>
+                    <StatusBadge tone={bookingStatusTone(row.status)}>
+                      {row.status.toLowerCase()}
+                    </StatusBadge>
+                  </li>
+                ))}
+              </ul>
             )}
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Work queue</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Daily operations — clear these to keep clients moving
-          </p>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            value={tab}
-            onValueChange={(value) =>
-              setTab(value as keyof typeof DASHBOARD_QUEUE)
-            }
-          >
-            <TabsList className="mb-4 h-auto w-full justify-start gap-1 overflow-x-auto">
-              {queueTabs.map((key) => (
-                <TabsTrigger key={key} value={key} className="shrink-0">
-                  {key}
-                  <Badge variant="secondary" className="ml-1.5">
-                    {DASHBOARD_QUEUE[key].length}
-                  </Badge>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            {queueTabs.map((key) => (
-              <TabsContent key={key} value={key} className="mt-0">
-                <ul className="divide-y divide-border">
-                  {DASHBOARD_QUEUE[key].map((row) => (
-                    <li
-                      key={row.who}
-                      className="flex items-center justify-between gap-4 py-3.5"
-                    >
-                      <div className="flex min-w-0 items-center gap-4">
-                        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                          {row.who
-                            .split(" ")
-                            .map((w) => w[0])
-                            .slice(0, 2)
-                            .join("")}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">
-                            {row.who}
-                          </p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {row.type} · {row.status}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-3">
-                        <StatusBadge tone="info">{row.type}</StatusBadge>
-                        <Button variant="link" className="h-auto p-0">
-                          {row.action}
-                          <ArrowRight className="size-3.5" />
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </CardContent>
-      </Card>
     </div>
   );
 }

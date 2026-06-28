@@ -1,11 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { Play } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 
 import type { PopularVideo } from "../data";
 
@@ -21,13 +19,13 @@ export function InsightsVideoCard({
   const [isPlaying, setIsPlaying] = useState(false);
 
   return (
-    <Card
-      className={`group overflow-hidden rounded-2xl p-0 shadow-sm transition-all hover:shadow-md ${
-        compact ? "min-w-[320px] w-[320px] shrink-0" : ""
+    <div
+      className={`group card-lift overflow-hidden rounded-2xl border border-border bg-card ${
+        compact ? "w-[320px] min-w-[320px] shrink-0" : ""
       }`}
     >
       <div
-        className={`relative overflow-hidden bg-foreground ${
+        className={`relative overflow-hidden bg-black ${
           compact ? "aspect-[4/3]" : "aspect-video"
         }`}
       >
@@ -40,20 +38,20 @@ export function InsightsVideoCard({
               className="object-cover"
               sizes={compact ? "320px" : "50vw"}
             />
-            <div className="absolute inset-0 bg-foreground/20 transition-colors group-hover:bg-foreground/30" />
-            <Button
+            <div className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-black/30" />
+            <button
               type="button"
-              variant="secondary"
-              size="icon-lg"
-              className="absolute top-1/2 left-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full"
               onClick={() => setIsPlaying(true)}
               aria-label={`Play ${video.title}`}
+              className="absolute inset-0 grid place-items-center"
             >
-              <Play className="ml-0.5 size-5" fill="currentColor" />
-            </Button>
-            <span className="absolute right-2 bottom-2 rounded bg-foreground/70 px-2 py-0.5 text-xs font-medium text-background">
+              <span className="grid h-14 w-14 place-items-center rounded-full bg-white/95 text-primary-deep shadow-lg backdrop-blur transition-transform group-hover:scale-110">
+                <Play size={20} className="ml-0.5" fill="currentColor" />
+              </span>
+            </button>
+            <div className="absolute right-2 bottom-2 rounded bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
               {video.duration}
-            </span>
+            </div>
           </>
         ) : (
           <iframe
@@ -65,7 +63,7 @@ export function InsightsVideoCard({
           />
         )}
       </div>
-      <CardContent className={compact ? "p-6" : "p-5"}>
+      <div className={compact ? "flex flex-col p-6" : "p-5"}>
         <h3
           className={`font-semibold leading-snug ${
             compact ? "line-clamp-2 text-lg" : "text-base"
@@ -82,7 +80,7 @@ export function InsightsVideoCard({
             {video.therapist}
           </p>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

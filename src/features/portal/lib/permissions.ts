@@ -23,7 +23,7 @@ export type PortalNavItem = {
 export const PORTAL_NAV: PortalNavItem[] = [
   {
     href: "/dashboard",
-    label: "Overview",
+    label: "Dashboard",
     icon: LayoutDashboard,
     roles: ["admin", "receptionist", "customer"],
     group: "Overview",
@@ -51,7 +51,7 @@ export const PORTAL_NAV: PortalNavItem[] = [
   },
   {
     href: "/dashboard/inquiries",
-    label: "Inquiries",
+    label: "Messages",
     icon: Inbox,
     roles: ["admin", "receptionist"],
     group: "Engagement",
@@ -65,7 +65,7 @@ export const PORTAL_NAV: PortalNavItem[] = [
   },
   {
     href: "/dashboard/people",
-    label: "People",
+    label: "Customers",
     icon: Users,
     roles: ["admin"],
     group: "Management",

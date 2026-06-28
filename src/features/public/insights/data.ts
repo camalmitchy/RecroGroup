@@ -9,6 +9,7 @@ export type PopularVideo = {
 
 export type ArticleContent = {
   id: string;
+  slug: string;
   type: "article";
   category: string;
   title: string;
@@ -50,6 +51,7 @@ export type InsightCategory = (typeof categories)[number];
 export const allContent: InsightContent[] = [
   {
     id: "featured-1",
+    slug: "from-the-foxhole-to-the-front-porch",
     type: "article",
     category: "Family",
     title: "From the foxhole to the front porch — a family perspective",
@@ -62,6 +64,7 @@ export const allContent: InsightContent[] = [
   },
   {
     id: "art-1",
+    slug: "the-perfect-storm",
     type: "article",
     category: "Relationships",
     title: "The perfect storm",
@@ -73,6 +76,7 @@ export const allContent: InsightContent[] = [
   },
   {
     id: "art-2",
+    slug: "when-grief-shows-up-at-the-office",
     type: "article",
     category: "Grief & Loss",
     title: "When grief shows up at the office",
@@ -84,6 +88,7 @@ export const allContent: InsightContent[] = [
   },
   {
     id: "art-3",
+    slug: "repair-conversations-for-couples",
     type: "article",
     category: "Relationships",
     title: "Repair conversations for couples",
@@ -95,6 +100,7 @@ export const allContent: InsightContent[] = [
   },
   {
     id: "art-4",
+    slug: "how-children-grieve-differently",
     type: "article",
     category: "Parenting",
     title: "How children grieve differently",
@@ -106,6 +112,7 @@ export const allContent: InsightContent[] = [
   },
   {
     id: "art-5",
+    slug: "five-gentle-ways-to-start-therapy",
     type: "article",
     category: "Therapy 101",
     title: "Five gentle ways to start therapy",
@@ -117,6 +124,7 @@ export const allContent: InsightContent[] = [
   },
   {
     id: "art-7",
+    slug: "anxiety-told-simply",
     type: "article",
     category: "Workplace",
     title: "Anxiety, told simply",
@@ -249,3 +257,13 @@ export function filterInsights(
       return item.category === category;
     });
 }
+
+export function getAllArticles(): ArticleContent[] {
+  return allContent.filter((item): item is ArticleContent => item.type === "article");
+}
+
+export function getArticleMetaBySlug(slug: string): ArticleContent | undefined {
+  return getAllArticles().find((a) => a.slug === slug);
+}
+
+export const articleMetaSlugs = getAllArticles().map((a) => a.slug);

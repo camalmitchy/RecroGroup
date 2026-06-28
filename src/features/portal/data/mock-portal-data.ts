@@ -212,3 +212,219 @@ export const DASHBOARD_QUEUE = {
     { who: "James K.", type: "Bank transfer", status: "Proof not uploaded", action: "Remind" },
   ],
 } as const;
+
+export type MockCustomer = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  type: string;
+  lastActivity: string;
+  bookings: number;
+};
+
+export const MOCK_CUSTOMERS: MockCustomer[] = [
+  { id: "c1", name: "Amina K.", email: "amina@example.com", phone: "+254 700 111 222", type: "Individual", lastActivity: "Today", bookings: 7 },
+  { id: "c2", name: "Wanjiku & James", email: "wj@example.com", phone: "+254 711 333 444", type: "Couple", lastActivity: "Yesterday", bookings: 4 },
+  { id: "c3", name: "Brian O.", email: "brian@example.com", phone: "+254 722 555 666", type: "Family", lastActivity: "2d ago", bookings: 2 },
+  { id: "c4", name: "Grace N.", email: "grace@example.com", phone: "+254 733 777 888", type: "Individual", lastActivity: "3d ago", bookings: 1 },
+  { id: "c5", name: "Acme Ltd", email: "hr@acme.co.ke", phone: "+254 20 555 0100", type: "Corporate", lastActivity: "1w ago", bookings: 3 },
+];
+
+export type MockNewsletterSubscriber = {
+  id: string;
+  email: string;
+  name: string | null;
+  createdAt: string;
+};
+
+export const INITIAL_NEWSLETTER_SUBSCRIBERS: MockNewsletterSubscriber[] = [
+  { id: "n1", email: "hello@example.com", name: "Sarah M.", createdAt: "2026-06-20" },
+  { id: "n2", email: "wellness@corp.co.ke", name: null, createdAt: "2026-06-18" },
+  { id: "n3", email: "faith@example.com", name: "Faith N.", createdAt: "2026-06-15" },
+];
+
+export type MockBlogPost = {
+  id: string;
+  title: string;
+  slug: string;
+  category: string;
+  excerpt: string;
+  content: string;
+  coverImageUrl: string;
+  isPublished: boolean;
+};
+
+export const INITIAL_BLOG_POSTS: MockBlogPost[] = [
+  {
+    id: "bp1",
+    title: "Five gentle ways to start therapy",
+    slug: "five-gentle-ways-to-start-therapy",
+    category: "Therapy 101",
+    excerpt: "Starting therapy can feel daunting. Here are five gentle entry points.",
+    content: "Starting therapy can feel daunting...",
+    coverImageUrl: "/assets/reading-guide.jpg",
+    isPublished: true,
+  },
+  {
+    id: "bp2",
+    title: "From the foxhole to the front porch",
+    slug: "from-the-foxhole-to-the-front-porch",
+    category: "Family",
+    excerpt: "A family perspective on healing after deployment.",
+    content: "When a service member returns home...",
+    coverImageUrl: "/assets/journey-connection.jpg",
+    isPublished: true,
+  },
+];
+
+export type MockMediaItem = {
+  id: string;
+  title: string;
+  kind: "video" | "podcast" | "audio";
+  url: string;
+  description: string;
+  thumbnailUrl: string;
+  isPublished: boolean;
+};
+
+export const INITIAL_MEDIA_ITEMS: MockMediaItem[] = [
+  {
+    id: "m1",
+    title: "Understanding grief in children",
+    kind: "video",
+    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    description: "A short introduction for parents and guardians.",
+    thumbnailUrl: "/assets/grief-camp.jpg",
+    isPublished: true,
+  },
+];
+
+export type MockFaq = {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+  sortOrder: number;
+  isPublished: boolean;
+};
+
+export const INITIAL_FAQS: MockFaq[] = [
+  {
+    id: "f1",
+    question: "How do I book a session?",
+    answer: "Use the Join Us page or contact us directly.",
+    category: "Booking",
+    sortOrder: 1,
+    isPublished: true,
+  },
+  {
+    id: "f2",
+    question: "Do you accept insurance?",
+    answer: "We work with several providers. Contact us for details.",
+    category: "Billing",
+    sortOrder: 2,
+    isPublished: true,
+  },
+];
+
+export type MockTestimonial = {
+  id: string;
+  authorName: string;
+  role: string;
+  quote: string;
+  rating: number;
+  isPublished: boolean;
+};
+
+export const INITIAL_TESTIMONIALS: MockTestimonial[] = [
+  {
+    id: "t1",
+    authorName: "A. M.",
+    role: "Individual therapy client",
+    quote: "I felt heard from the very first session.",
+    rating: 5,
+    isPublished: true,
+  },
+];
+
+export type MockService = {
+  id: string;
+  title: string;
+  slug: string;
+  category: string;
+  description: string;
+  priceKes: number;
+  durationMin: number;
+  isPublished: boolean;
+};
+
+export const INITIAL_SERVICES: MockService[] = [
+  {
+    id: "s1",
+    title: "Individual Therapy",
+    slug: "individual",
+    category: "Therapeutic care",
+    description: "One-to-one sessions tailored to your needs.",
+    priceKes: 5000,
+    durationMin: 50,
+    isPublished: true,
+  },
+  {
+    id: "s2",
+    title: "Couples Therapy",
+    slug: "couples",
+    category: "Therapeutic care",
+    description: "Support for partners navigating change together.",
+    priceKes: 7500,
+    durationMin: 60,
+    isPublished: true,
+  },
+];
+
+export type MockTherapistRecord = {
+  id: string;
+  fullName: string;
+  title: string;
+  email: string;
+  phone: string;
+  bio: string;
+  photoUrl: string;
+  isActive: boolean;
+};
+
+export const INITIAL_THERAPIST_RECORDS: MockTherapistRecord[] = [
+  {
+    id: "t1",
+    fullName: "Dr. Michelle Karume",
+    title: "Clinical Psychologist",
+    email: "michelle@recrogroup.org",
+    phone: "+254 700 000 001",
+    bio: "Specialises in trauma-informed family therapy.",
+    photoUrl: "/assets/founder-portrait.jpg",
+    isActive: true,
+  },
+  {
+    id: "t2",
+    fullName: "Grace Wanjiku",
+    title: "Counselling Psychologist",
+    email: "grace@recrogroup.org",
+    phone: "+254 700 000 002",
+    bio: "Works with children, adolescents, and families.",
+    photoUrl: "",
+    isActive: true,
+  },
+];
+
+export type MockStaffRole = {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  role: "admin" | "receptionist";
+};
+
+export const INITIAL_STAFF_ROLES: MockStaffRole[] = [
+  { id: "sr1", userId: "u1", fullName: "Admin User", email: "admin@recrogroup.org", role: "admin" },
+  { id: "sr2", userId: "u2", fullName: "Reception Desk", email: "reception@recrogroup.org", role: "receptionist" },
+];

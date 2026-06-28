@@ -4,5 +4,5 @@ import { getRequiredSession } from "@/features/portal/lib/portal-guard";
 export default async function SettingsPage() {
   const session = await getRequiredSession("/dashboard/settings");
 
-  return <SettingsPanel role={session.role} />;
+  return <SettingsPanel />;
 }

@@ -8,11 +8,18 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-serif);
   --shadow-soft: var(--shadow-soft);
   --shadow-lift: var(--shadow-lift);
+  --shadow-glow: var(--shadow-glow);
+  --color-primary-deep: var(--primary-deep);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary-soft: var(--secondary-soft);
+  --color-accent-soft: var(--accent-soft);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -52,33 +59,50 @@
 }
 
 :root {
-  --background: oklch(0.975 0.004 95);
-  --surface: oklch(1 0 0);
-  --foreground: oklch(0.28 0.02 250);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.28 0.02 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.28 0.02 250);
-  --primary: oklch(0.52 0.08 150);
-  --primary-foreground: oklch(0.99 0.01 155);
-  --secondary: oklch(0.55 0.08 250);
-  --secondary-foreground: oklch(0.99 0.01 155);
-  --muted: oklch(0.96 0.006 106);
-  --muted-foreground: oklch(0.5 0.02 250);
-  --accent: oklch(0.62 0.06 75);
-  --accent-foreground: oklch(0.99 0.01 155);
-  --destructive: oklch(0.55 0.15 25);
-  --border: oklch(0.93 0.015 150);
-  --input: oklch(0.93 0.015 150);
-  --ring: oklch(0.52 0.08 150);
+  --radius: 1rem;
+
+  --background: #f7f6f3;
+  --surface: #ffffff;
+  --surface-2: #f1f0ec;
+  --foreground: #1f2933;
+  --card: #ffffff;
+  --card-foreground: #1f2933;
+  --popover: #ffffff;
+  --popover-foreground: #1f2933;
+
+  --primary: #4f6f52;
+  --primary-foreground: #ffffff;
+  --primary-deep: #3f5b43;
+  --primary-soft: #e7efe9;
+
+  --secondary: #4a6fa5;
+  --secondary-foreground: #ffffff;
+  --secondary-soft: #eaf1fa;
+
+  --muted: #f1f0ec;
+  --muted-foreground: #52606d;
+
+  --accent: #a68a64;
+  --accent-foreground: #ffffff;
+  --accent-soft: #d8cbb5;
+
+  --destructive: #b85c5c;
+  --border: #e7efe9;
+  --input: #e7efe9;
+  --ring: #4f6f52;
+
   --shadow-soft: 0 1px 2px 0 rgb(17 24 39 / 0.04), 0 1px 3px 0 rgb(17 24 39 / 0.06);
   --shadow-lift: 0 10px 25px -10px rgb(17 24 39 / 0.1), 0 4px 10px -4px rgb(17 24 39 / 0.06);
+  --shadow-glow: 0 12px 40px -12px color-mix(in oklab, var(--primary) 35%, transparent);
+
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+
   --chart-1: oklch(0.871 0.15 154.449);
   --chart-2: oklch(0.723 0.219 149.579);
   --chart-3: oklch(0.627 0.194 149.214);
   --chart-4: oklch(0.527 0.154 150.069);
   --chart-5: oklch(0.448 0.119 151.328);
-  --radius: 0.625rem;
+
   --sidebar: oklch(0.988 0.003 106.5);
   --sidebar-foreground: oklch(0.153 0.006 107.1);
   --sidebar-primary: oklch(0.627 0.194 149.214);
@@ -87,11 +111,19 @@
   --sidebar-accent-foreground: oklch(0.228 0.013 107.4);
   --sidebar-border: oklch(0.93 0.007 106.5);
   --sidebar-ring: oklch(0.737 0.021 106.9);
+
+  --admin-bg: #f4f6f8;
+  --admin-surface: #ffffff;
+  --admin-border: #d9dee3;
+  --admin-primary: #3f5b43;
+  --success: #4f6f52;
+  --warning: #a68a64;
 }
 
 .dark {
   --background: oklch(0.153 0.006 107.1);
   --surface: oklch(0.228 0.013 107.4);
+  --surface-2: oklch(0.286 0.016 107.4);
   --foreground: oklch(0.988 0.003 106.5);
   --card: oklch(0.228 0.013 107.4);
   --card-foreground: oklch(0.988 0.003 106.5);
@@ -99,6 +131,8 @@
   --popover-foreground: oklch(0.988 0.003 106.5);
   --primary: oklch(0.448 0.119 151.328);
   --primary-foreground: oklch(0.982 0.018 155.826);
+  --primary-deep: oklch(0.38 0.1 151);
+  --primary-soft: oklch(0.3 0.04 150);
   --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.286 0.016 107.4);
@@ -128,14 +162,21 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    @apply font-sans;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
   }
-  button:not(:disabled), [role="button"]:not(:disabled) {
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
     cursor: pointer;
-  }
-  html {
-    @apply font-sans;
   }
 
   h1,
@@ -155,6 +196,78 @@
   @media (min-width: 768px) {
     padding-inline: 2rem;
   }
+}
+
+@utility card-lift {
+  transition:
+    transform 250ms ease,
+    box-shadow 250ms ease,
+    border-color 250ms ease;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.005);
+    box-shadow: var(--shadow-lift);
+    border-color: color-mix(in oklab, var(--primary) 40%, var(--border));
+  }
+}
+
+@utility btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: var(--shadow-glow);
+  transition:
+    transform 200ms ease,
+    background 200ms ease,
+    box-shadow 200ms ease;
+
+  &:hover {
+    background: var(--primary-deep);
+    transform: translateY(-1px);
+  }
+}
+
+@utility btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  background: var(--background);
+  color: var(--primary-deep);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1.5px solid color-mix(in oklab, var(--primary) 35%, var(--border));
+  transition:
+    background 200ms ease,
+    border-color 200ms ease;
+
+  &:hover {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+  }
+}
+
+@utility eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  background: var(--primary-soft);
+  color: var(--primary-deep);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 @utility scrollbar-hide {

@@ -56,7 +56,9 @@ export function AppSidebar({ role, session }: AppSidebarProps) {
                   className="size-8 rounded-lg object-contain"
                 />
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Recro Portal</span>
+                  <span className="truncate font-semibold">
+                    {role === "customer" ? "Recro Portal" : "Recro Admin"}
+                  </span>
                   <span className="truncate text-xs text-muted-foreground">
                     {ROLE_LABELS[role]}
                   </span>
