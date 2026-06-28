@@ -4,9 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
-import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -57,15 +56,10 @@ export function SignUpForm() {
       router.refresh();
     } catch (error) {
       if (!applyServerFieldErrors(error, setError)) {
-        setError("root", {
-          type: "server",
-          message: getFormErrorMessage(error),
-        });
+        toast.error(getFormErrorMessage(error));
       }
     }
   });
-
-  const rootError = errors.root?.message ?? getFormErrorMessage(signUp.error);
 
   return (
     <div className="space-y-8">
@@ -76,13 +70,6 @@ export function SignUpForm() {
           your care journey.
         </p>
       </div>
-
-      {rootError ? (
-        <Alert variant="destructive">
-          <AlertCircle />
-          <AlertDescription>{rootError}</AlertDescription>
-        </Alert>
-      ) : null}
 
       <form onSubmit={onSubmit} className="space-y-6" noValidate>
         <FieldGroup>

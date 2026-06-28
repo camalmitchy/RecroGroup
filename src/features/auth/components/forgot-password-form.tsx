@@ -4,7 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -51,16 +52,10 @@ export function ForgotPasswordForm() {
       setSubmitted(true);
     } catch (error) {
       if (!applyServerFieldErrors(error, setError)) {
-        setError("root", {
-          type: "server",
-          message: getFormErrorMessage(error),
-        });
+        toast.error(getFormErrorMessage(error));
       }
     }
   });
-
-  const rootError =
-    errors.root?.message ?? getFormErrorMessage(forgotPassword.error);
 
   if (submitted) {
     return (
@@ -90,13 +85,6 @@ export function ForgotPasswordForm() {
           instructions.
         </p>
       </div>
-
-      {rootError ? (
-        <Alert variant="destructive">
-          <AlertCircle />
-          <AlertDescription>{rootError}</AlertDescription>
-        </Alert>
-      ) : null}
 
       <form onSubmit={onSubmit} className="space-y-6" noValidate>
         <FieldGroup>
