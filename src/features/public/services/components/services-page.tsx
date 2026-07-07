@@ -7,40 +7,43 @@ import { serviceList } from "../data";
 export function ServicesPage() {
   return (
     <>
-      <section className="relative h-[400px] overflow-hidden bg-surface lg:h-[450px]">
+      <section className="relative h-[500px] md:h-[600px] overflow-hidden bg-surface">
         <Image
-          src="/assets/therapy-session.jpg"
-          alt="Therapy session"
+          src="/assets/hero-services.jpg"
+          alt="Care for every stage of your journey"
           fill
           priority
           className="object-cover"
           sizes="100vw"
         />
+        <div className="absolute inset-0 bg-primary-deep/45" />
         <div className="absolute inset-0 z-[1] bg-gradient-to-r from-black/60 via-black/40 to-black/30" />
         <div className="relative z-10 h-full">
           <div className="container-page flex h-full items-center py-16 lg:py-20">
-            <div className="max-w-2xl">
+            <div className="max-w-4xl mx-auto text-center">
               <span className="inline-flex items-center rounded-full border border-white/30 bg-white/20 px-4 py-1.5 text-xs font-semibold tracking-[0.18em] text-white uppercase backdrop-blur-sm">
                 Our Services
               </span>
-              <h1 className="mt-6 font-serif text-5xl leading-[1.05] text-white drop-shadow-lg md:text-6xl">
-                Care that meets you
-                <br />
-                where you are
+              <h1 className="mt-6 font-serif text-5xl leading-[1.05] text-white md:text-6xl lg:text-7xl">
+                Care for every stage of your{" "}
+                <em className="italic text-white/90">journey</em>.
               </h1>
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-white/95 drop-shadow">
-                From individual sessions to family work and organisational
-                wellness — we build the right journey with you.
+              <p className="mt-6 max-w-2xl mx-auto text-base leading-relaxed text-white/95 md:text-lg">
+                Six core services — each one staffed by clinicians trained for
+                that specific kind of work.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/contact" className="btn-primary">
-                  Talk to us <ArrowRight size={16} />
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary-deep hover:bg-primary-deep/90 px-8 py-3 font-semibold text-white transition"
+                >
+                  Book a Session
                 </Link>
                 <Link
-                  href="/join-us"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/40 bg-white/20 px-6 py-2.5 font-semibold text-white backdrop-blur-sm transition hover:bg-white/30"
+                  href="/contact"
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-white/40 bg-white/20 px-8 py-3 font-semibold text-white backdrop-blur-sm transition hover:bg-white/30"
                 >
-                  Book a session
+                  Help Me Choose
                 </Link>
               </div>
             </div>
@@ -78,24 +81,12 @@ export function ServicesPage() {
                 </p>
 
                 <div className="mb-5 border-t border-border/50 pt-4">
-                  <div className="flex items-start justify-between text-sm">
-                    <div>
-                      <p className="mb-1.5 text-[10px] tracking-[0.15em] text-muted-foreground/70 uppercase">
-                        Duration
-                      </p>
-                      <p className="text-[13px] font-normal whitespace-pre-line text-foreground">
-                        {service.duration}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="mb-1.5 text-[10px] tracking-[0.15em] text-muted-foreground/70 uppercase">
-                        From
-                      </p>
-                      <p className="text-[13px] font-normal whitespace-pre-line text-foreground">
-                        {service.price}
-                      </p>
-                    </div>
-                  </div>
+                  <p className="mb-1.5 text-[10px] tracking-[0.15em] text-muted-foreground/70 uppercase">
+                    Duration
+                  </p>
+                  <p className="text-[13px] font-normal text-foreground">
+                    {service.duration}
+                  </p>
                 </div>
 
                 <Link
@@ -107,55 +98,6 @@ export function ServicesPage() {
               </div>
             </article>
           ))}
-        </div>
-      </section>
-
-      <section className="bg-muted/30 py-16 lg:py-20">
-        <div className="container-page">
-          <div className="mx-auto max-w-3xl">
-            <div className="flex flex-col items-center rounded-3xl border border-border bg-card p-8 text-center shadow-[var(--shadow-soft)] lg:p-10">
-              <div className="mb-6 font-serif text-5xl text-primary/20">
-                &ldquo;
-              </div>
-              <blockquote className="font-serif text-lg leading-relaxed text-foreground md:text-xl">
-                I felt heard from the very first session. Recro gave me language
-                for things I had carried silently for years.
-              </blockquote>
-              <div className="mt-6 flex gap-1 text-primary">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <span key={i} className="text-xl">
-                    ★
-                  </span>
-                ))}
-              </div>
-              <p className="mt-3 text-sm font-semibold text-foreground">
-                A. M.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Individual therapy client
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-page bg-background pb-20">
-        <div className="rounded-3xl border border-border bg-muted/30 p-8 text-center md:p-12">
-          <h2 className="mb-4 font-serif text-3xl text-primary-deep md:text-4xl">
-            Not sure where to start?
-          </h2>
-          <p className="mx-auto mb-8 max-w-2xl text-muted-foreground">
-            A short intake call helps match you with the right therapist and
-            approach. We&apos;re here to guide you.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link href="/contact" className="btn-primary">
-              Talk to us
-            </Link>
-            <Link href="/join-us" className="btn-secondary">
-              Book a session
-            </Link>
-          </div>
         </div>
       </section>
     </>

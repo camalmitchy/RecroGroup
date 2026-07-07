@@ -87,71 +87,85 @@ function HomeBookingForm() {
 export function HomePage() {
   return (
     <>
-      <section className="relative min-h-[600px] overflow-hidden bg-background lg:min-h-[700px]">
-        <Image
-          src="/assets/landing.png"
-          alt="A diverse family sitting together in a bright sunlit therapy room"
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-black/70 via-black/50 to-black/20" />
-        <div className="relative z-10 h-full">
-          <div className="container-page flex h-full min-h-[600px] items-end pt-12 pb-16 md:pt-20 md:pb-20 lg:min-h-[700px]">
-            <div className="max-w-2xl">
-              <h1 className="text-4xl leading-[1.05] font-semibold tracking-tight text-white drop-shadow-lg sm:text-5xl lg:text-6xl">
-                Walking with you, step by step.
-              </h1>
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-white/95 drop-shadow lg:text-lg">
-                A compassionate space for healing, growth, and emotional wellness
-                — for individuals, couples, families, and organisations navigating
-                life&apos;s most difficult moments.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Link href="/join-us" className="btn-primary">
-                  Book a session <ArrowRight size={16} />
-                </Link>
-                <Link
-                  href="/services"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/40 bg-white/20 px-6 py-2.5 font-semibold text-white backdrop-blur-sm transition hover:bg-white/30"
-                >
-                  Explore services
-                </Link>
-              </div>
-              <dl className="mt-12 grid max-w-md grid-cols-3 gap-6">
-                {homeStats.map((s) => (
-                  <div key={s.v}>
-                    <dt className="text-3xl font-semibold text-white drop-shadow">
-                      {s.k}
-                    </dt>
-                    <dd className="mt-1 text-xs text-white/80">{s.v}</dd>
-                  </div>
-                ))}
-              </dl>
+      {/* HERO */}
+      <section className="relative px-6 pt-8 pb-24 lg:pt-12 lg:pb-32">
+        <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-2">
+          <div>
+            <h1 className="mt-6 font-serif text-5xl leading-[1.05] text-foreground md:text-7xl">
+              Restore your{" "}
+              <span className="italic text-primary-deep">Life</span>.
+            </h1>
+            <p className="mt-7 max-w-lg text-lg leading-relaxed text-muted-foreground">
+              A compassionate space for healing, growth, and emotional wellness
+              — for individuals, couples, families, and organisations navigating
+              life&rsquo;s most difficult moments.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link href="/contact" className="btn-primary">
+                Book a Session
+              </Link>
+              <Link href="/services" className="btn-secondary">
+                Explore Services
+              </Link>
             </div>
+            <dl className="mt-12 grid grid-cols-3 gap-6 border-t border-border pt-8 max-w-md">
+              <div>
+                <dt className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Years
+                </dt>
+                <dd className="mt-1 font-serif text-2xl text-foreground">
+                  12+
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Clients
+                </dt>
+                <dd className="mt-1 font-serif text-2xl text-foreground">
+                  3,000+
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Therapists
+                </dt>
+                <dd className="mt-1 font-serif text-2xl text-foreground">14</dd>
+              </div>
+            </dl>
+          </div>
+          <div className="relative">
+            <Image
+              src="/assets/hero-therapy-room.jpg"
+              alt="A peaceful, sunlit therapy room with linen curtains, two warm armchairs, and a small plant"
+              width={1200}
+              height={1200}
+              className="aspect-square w-full rounded-3xl object-cover shadow-[var(--shadow-card)] ring-1 ring-border"
+              priority
+            />
+            <figure className="absolute -bottom-8 -left-6 hidden max-w-xs rounded-2xl bg-card border border-border p-6 shadow-[var(--shadow-card)] md:block">
+              <blockquote className="font-serif text-lg italic leading-snug text-foreground">
+                &ldquo;In the midst of winter, I found there was, within me, an
+                invincible summer.&rdquo;
+              </blockquote>
+              <figcaption className="mt-3 text-xs font-semibold uppercase tracking-wider text-primary-deep">
+                — Albert Camus
+              </figcaption>
+            </figure>
           </div>
         </div>
       </section>
 
       <section className="container-page bg-background py-20">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div className="max-w-xl">
-            <span className="eyebrow">What we do</span>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
-              Support for every season of life
-            </h2>
-            <p className="mt-3 text-muted-foreground">
-              Whether you&apos;re navigating loss, growing as a couple, raising
-              kids or leading a team — there&apos;s a Recro service for that.
-            </p>
-          </div>
-          <Link
-            href="/services"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-deep transition-all hover:gap-2.5"
-          >
-            All services <ArrowRight size={14} />
-          </Link>
+        <div className="mx-auto max-w-4xl text-center">
+          <span className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground">
+            What we offer
+          </span>
+          <h2 className="mt-6 font-serif text-4xl md:text-5xl lg:text-6xl text-foreground">
+            Support tailored for you
+          </h2>
+          <p className="mt-6 text-base md:text-lg text-muted-foreground mx-auto max-w-3xl">
+            Specialised care for every stage of life's journey — alone, together, or as a team.
+          </p>
         </div>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -342,11 +356,11 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#2b332e] text-background">
+      <section className="bg-primary-deep text-background">
         <div className="container-page py-20">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <span className="text-xs font-semibold tracking-[0.2em] text-accent uppercase">
+              <span className="text-xs font-semibold tracking-[0.2em] text-primary-soft uppercase">
                 Media &amp; insights
               </span>
               <h2 className="mt-4 font-serif text-4xl tracking-tight text-background md:text-5xl">
@@ -354,8 +368,8 @@ export function HomePage() {
               </h2>
             </div>
             <Link
-              href="/insights"
-              className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-accent uppercase transition-all hover:gap-3"
+              href="/media"
+              className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-primary-soft uppercase transition-all hover:gap-3"
             >
               View media library <ArrowRight size={14} />
             </Link>

@@ -34,7 +34,7 @@ export function HomeVideoCard({ video }: { video: HomeVideo }) {
               type="button"
               variant="secondary"
               size="icon-lg"
-              className="absolute top-1/2 left-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              className="absolute top-1/2 left-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary hover:bg-primary/90 text-white"
               onClick={() => setIsPlaying(true)}
               aria-label={`Play ${video.title}`}
             >

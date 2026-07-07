@@ -21,9 +21,9 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/individual-therapy.svg",
     title: "Individual Therapy",
     description:
-      "Personalised psychotherapy for anxiety, depression, trauma, identity and life transitions.",
-    duration: "60 minutes",
-    price: "From KES 5,000",
+      "Confidential, judgment-free space to slow down and make sense of what you're carrying. Therapists use evidence-based approaches adapted to your therapy goals.",
+    duration: "50 mins",
+    price: "",
   },
   {
     id: "02",
@@ -31,9 +31,9 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/family-therapy.svg",
     title: "Family Therapy",
     description:
-      "Whole-family sessions to navigate conflict, transitions, blended-family dynamics and more.",
-    duration: "90 minutes",
-    price: "From KES 8,000",
+      "Works with the whole system, helping each person feel heard while creating language and structure for the family to function with warmth, clarity, and safety.",
+    duration: "50 mins",
+    price: "",
   },
   {
     id: "03",
@@ -41,9 +41,9 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/couples-therapy.svg",
     title: "Couples Therapy",
     description:
-      "Communication, trust repair, intimacy and decision-making support for partners.",
-    duration: "75 minutes",
-    price: "From KES 7,500",
+      "Helps partners slow down reactive cycles, rebuild trust, and reconnect. Sessions are emotionally focused, non-blaming, and culturally attuned.",
+    duration: "50 mins",
+    price: "",
   },
   {
     id: "04",
@@ -51,29 +51,29 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/group-therapy.svg",
     title: "Group Therapy",
     description:
-      "Themed therapeutic groups: grief, parenting, anxiety, divorce recovery and growth.",
-    duration: "90 minutes\n8 weeks",
-    price: "From KES 3,500\nper session",
+      "Small, carefully facilitated groups provide connection, perspective, and skills practice that complements individual work beautifully.",
+    duration: "2 hours",
+    price: "",
   },
   {
     id: "05",
     slug: "children",
     icon: "/assets/icons/grief-camp.svg",
-    title: "Grief Camps",
+    title: "Grief Camp",
     description:
-      "Structured healing retreats for children and families navigating loss and bereavement.",
-    duration: "3-5 day\nprogram",
-    price: "From KES 12,000",
+      "A child-safe, family-friendly program providing young people with language, ritual, and community around loss. Designed and led by licensed clinicians with care for age, faith, and family context.",
+    duration: "3 days",
+    price: "",
   },
   {
     id: "06",
     slug: "corporate",
     icon: "/assets/icons/corporate-speaking.svg",
-    title: "Corporate Speaking",
+    title: "Corporate Speaking & Workshops",
     description:
-      "EAPs, workshops, manager debriefs and team check-ins for healthy organizations.",
-    duration: "60–180 minutes",
-    price: "On request",
+      "Tailored programs for organizations that prioritize mental health. Engagements range from 60-minute keynotes to multi-session wellness programs, grounded in clinical insight.",
+    duration: "minimum 2 hours",
+    price: "",
   },
 ];
 

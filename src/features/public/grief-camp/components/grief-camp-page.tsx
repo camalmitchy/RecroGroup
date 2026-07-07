@@ -1,61 +1,35 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Calendar,
-  CheckCircle2,
-  Download,
-  HandHeart,
-  Landmark,
-  UserRound,
-  Users,
-  Wallet,
-} from "lucide-react";
+import { Check, ArrowRight, Heart } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
-  infoStrip,
+  camperPricing,
+  parentPricing,
   journeyChecklist,
-  journeyPillars,
-  pricingBlocks,
 } from "../data";
 
-const infoIcons = [Users, Calendar, Wallet, UserRound] as const;
-
-function JourneyImageCard({
-  title,
-  image,
-  className,
-}: {
-  title: string;
-  image: string;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`group relative aspect-[4/3] overflow-hidden rounded-2xl border border-border/30 bg-surface/60 transition-shadow hover:shadow-sm ${className ?? ""}`}
-    >
-      <div className="relative size-full overflow-hidden">
-        <Image
-          src={image}
-          alt={title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 1024px) 50vw, 25vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-      </div>
-      <div className="absolute inset-x-0 bottom-0 p-4 text-center">
-        <p className="text-xs font-semibold text-white drop-shadow-lg lg:text-sm">
-          {title}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export function GriefCampPage() {
+  const concerns = [
+    "Loss of a parent or sibling",
+    "Sudden or traumatic loss",
+    "Complicated grief reactions",
+    "Social withdrawal after loss",
+    "Difficulty expressing grief",
+    "Anniversary reactions",
+  ];
+
+  const expectations = [
+    "Complete a brief application form sharing your child's story and needs.",
+    "Attend a pre-camp briefing session where we meet families and answer questions.",
+    "Drop off on Friday afternoon — we handle everything from meals to activities to bedtime.",
+    "Join us for a closing circle on Sunday where campers share one thing they're taking home.",
+    "Receive a post-camp integration guide to support your child's continued healing.",
+  ];
+
   return (
     <>
+      {/* Hero Section */}
       <section className="relative min-h-[500px] overflow-hidden bg-surface lg:min-h-[600px]">
         <Image
           src="/assets/grief-cam.png"
@@ -82,257 +56,328 @@ export function GriefCampPage() {
                 — with company, with kindness, and with time.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/join-us" className="btn-primary">
-                  Apply for Grief Camp <ArrowRight size={16} />
-                </Link>
-                <a
-                  href="#"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/40 bg-white/20 px-6 py-2.5 font-semibold text-white backdrop-blur-sm transition hover:bg-white/30"
+                <Button asChild size="lg" className="rounded-full">
+                  <Link href="/contact">Apply for Grief Camp</Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full border-2 border-white/40 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
                 >
-                  <Download size={16} /> Download Flyer
-                </a>
+                  <Link href="/contact">Download Flyer</Link>
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="container-page bg-background py-16 lg:py-20">
-        <div className="grid gap-12 lg:grid-cols-12">
-          <div className="lg:col-span-6">
-            <h2 className="font-serif text-3xl text-primary-deep md:text-4xl">
-              Understanding the Journey
-            </h2>
-            <p className="mt-6 leading-relaxed text-muted-foreground">
-              Grief can feel isolating, especially for teens. Our camp provides
-              a structured yet gentle environment where adolescents can process
-              their feelings without pressure.
-            </p>
-            <p className="mt-4 leading-relaxed text-muted-foreground">
-              Led by specialised grief counsellors, the weekend balances
-              therapeutic activities with traditional camp fun, allowing teens
-              to be themselves while connecting with peers who truly understand.
-            </p>
-            <ul className="mt-8 space-y-3">
-              {journeyChecklist.map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <CheckCircle2
-                    size={20}
-                    className="mt-0.5 shrink-0 text-primary"
-                  />
-                  <span className="text-sm text-foreground">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="lg:col-span-6">
-            <div className="grid grid-cols-2 gap-3 lg:gap-4">
-              <div className="space-y-3 lg:space-y-4">
-                <JourneyImageCard
-                  title={journeyPillars[0].title}
-                  image={journeyPillars[0].image}
-                />
-                <JourneyImageCard
-                  title={journeyPillars[2].title}
-                  image={journeyPillars[2].image}
-                  className="mt-4 lg:mt-6"
-                />
-              </div>
-              <div className="space-y-3 lg:space-y-4">
-                <JourneyImageCard
-                  title={journeyPillars[1].title}
-                  image={journeyPillars[1].image}
-                  className="mt-2 lg:mt-3"
-                />
-                <JourneyImageCard
-                  title={journeyPillars[3].title}
-                  image={journeyPillars[3].image}
-                  className="mt-4 lg:mt-6"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-14 grid gap-6 rounded-3xl border border-border bg-muted/50 p-6 md:grid-cols-4 md:divide-x md:divide-border md:p-8">
-          {infoStrip.map(({ title, body }, index) => {
-            const Icon = infoIcons[index];
-            return (
-              <div
-                key={title}
-                className="md:px-6 md:first:pl-0 md:last:pr-0"
-              >
-                <div className="flex items-center gap-2">
-                  <Icon size={18} className="text-primary" />
-                  <p className="text-sm font-semibold text-foreground">
-                    {title}
-                  </p>
-                </div>
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                  {body}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="bg-muted/30 py-16 lg:py-20">
-        <div className="container-page">
-          <div className="mx-auto max-w-3xl">
-            <div className="flex flex-col items-center rounded-3xl border border-border bg-card p-8 text-center shadow-[var(--shadow-soft)] lg:p-10">
-              <div className="mb-6 font-serif text-5xl text-primary/20">
-                &ldquo;
-              </div>
-              <blockquote className="font-serif text-lg leading-relaxed text-foreground md:text-xl">
-                Camp gave my daughter friends who understood without her having
-                to explain. It gave me hope.
-              </blockquote>
-              <div className="mt-6 flex gap-1 text-primary">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <span key={i} className="text-xl">
-                    ★
-                  </span>
-                ))}
-              </div>
-              <p className="mt-3 text-sm font-semibold text-foreground">
-                Parent of camper
+      {/* Main Content */}
+      <section className="px-6 py-20">
+        <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[2fr_1fr]">
+          <div className="space-y-12">
+            {/* Who this helps */}
+            <Block title="Who this helps">
+              <p className="text-muted-foreground leading-relaxed">
+                Grief Camp is designed for adolescents aged 10–16 who have
+                experienced the death of a parent, sibling, or close family
+                member. It's for kids who are navigating loss and need a place
+                where they don't have to explain, pretend, or hold back.
               </p>
-              <p className="text-xs text-muted-foreground">Grief Camp family</p>
-            </div>
-          </div>
-        </div>
-      </section>
+            </Block>
 
-      <section id="pricing" className="container-page bg-background pb-16">
-        <h2 className="text-center font-serif text-3xl text-primary-deep md:text-4xl">
-          2026 Pricing
-        </h2>
-        <div className="mx-auto mt-10 grid max-w-5xl gap-6 lg:grid-cols-2">
-          {pricingBlocks.map((block) => (
-            <div
-              key={block.title}
-              className="rounded-3xl border border-border bg-card p-7 shadow-[var(--shadow-soft)]"
-            >
-              <h3 className="flex items-center gap-2 text-base font-semibold text-primary-deep">
-                <UserRound size={18} className="text-primary" /> {block.title}
-              </h3>
-              <ul className="mt-5 divide-y divide-border">
-                {block.tiers.map((tier) => (
-                  <li
-                    key={tier.label}
-                    className="flex items-center justify-between py-4"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold">{tier.label}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {tier.deadline}
-                      </p>
-                    </div>
-                    <span className="text-base font-semibold text-primary-deep">
-                      {tier.price}
-                    </span>
+            {/* Common concerns */}
+            <Block title="Common concerns we work with">
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {concerns.map((c) => (
+                  <li key={c} className="flex items-start gap-2.5 text-foreground">
+                    <Check
+                      className="mt-0.5 size-4 text-primary"
+                      strokeWidth={2.5}
+                    />
+                    <span className="text-sm">{c}</span>
                   </li>
                 ))}
               </ul>
-            </div>
-          ))}
-        </div>
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Fees cover accommodation, meals, activities, materials and
-          professional support.
-        </p>
-      </section>
+            </Block>
 
-      <section className="container-page bg-background pb-16">
-        <h2 className="text-center font-serif text-3xl text-primary-deep md:text-4xl">
-          Payment Options
-        </h2>
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
-          <PaymentCard
-            title="M-PESA"
-            icon={Wallet}
-            lines={[
-              "Buy Goods and Services",
-              <>
-                <span className="font-semibold">Till number:</span> 747736
-              </>,
-            ]}
-          />
-          <PaymentCard
-            title="Bank Transfer (KES)"
-            icon={Landmark}
-            lines={[
-              "SBM Bank · Recro Group Limited",
-              "Acc: 0182074946003 · Code 60 · Branch 018",
-              <>
-                <span className="font-semibold">Swift:</span> SBMKKENA ·{" "}
-                <span className="font-semibold">Ref:</span> GRIEF CAMP
-              </>,
-            ]}
-          />
-          <PaymentCard
-            title="USD Account"
-            icon={Landmark}
-            lines={[
-              "SBM Bank · Recro Group Limited",
-              "Acc: 0182074946003 · Code 60 · Branch 018",
-              <>
-                <span className="font-semibold">Swift:</span> CKENKENA ·{" "}
-                <span className="font-semibold">Ref:</span> GRIEF CAMP
-              </>,
-            ]}
-          />
-        </div>
+            {/* What to expect */}
+            <Block title="What to expect">
+              <ol className="space-y-4">
+                {expectations.map((e, i) => (
+                  <li key={i} className="flex gap-4">
+                    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted font-serif text-sm text-foreground">
+                      {i + 1}
+                    </span>
+                    <span className="text-muted-foreground leading-relaxed">
+                      {e}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </Block>
 
-        <div className="mt-8 flex flex-col gap-6 rounded-3xl border border-border bg-muted/50 p-6 md:flex-row md:items-center md:p-8">
-          <div className="flex flex-1 items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-card">
-              <HandHeart size={24} className="text-primary" />
+            {/* Camp logistics */}
+            <Block title="Camp logistics">
+              <dl className="grid gap-6 sm:grid-cols-3">
+                {[
+                  ["Age group", "10–16 years"],
+                  ["Next camp", "Aug 14-16, 2026"],
+                  ["Format", "Residential weekend"],
+                  ["Camp fee", "From KES 11,000"],
+                  ["Scholarships", "Available"],
+                  ["Capacity", "20 children / camp"],
+                ].map(([k, v]) => (
+                  <div key={k}>
+                    <dt className="text-xs uppercase tracking-wider text-muted-foreground">
+                      {k}
+                    </dt>
+                    <dd className="mt-1 font-serif text-lg text-foreground">
+                      {v}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button asChild size="lg" className="rounded-full">
+                  <Link href="/contact">Apply for Grief Camp</Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full"
+                >
+                  <Link href="/contact">Sponsor a Child</Link>
+                </Button>
+              </div>
+              <p className="mt-4 text-xs text-muted-foreground">
+                Camp flyers for upcoming seasons are published here by our admin
+                team as soon as they are confirmed.
+              </p>
+            </Block>
+
+            {/* What makes camp different */}
+            <Block title="What makes camp different">
+              <ul className="space-y-3">
+                {journeyChecklist.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <Check
+                      className="mt-0.5 size-5 shrink-0 text-primary"
+                      strokeWidth={2.5}
+                    />
+                    <span className="text-sm text-foreground">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </Block>
+          </div>
+
+          {/* Sidebar */}
+          <aside className="space-y-6 lg:sticky lg:top-28 h-fit">
+            {/* At a glance */}
+            <div className="rounded-3xl bg-muted/50 border border-border p-7">
+              <h3 className="eyebrow">At a glance</h3>
+              <dl className="mt-5 space-y-4 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Duration</dt>
+                  <dd className="text-foreground">3 days / 2 nights</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Pricing</dt>
+                  <dd className="text-foreground">From KES 11,000</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Location</dt>
+                  <dd className="text-foreground">Residential camp</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Next camp</dt>
+                  <dd className="text-foreground">Aug 14-16, 2026</dd>
+                </div>
+              </dl>
+              <div className="mt-6">
+                <Button asChild size="lg" className="w-full rounded-full">
+                  <Link href="/contact">Apply now</Link>
+                </Button>
+              </div>
             </div>
-            <div>
-              <h3 className="font-serif text-xl text-primary-deep">
-                Sponsor a Child
-              </h3>
-              <p className="mt-1 max-w-xl text-sm leading-relaxed text-muted-foreground">
-                Your generosity can give a grieving child the chance to heal,
-                grow and remember they are not alone.
+
+            {/* Pricing breakdown */}
+            <div className="rounded-3xl bg-card border border-border p-7">
+              <h3 className="eyebrow">2026 Pricing</h3>
+              <div className="mt-5 space-y-6">
+                {/* Camper pricing */}
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                    For Campers
+                  </p>
+                  <ul className="space-y-2">
+                    {camperPricing.map((tier) => (
+                      <li
+                        key={tier.label}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <div>
+                          <span className="font-medium text-foreground">
+                            {tier.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {tier.deadline}
+                          </span>
+                        </div>
+                        <span className="font-semibold text-primary-deep">
+                          {tier.price}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Parent pricing */}
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                    For Parents
+                  </p>
+                  <ul className="space-y-2">
+                    {parentPricing.map((tier) => (
+                      <li
+                        key={tier.label}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <div>
+                          <span className="font-medium text-foreground">
+                            {tier.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {tier.deadline}
+                          </span>
+                        </div>
+                        <span className="font-semibold text-primary-deep">
+                          {tier.price}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <p className="mt-4 text-xs text-muted-foreground">
+                Includes accommodation, meals, activities & counselling.
               </p>
             </div>
+          </aside>
+        </div>
+      </section>
+
+      {/* Related Resources */}
+      <section className="bg-muted/30 px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="font-serif text-3xl text-foreground md:text-4xl">
+            Related reading
+          </h2>
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                category: "Parenting",
+                title: "Talking to Children About Death",
+                excerpt:
+                  "Age-appropriate ways to discuss loss with your children and support them through grief.",
+              },
+              {
+                category: "Grief",
+                title: "Understanding Complex Grief",
+                excerpt:
+                  "Grief isn't linear. Learn about the different stages and how to navigate the complexity of loss.",
+              },
+              {
+                category: "Grief",
+                title: "Navigating Holidays After Loss",
+                excerpt:
+                  "Practical guidance for managing special occasions and family gatherings while grieving.",
+              },
+            ].map((r, i) => (
+              <Link
+                key={i}
+                href="/resources"
+                className="group rounded-3xl bg-card border border-border p-7 transition-all hover:-translate-y-1 hover:shadow-lg"
+              >
+                <span className="inline-block rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-deep">
+                  {r.category}
+                </span>
+                <h3 className="mt-3 font-serif text-xl text-foreground">
+                  {r.title}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {r.excerpt}
+                </p>
+                <span className="mt-5 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary-deep">
+                  Read more{" "}
+                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Link>
+            ))}
           </div>
-          <Link
-            href="/contact"
-            className="btn-secondary inline-flex shrink-0 self-start md:self-auto"
-          >
-            Learn about Sponsorship <ArrowRight size={16} />
-          </Link>
+        </div>
+      </section>
+
+      {/* Other Services */}
+      <section className="px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="font-serif text-3xl text-foreground md:text-4xl">
+            Other services
+          </h2>
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                title: "Individual Therapy",
+                description: "One-on-one psychotherapy for personal growth",
+                href: "/services/individual",
+              },
+              {
+                title: "Family Therapy",
+                description: "Whole-family sessions for stronger connections",
+                href: "/services/family",
+              },
+              {
+                title: "Group Therapy",
+                description: "Shared healing experiences with peer support",
+                href: "/services/group",
+              },
+            ].map((s) => (
+              <Link
+                key={s.title}
+                href={s.href}
+                className="group rounded-3xl border border-border bg-card p-7 hover:border-primary/30 hover:shadow-lg transition-all"
+              >
+                <h3 className="font-serif text-xl text-foreground">
+                  {s.title}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {s.description}
+                </p>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
     </>
   );
 }
 
-function PaymentCard({
+function Block({
   title,
-  icon: Icon,
-  lines,
+  children,
 }: {
   title: string;
-  icon: typeof Wallet;
-  lines: React.ReactNode[];
+  children: React.ReactNode;
 }) {
   return (
-    <div className="card-lift rounded-3xl border border-border bg-card p-6">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground">{title}</p>
-        <Icon size={20} className="text-primary" />
-      </div>
-      <ul className="mt-4 space-y-1.5 text-xs leading-relaxed text-muted-foreground">
-        {lines.map((line, i) => (
-          <li key={i}>{line}</li>
-        ))}
-      </ul>
+    <div>
+      <h2 className="font-serif text-2xl text-foreground md:text-3xl">
+        {title}
+      </h2>
+      <div className="mt-5">{children}</div>
     </div>
   );
 }

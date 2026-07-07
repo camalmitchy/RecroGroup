@@ -1,11 +1,19 @@
-"use client";
+import type { Metadata } from "next";
 
-import { useEffect } from "react";
+import { FaqPage } from "@/features/public/faq/components/faq-page";
 
-export default function FaqRedirectPage() {
-  useEffect(() => {
-    window.location.replace("/contact#faq");
-  }, []);
+export const metadata: Metadata = {
+  title: "FAQ | Recro Group",
+  description:
+    "Answers to common questions about therapy, fees, confidentiality, sessions and Grief Camp at Recro Group.",
+  openGraph: {
+    title: "FAQ | Recro Group",
+    description:
+      "Answers to common questions about therapy, fees, confidentiality, sessions and Grief Camp at Recro Group.",
+    url: "/faq",
+  },
+};
 
-  return null;
+export default function Page() {
+  return <FaqPage />;
 }
