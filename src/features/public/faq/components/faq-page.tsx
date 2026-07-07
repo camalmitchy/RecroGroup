@@ -18,7 +18,7 @@ export function FaqPage() {
             {/* Hero Section */}
             <section className="relative h-[500px] md:h-[600px] overflow-hidden">
                 <Image
-                    src="/assets/landing.png"
+                    src="/assets/home.png"
                     alt="FAQ"
                     fill
                     className="object-cover"

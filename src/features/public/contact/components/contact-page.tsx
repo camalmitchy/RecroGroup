@@ -12,6 +12,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const locations = [
+  {
+    id: "nairobi",
+    name: "Nairobi",
+    address: "Karen, Nairobi",
+    coordinates: { lat: -1.3195, lng: 36.7076 },
+    mapUrl: "https://www.google.com/maps?q=-1.3195,36.7076",
+    phone: "+254 700 000 000",
+    hours: "Mon–Sat, 8:30am – 6:00pm",
+  },
+  {
+    id: "mombasa",
+    name: "Mombasa",
+    address: "Nyali, Mombasa",
+    coordinates: { lat: -4.0435, lng: 39.6682 },
+    mapUrl: "https://www.google.com/maps?q=-4.0435,39.6682",
+    phone: "+254 700 000 001",
+    hours: "Mon–Sat, 9:00am – 5:30pm",
+  },
+  {
+    id: "nakuru",
+    name: "Nakuru",
+    address: "Milimani, Nakuru",
+    coordinates: { lat: -0.3031, lng: 36.0800 },
+    mapUrl: "https://www.google.com/maps?q=-0.3031,36.0800",
+    phone: "+254 700 000 002",
+    hours: "Mon–Sat, 9:00am – 5:30pm",
+  },
+];
 
 export function ContactPage() {
   const [formData, setFormData] = useState({
@@ -19,6 +50,7 @@ export function ContactPage() {
     phone: "",
     email: "",
     service: "",
+    location: "",
     message: "",
   });
 
@@ -33,18 +65,18 @@ export function ContactPage() {
       {/* Hero Section */}
       <section className="relative h-[500px] md:h-[600px] overflow-hidden">
         <Image
-          src="/assets/therapy-session.jpg"
+          src="/assets/therapy.png"
           alt="Contact us"
           fill
           className="object-cover"
           sizes="100vw"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/30" />
+        <div className="absolute inset-0 bg-primary-deep/35" />
 
         <div className="relative z-10 flex h-full items-center">
           <div className="container-page w-full">
-            <div className="max-w-3xl mx-auto text-center">
+            <div className="max-w-2xl">
               <span className="inline-flex items-center rounded-full bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 text-xs font-semibold tracking-[0.18em] uppercase text-white">
                 Contact Us
               </span>
@@ -53,7 +85,7 @@ export function ContactPage() {
                 <br />
                 We'll take it from there.
               </h1>
-              <p className="mt-6 text-white/95 leading-relaxed text-base max-w-2xl mx-auto">
+              <p className="mt-6 text-white/95 leading-relaxed text-base max-w-xl">
                 Tell us a little about what's going on. We respond within one
                 working day, and we'll gently suggest where to start — therapy, a
                 group, or a call with our team.
@@ -119,6 +151,27 @@ export function ContactPage() {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2 uppercase tracking-wider text-xs">
+                Preferred Location
+              </label>
+              <Select
+                value={formData.location}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, location: value })
+                }
+              >
+                <SelectTrigger className="w-full rounded-xl border-0 bg-[#F4F1EA] px-4 py-3 text-sm">
+                  <SelectValue placeholder="Select a location..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nairobi">Nairobi</SelectItem>
+                  <SelectItem value="mombasa">Mombasa</SelectItem>
+                  <SelectItem value="nakuru">Nakuru</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2 uppercase tracking-wider text-xs">
                 I'm interested in
               </label>
               <Select
@@ -170,42 +223,103 @@ export function ContactPage() {
 
           {/* Contact Info & Crisis Notice */}
           <div className="space-y-6">
-            {/* Reach us directly */}
+            {/* Our Locations */}
             <div className="rounded-2xl bg-white p-8 shadow-sm">
               <h3 className="text-lg font-serif font-semibold mb-6">
-                Reach us directly
+                Our Locations
+              </h3>
+
+              <Tabs defaultValue="nairobi" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-6">
+                  {locations.map((location) => (
+                    <TabsTrigger
+                      key={location.id}
+                      value={location.id}
+                      className="data-[state=active]:bg-primary-deep data-[state=active]:text-white"
+                    >
+                      {location.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                {locations.map((location) => (
+                  <TabsContent key={location.id} value={location.id} className="space-y-4">
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10">
+                          <MapPin className="size-4 text-primary-deep" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{location.address}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Coordinates: {location.coordinates.lat}, {location.coordinates.lng}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10">
+                          <Phone className="size-4 text-primary-deep" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{location.phone}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10">
+                          <Clock className="size-4 text-primary-deep" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{location.hours}</p>
+                        </div>
+                      </div>
+
+                      <div className="pt-2">
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="w-full rounded-full"
+                        >
+                          <a
+                            href={location.mapUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            View on Map
+                          </a>
+                        </Button>
+                      </div>
+
+                      {/* Embedded Map */}
+                      <div className="rounded-xl overflow-hidden border border-border">
+                        <iframe
+                          width="100%"
+                          height="200"
+                          style={{ border: 0 }}
+                          src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${location.coordinates.lat},${location.coordinates.lng}&zoom=15`}
+                          allowFullScreen
+                          title={`Map of ${location.name}`}
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </div>
+
+            {/* General Contact */}
+            <div className="rounded-2xl bg-white p-8 shadow-sm">
+              <h3 className="text-lg font-serif font-semibold mb-6">
+                General Inquiries
               </h3>
               <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10">
-                    <Phone className="size-4 text-primary-deep" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">+254 700 000 000</p>
-                  </div>
-                </div>
                 <div className="flex items-start gap-3">
                   <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10">
                     <Mail className="size-4 text-primary-deep" />
                   </div>
                   <div>
                     <p className="text-sm font-medium">hello@recrogroup.co.ke</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10">
-                    <MapPin className="size-4 text-primary-deep" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Karen, Nairobi · Kenya</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10">
-                    <Clock className="size-4 text-primary-deep" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Mon–Sat, 8:30am – 6:00pm</p>
                   </div>
                 </div>
               </div>
