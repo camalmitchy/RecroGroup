@@ -12,10 +12,17 @@ function getPool() {
     const connectionString = process.env.DATABASE_URL;
 
     if (!connectionString) {
-      throw new Error("DATABASE_URL environment variable is not set");
+      // During build time or when DATABASE_URL is not set,
+      // create a placeholder pool to allow the build to succeed
+      console.warn("DATABASE_URL not set - using placeholder connection");
+      globalForPrisma.pool = new Pool({
+        connectionString: "postgresql://placeholder:placeholder@localhost:5432/placeholder",
+        // Don't actually try to connect during build
+        max: 0,
+      });
+    } else {
+      globalForPrisma.pool = new Pool({ connectionString });
     }
-
-    globalForPrisma.pool = new Pool({ connectionString });
   }
 
   return globalForPrisma.pool;
