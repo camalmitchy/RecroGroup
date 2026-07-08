@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogIn } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -30,7 +30,7 @@ export function SiteHeader() {
             size="lg"
           >
             <Link href="/login">
-              <LogIn className="mr-2 size-4" />
+              <ArrowRight className="mr-2 size-4" />
               Sign in
             </Link>
           </Button>

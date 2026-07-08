@@ -86,7 +86,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     titleRest: "Therapy",
     ctaLabel: "Book an individual session",
     icon: HeartHandshake,
-    heroImage: "/assets/therapy-session.jpg",
+    heroImage: "/assets/individual.png",
     glanceImage: "/assets/therapy-session.jpg",
     ctaImage: "/assets/landing.png",
     intro:
@@ -220,7 +220,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     titleRest: "Counselling",
     ctaLabel: "Book a couples session",
     icon: Users,
-    heroImage: "/assets/journey-connection.jpg",
+    heroImage: "/assets/couples.png",
     glanceImage: "/assets/journey-connection.jpg",
     ctaImage: "/assets/journey-connection.jpg",
     intro:
@@ -353,7 +353,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     titleRest: "Therapy",
     ctaLabel: "Book a family session",
     icon: Users,
-    heroImage: "/assets/landing.png",
+    heroImage: "/assets/family.png",
     glanceImage: "/assets/landing.png",
     ctaImage: "/assets/landing.png",
     intro:
@@ -486,7 +486,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     titleRest: "& Adolescents",
     ctaLabel: "Book a session for your child",
     icon: Baby,
-    heroImage: "/assets/grief-camp.jpg",
+    heroImage: "/assets/grief.png",
     glanceImage: "/assets/journey-camp.jpg",
     ctaImage: "/assets/grief-cam.png",
     intro:
@@ -610,7 +610,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     titleRest: "Therapy",
     ctaLabel: "Join a therapy group",
     icon: Brain,
-    heroImage: "/assets/journey-group.jpg",
+    heroImage: "/assets/group.png",
     glanceImage: "/assets/journey-group.jpg",
     ctaImage: "/assets/journey-nature.jpg",
     intro:
@@ -737,7 +737,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     titleRest: "Wellness",
     ctaLabel: "Talk to our corporate team",
     icon: Briefcase,
-    heroImage: "/assets/hero-4.jpg",
+    heroImage: "/assets/corporate.png",
     glanceImage: "/assets/hero-4.jpg",
     ctaImage: "/assets/hero-4.jpg",
     intro:
