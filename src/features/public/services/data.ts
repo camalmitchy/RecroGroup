@@ -53,6 +53,7 @@ export type ServiceDetail = {
   intro: string;
   overview: string[];
   whoFor: string;
+  goodFitFor?: string[];
   concerns: string[];
   expect: string[];
   benefits: string[];

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LogIn } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -17,18 +18,21 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <Button
             asChild
-            variant="outline"
             className="hidden rounded-full lg:inline-flex"
             size="lg"
           >
-            <Link href="/contact">Book a session</Link>
+            <Link href="/join-us">Book a Session</Link>
           </Button>
           <Button
             asChild
-            className="hidden rounded-full lg:inline-flex"
+            variant="outline"
+            className="hidden rounded-full border-2 lg:inline-flex"
             size="lg"
           >
-            <Link href="/join-us">Join Us</Link>
+            <Link href="/login">
+              <LogIn className="mr-2 size-4" />
+              Sign in
+            </Link>
           </Button>
           <MobileNav />
         </div>

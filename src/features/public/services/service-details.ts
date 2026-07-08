@@ -21,8 +21,8 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/individual-therapy.svg",
     title: "Individual Therapy",
     description:
-      "Confidential, judgment-free space to slow down and make sense of what you're carrying. Therapists use evidence-based approaches adapted to your therapy goals.",
-    duration: "50 mins",
+      "Individual therapy is a confidential, judgement-free space to slow down and make sense of what you're carrying. Our therapists use evidence-based approaches — adapted to your therapy goals.",
+    duration: "50 min",
     price: "",
   },
   {
@@ -31,8 +31,8 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/family-therapy.svg",
     title: "Family Therapy",
     description:
-      "Works with the whole system, helping each person feel heard while creating language and structure for the family to function with warmth, clarity, and safety.",
-    duration: "50 mins",
+      "Family therapy looks at the whole system. We help each person feel heard while creating language and structure for the family to function with more warmth, clarity, and safety — especially during difficult seasons.",
+    duration: "50 min",
     price: "",
   },
   {
@@ -41,8 +41,8 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/couples-therapy.svg",
     title: "Couples Therapy",
     description:
-      "Helps partners slow down reactive cycles, rebuild trust, and reconnect. Sessions are emotionally focused, non-blaming, and culturally attuned.",
-    duration: "50 mins",
+      "We work with couples to slow down reactive cycles, rebuild trust, and reconnect. Sessions are emotionally focused, non-blaming, and culturally attuned to relationships in Kenya today.",
+    duration: "50 min",
     price: "",
   },
   {
@@ -51,8 +51,8 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/group-therapy.svg",
     title: "Group Therapy",
     description:
-      "Small, carefully facilitated groups provide connection, perspective, and skills practice that complements individual work beautifully.",
-    duration: "2 hours",
+      "Group therapy reminds us we are not alone. Held in a small, carefully facilitated space, groups offer connection, perspective, and skills practice that complements individual work beautifully.",
+    duration: "2 hrs",
     price: "",
   },
   {
@@ -61,7 +61,7 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/grief-camp.svg",
     title: "Grief Camp",
     description:
-      "A child-safe, family-friendly program providing young people with language, ritual, and community around loss. Designed and led by licensed clinicians with care for age, faith, and family context.",
+      "Our flagship Grief Camp is a child-safe, family-friendly programme that gives young people language, ritual, and community around loss. Designed and led by licensed clinicians, with care taken for every age, faith background, and family situation.",
     duration: "3 days",
     price: "",
   },
@@ -71,8 +71,8 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/corporate-speaking.svg",
     title: "Corporate Speaking & Workshops",
     description:
-      "Tailored programs for organizations that prioritize mental health. Engagements range from 60-minute keynotes to multi-session wellness programs, grounded in clinical insight.",
-    duration: "minimum 2 hours",
+      "We partner with organisations who take the mental health of their people seriously. Engagements range from a 60-minute keynote to a multi-session wellness programme, always grounded in clinical insight and delivered with our missions and vision in mind.",
+    duration: "min 2 hrs",
     price: "",
   },
 ];
@@ -90,7 +90,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     glanceImage: "/assets/therapy-session.jpg",
     ctaImage: "/assets/landing.png",
     intro:
-      "A confidential space to slow down, reflect, and work through what you're carrying — with a therapist who truly listens and walks alongside you.",
+      "Individual therapy is a confidential, judgement-free space to slow down and make sense of what you're carrying. Our therapists use evidence-based approaches — adapted to your therapy goals.",
     overview: [
       "Individual therapy at Recro is a one-on-one relationship between you and a licensed psychotherapist. Whether you are navigating anxiety, depression, grief, burnout, or a life transition, sessions are paced to your readiness — never rushed toward a fix.",
       "We draw from evidence-based modalities including Cognitive Behavioural Therapy (CBT), Solution-Focused Therapy, and trauma-informed care, adapted to your cultural context and personal goals.",
@@ -98,6 +98,13 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     ],
     whoFor:
       "Adults and adolescents (14+) navigating personal challenges, emotional pain, identity questions, or the desire for deeper self-understanding.",
+    goodFitFor: [
+      "Feeling stuck or overwhelmed by recurring thoughts or emotions",
+      "Going through a major life transition (career change, loss, relocation)",
+      "Wanting to understand yourself better and build healthier patterns",
+      "Experiencing anxiety, depression, or grief that's affecting daily life",
+      "Looking for a confidential space to process difficult experiences",
+    ],
     concerns: [
       "Anxiety & Stress",
       "Depression & Low Mood",
@@ -108,10 +115,10 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       "Grief",
     ],
     expect: [
-      "A confidential intake conversation to understand what brings you here and what you hope for.",
-      "Collaborative goal-setting — you choose the pace and focus areas.",
-      "Weekly or fortnightly 50-minute sessions, in-person at our Nairobi clinic or online.",
-      "Periodic review of progress with adjustments to approach as needed.",
+      "Reach out. Book online or call us. We'll match you with a therapist who fits your needs.",
+      "First session. A confidential intake conversation to understand what brings you here and what you hope for.",
+      "Build together. Collaborative goal-setting — you choose the pace and focus areas.",
+      "Ongoing care. Weekly or fortnightly 50-minute sessions, in-person at our Nairobi clinic or online.",
     ],
     benefits: [
       "Clearer understanding of your emotional patterns",
@@ -179,7 +186,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       author: "A. M.",
       role: "Individual therapy client",
     },
-    duration: "50 minutes",
+    duration: "50 min",
     pricing: "From KES 5,000",
     pricingNote: "Sliding-scale spots available on request.",
     mode: "In-person · Online · Phone",
@@ -217,7 +224,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     glanceImage: "/assets/journey-connection.jpg",
     ctaImage: "/assets/journey-connection.jpg",
     intro:
-      "A structured, supportive space for partners to rebuild communication, repair trust, and make decisions together with clarity rather than reactivity.",
+      "We work with couples to slow down reactive cycles, rebuild trust, and reconnect. Sessions are emotionally focused, non-blaming, and culturally attuned to relationships in Kenya today.",
     overview: [
       "Couples counselling at Recro is not about picking sides. It is about understanding the dance you have been doing together — the patterns that escalate conflict, the moments of disconnection, and the hopes you still share beneath the frustration.",
       "We work with dating couples, engaged partners, married couples, and those considering separation. Sessions are 75 minutes to allow both voices adequate space.",
@@ -225,6 +232,13 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     ],
     whoFor:
       "Partners at any relationship stage who want to improve communication, rebuild trust after rupture, or navigate major decisions together.",
+    goodFitFor: [
+      "Feeling stuck in recurring arguments that go nowhere",
+      "Wanting to rebuild trust after infidelity or betrayal",
+      "Preparing for marriage or a major commitment together",
+      "Considering separation but unsure if it's the right choice",
+      "Struggling with intimacy, connection, or feeling heard by your partner",
+    ],
     concerns: [
       "Communication breakdown",
       "Trust & Infidelity recovery",
@@ -234,10 +248,10 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       "Separation decisions",
     ],
     expect: [
-      "Joint intake session to map strengths and pain points together.",
-      "Individual check-ins when needed so both partners feel fully heard.",
-      "Structured exercises for difficult conversations you can practice at home.",
-      "Clear agreements and repair tools to use between sessions.",
+      "Reach out. Book a couples session online or call us to discuss your relationship needs.",
+      "Joint intake. We meet together to map strengths and pain points as a couple.",
+      "Build tools. Structured exercises for difficult conversations you can practice at home.",
+      "Ongoing sessions. Weekly 75-minute sessions with repair tools to use between meetings.",
     ],
     benefits: [
       "Healthier conflict — arguments that lead somewhere",
@@ -305,7 +319,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       author: "J. & P.",
       role: "Couples counselling clients",
     },
-    duration: "75 minutes",
+    duration: "50 min",
     pricing: "From KES 7,500",
     pricingNote: "Joint sessions; individual add-on sessions available.",
     mode: "In-person · Online",
@@ -343,7 +357,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     glanceImage: "/assets/landing.png",
     ctaImage: "/assets/landing.png",
     intro:
-      "Therapy with the whole family system — gently rewriting the patterns, roles and stories that shape how you connect.",
+      "Family therapy looks at the whole system. We help each person feel heard while creating language and structure for the family to function with more warmth, clarity, and safety — especially during difficult seasons.",
     overview: [
       "Family therapy treats the family as an interconnected system. When one member struggles, the whole system feels it — and the whole system can heal.",
       "Recro's family therapists work with nuclear families, blended families, extended family conflicts, and families navigating illness, loss, or relocation.",
@@ -351,6 +365,13 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     ],
     whoFor:
       "Families experiencing conflict, communication breakdown, transitions (blending, divorce, relocation), or a child/teen in distress affecting the whole home.",
+    goodFitFor: [
+      "Feeling like your family is stuck in unhealthy patterns or roles",
+      "Navigating a major family transition (blending families, divorce, relocation)",
+      "Struggling with a child or teen whose behavior affects the whole household",
+      "Wanting everyone in the family to feel heard and understood",
+      "Dealing with conflict between parents and teens or between siblings",
+    ],
     concerns: [
       "Parent-teen conflict",
       "Blended family dynamics",
@@ -360,10 +381,10 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       "Cultural/generational tension",
     ],
     expect: [
-      "Parent/guardian intake before the first family session.",
-      "Full-family sessions with clear ground rules for respectful communication.",
-      "Homework and rituals to practice new patterns at home.",
-      "Regular check-ins to celebrate progress and adjust the plan.",
+      "Parent intake. We meet with parents/guardians first to understand family dynamics.",
+      "First family session. Everyone meets together with clear ground rules for respectful communication.",
+      "Practice at home. Homework and rituals to practice new patterns between sessions.",
+      "Ongoing care. Regular sessions to celebrate progress and adjust the plan as needed.",
     ],
     benefits: [
       "Calmer, more predictable home environment",
@@ -431,7 +452,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       author: "The N. family",
       role: "Family therapy clients",
     },
-    duration: "60 – 90 minutes",
+    duration: "50 min",
     pricing: "From KES 8,000",
     pricingNote: "Extended sessions available for larger families.",
     mode: "In-person · Online",
@@ -469,7 +490,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     glanceImage: "/assets/journey-camp.jpg",
     ctaImage: "/assets/grief-cam.png",
     intro:
-      "Therapy for children and teens that meets them where they are — through play, art, storytelling and conversation, with parents kept close.",
+      "Our flagship Grief Camp is a child-safe, family-friendly programme that gives young people language, ritual, and community around loss. Designed and led by licensed clinicians, with care taken for every age, faith background, and family situation.",
     overview: [
       "Children do not always have words for big feelings. At Recro, our child and adolescent therapists use play therapy, art, sand tray work, and age-appropriate conversation to help young people process anxiety, grief, behavioural challenges, and school struggles.",
       "Parents are partners in the process — not spectators. Regular parent feedback sessions ensure you understand what is happening in therapy and how to support your child at home.",
@@ -477,6 +498,13 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     ],
     whoFor:
       "Children aged 5–12 and adolescents 13–18 experiencing emotional, behavioural, or developmental concerns — and their parents seeking guidance.",
+    goodFitFor: [
+      "Noticing persistent changes in your child's mood, sleep, or behavior",
+      "Your child is struggling with anxiety, worry, or big emotions they can't express",
+      "Experiencing school refusal, friendship difficulties, or social struggles",
+      "Your child has experienced loss, trauma, or a major family transition",
+      "Looking for professional guidance on how to support your child at home",
+    ],
     concerns: [
       "Anxiety & worry",
       "Grief & loss",
@@ -486,10 +514,10 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       "Self-esteem & identity",
     ],
     expect: [
-      "Parent/guardian consultation before your child's first session.",
-      "Weekly 45-minute sessions tailored to your child's developmental stage.",
-      "Monthly parent feedback sessions with practical home strategies.",
-      "Coordination with schools when clinically appropriate and consented.",
+      "Parent consultation. We meet with you first to understand your child's needs and concerns.",
+      "Child sessions. Weekly 45-minute sessions using play, art, and age-appropriate conversation.",
+      "Parent feedback. Monthly sessions with you to share progress and practical home strategies.",
+      "Coordinated care. We work with schools when appropriate and with your consent.",
     ],
     benefits: [
       "Calmer emotional regulation at home and school",
@@ -557,7 +585,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       author: "Parent of camper",
       role: "Grief Camp & child therapy family",
     },
-    duration: "45 minutes",
+    duration: "3 days",
     pricing: "From KES 4,500",
     pricingNote: "Parent feedback sessions included monthly.",
     mode: "In-person",
@@ -586,7 +614,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     glanceImage: "/assets/journey-group.jpg",
     ctaImage: "/assets/journey-nature.jpg",
     intro:
-      "Themed therapeutic groups bring together people walking similar paths — in a small, closed circle with a trained facilitator.",
+      "Group therapy reminds us we are not alone. Held in a small, carefully facilitated space, groups offer connection, perspective, and skills practice that complements individual work beautifully.",
     overview: [
       "There is a particular kind of healing that only happens in community. Group therapy at Recro brings together 6–10 people around a shared theme — grief, parenting, anxiety, divorce recovery — in a closed, confidential cohort.",
       "Groups run for 8–10 weekly sessions. The closed format means the same people show up each week, building trust and depth that open groups cannot replicate.",
@@ -594,6 +622,13 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     ],
     whoFor:
       "Adults who would benefit from shared experience, peer support, and structured skill-building around a specific life theme.",
+    goodFitFor: [
+      "Feeling isolated in what you're going through and wanting connection",
+      "Ready to hear others' perspectives and share your own experience",
+      "Looking for accountability and encouragement from peers",
+      "Wanting structured skills practice in a supportive environment",
+      "Already in individual therapy and wanting to complement it with group support",
+    ],
     concerns: [
       "Grief & bereavement",
       "Parenting challenges",
@@ -603,10 +638,10 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       "Burnout recovery",
     ],
     expect: [
-      "Brief screening call to ensure group fit and readiness.",
-      "8–10 weekly 90-minute sessions with the same cohort.",
-      "Structured exercises plus open sharing time each session.",
-      "Closing session with integration and next-step planning.",
+      "Join waitlist. Contact us to join the waitlist for your theme of interest.",
+      "Screening call. Brief call to ensure group fit and readiness for the cohort.",
+      "Weekly sessions. 8–10 weekly 90-minute sessions with the same trusted group.",
+      "Close together. Final session with integration, reflection, and next-step planning.",
     ],
     benefits: [
       "Reduced isolation — others truly understand",
@@ -674,7 +709,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       author: "Group participant",
       role: "Grief support cohort",
     },
-    duration: "90 minutes weekly · 8–10 weeks",
+    duration: "2 hrs",
     pricing: "From KES 3,500 / session",
     pricingNote: "Full cohort packages available at a reduced rate.",
     mode: "In-person · Online",
@@ -706,7 +741,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     glanceImage: "/assets/hero-4.jpg",
     ctaImage: "/assets/hero-4.jpg",
     intro:
-      "We partner with organisations to build psychologically safe, high-performing teams — through EAPs, workshops, manager debriefs and crisis response.",
+      "We partner with organisations who take the mental health of their people seriously. Engagements range from a 60-minute keynote to a multi-session wellness programme, always grounded in clinical insight and delivered with our missions and vision in mind.",
     overview: [
       "Mental health at work is no longer a nice-to-have — it is a retention, productivity, and leadership imperative. Recro Group partners with HR teams, people leaders, and organisations across Kenya to design wellness programmes that actually get used.",
       "Our corporate offerings range from one-off workshops on burnout and grief literacy to full Employee Assistance Programmes (EAPs) with confidential counselling access for your entire workforce.",
@@ -714,6 +749,13 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     ],
     whoFor:
       "HR and People teams, C-suite leaders, NGO programme directors, and organisations investing in employee wellbeing and psychologically safe cultures.",
+    goodFitFor: [
+      "Seeing signs of burnout, high turnover, or low morale in your team",
+      "Wanting to equip managers for mental health conversations",
+      "Looking for an EAP that employees will actually use",
+      "Responding to a critical incident or organizational crisis",
+      "Building a workplace culture that prioritizes psychological safety",
+    ],
     concerns: [
       "Employee burnout & turnover",
       "Manager training & support",
@@ -723,10 +765,10 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       "Wellness strategy design",
     ],
     expect: [
-      "Discovery call to understand your organisation's culture and needs.",
-      "Tailored proposal with programme options, timelines, and pricing.",
-      "Delivery on-site, hybrid, or fully online.",
-      "Quarterly impact reporting and programme refinement.",
+      "Discovery call. We meet to understand your organization's culture, needs, and goals.",
+      "Custom proposal. Tailored programme options with timelines, pricing, and deliverables.",
+      "Programme delivery. On-site, hybrid, or fully online — designed for your team.",
+      "Impact reporting. Quarterly reports with usage data and programme refinement.",
     ],
     benefits: [
       "Lower absenteeism and presenteeism",
@@ -794,7 +836,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       author: "HR Director",
       role: "Regional NGO partner",
     },
-    duration: "Custom engagements",
+    duration: "min 2 hrs",
     pricing: "On request",
     pricingNote: "Proposals provided after discovery call.",
     mode: "On-site · Hybrid · Online",

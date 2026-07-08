@@ -34,7 +34,7 @@ export function ServicesPage() {
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link
-                  href="/contact"
+                  href="/join-us"
                   className="inline-flex items-center gap-2 rounded-full bg-primary-deep hover:bg-primary-deep/90 px-8 py-3 font-semibold text-white transition"
                 >
                   Book a Session

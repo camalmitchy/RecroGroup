@@ -16,9 +16,9 @@ export function FaqPage() {
     return (
         <>
             {/* Hero Section */}
-            <section className="relative h-[500px] md:h-[600px] overflow-hidden">
+            <section className="relative h-[400px] lg:h-[450px] overflow-hidden">
                 <Image
-                    src="/assets/home.png"
+                    src="/assets/landing.png"
                     alt="FAQ"
                     fill
                     className="object-cover"
@@ -29,7 +29,7 @@ export function FaqPage() {
 
                 <div className="relative z-10 flex h-full items-center">
                     <div className="container-page">
-                        <div className="max-w-3xl mx-auto text-center">
+                        <div className="max-w-2xl">
                             <span className="inline-flex items-center rounded-full bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 text-xs font-semibold tracking-[0.18em] uppercase text-white">
                                 FAQ
                             </span>
@@ -38,7 +38,7 @@ export function FaqPage() {
                                 <br />
                                 gently answered
                             </h1>
-                            <p className="mt-6 text-white/95 leading-relaxed text-base max-w-2xl mx-auto">
+                            <p className="mt-6 text-white/95 leading-relaxed text-base max-w-xl">
                                 Everything you might want to know before reaching out.
                             </p>
                         </div>
@@ -113,7 +113,7 @@ export function FaqPage() {
                                 variant="outline"
                                 className="rounded-full"
                             >
-                                <Link href="/contact">Book a session</Link>
+                                <Link href="/join-us">Book a session</Link>
                             </Button>
                         </div>
                     </div>

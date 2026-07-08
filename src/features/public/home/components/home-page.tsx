@@ -101,7 +101,7 @@ export function HomePage() {
               life&rsquo;s most difficult moments.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
-              <Link href="/contact" className="btn-primary">
+              <Link href="/join-us" className="btn-primary">
                 Book a Session
               </Link>
               <Link href="/services" className="btn-secondary">

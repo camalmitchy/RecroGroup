@@ -30,45 +30,39 @@ export function GriefCampPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative min-h-[500px] overflow-hidden bg-surface lg:min-h-[600px]">
-        <Image
-          src="/assets/grief-cam.png"
-          alt="Adolescents sitting in a circle at sunset"
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-black/50 via-black/30 to-black/20" />
-        <div className="relative z-10">
-          <div className="container-page flex min-h-[500px] items-center py-16 lg:min-h-[600px] lg:py-20">
-            <div className="max-w-xl pt-24 md:pt-32">
-              <span className="inline-flex items-center rounded-full border border-white/30 bg-white/20 px-4 py-1.5 text-xs font-semibold tracking-[0.18em] text-white uppercase backdrop-blur-sm">
-                Grief Camp 2026
-              </span>
-              <h1 className="mt-6 font-serif text-5xl leading-[1.05] text-white drop-shadow-lg md:text-6xl">
-                A safe place to
-                <br />
-                grieve out loud.
-              </h1>
-              <p className="mt-6 max-w-md text-base leading-relaxed text-white/95 drop-shadow">
-                Loss is not a problem to be solved. It is a passage to be walked
-                — with company, with kindness, and with time.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Button asChild size="lg" className="rounded-full">
-                  <Link href="/contact">Apply for Grief Camp</Link>
-                </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="rounded-full border-2 border-white/40 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
-                >
-                  <Link href="/contact">Download Flyer</Link>
-                </Button>
-              </div>
+      <section className="border-b border-border bg-muted/30 px-6 py-20 lg:py-28">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_auto]">
+          <div>
+            <Link
+              href="/services"
+              className="eyebrow inline-flex items-center gap-1.5 hover:text-foreground"
+            >
+              ← All services
+            </Link>
+            <h1 className="mt-5 font-serif text-4xl text-foreground md:text-6xl">
+              Grief Camp for Adolescents
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+              A safe, structured weekend where teens who have lost a parent or
+              sibling can grieve, connect, and remember — surrounded by others
+              who truly understand.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button asChild size="lg" className="rounded-full">
+                <Link href="/contact">Apply for Grief Camp</Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="rounded-full"
+              >
+                <Link href="/contact">Ask a question</Link>
+              </Button>
             </div>
+          </div>
+          <div className="grid size-28 place-items-center rounded-3xl bg-primary text-white lg:size-36">
+            <Heart className="size-12 lg:size-16" strokeWidth={1.25} />
           </div>
         </div>
       </section>

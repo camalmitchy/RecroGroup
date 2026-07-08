@@ -127,7 +127,7 @@ export function MobileNav() {
             className="mt-4 w-full rounded-full"
             size="lg"
           >
-            <Link href="/contact" onClick={close}>
+            <Link href="/join-us" onClick={close}>
               Book a session
             </Link>
           </Button>

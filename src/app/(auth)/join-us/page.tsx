@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 export default function JoinUsPage() {
   return (
     <AuthSplitLayout
-      imageSrc="/assets/landing.png"
-      imageAlt="A diverse family sitting together in a bright sunlit therapy room"
+      imageSrc="/assets/bg.png"
+      imageAlt="Recro Group therapy background"
       quote={{
         text: "Walking with you, step by step.",
         author: "Recro Group",

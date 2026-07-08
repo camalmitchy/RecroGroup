@@ -115,7 +115,7 @@ export function ContactPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, fullName: e.target.value })
                   }
-                  className="w-full rounded-xl border-0 bg-[#F4F1EA] px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full h-11 rounded-xl border-0 bg-[#F4F1EA] px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
@@ -129,7 +129,7 @@ export function ContactPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, phone: e.target.value })
                   }
-                  className="w-full rounded-xl border-0 bg-[#F4F1EA] px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full h-11 rounded-xl border-0 bg-[#F4F1EA] px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
@@ -145,7 +145,7 @@ export function ContactPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full rounded-xl border-0 bg-[#F4F1EA] px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full h-11 rounded-xl border-0 bg-[#F4F1EA] px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -159,7 +159,7 @@ export function ContactPage() {
                   setFormData({ ...formData, location: value })
                 }
               >
-                <SelectTrigger className="w-full rounded-xl border-0 bg-[#F4F1EA] px-4 py-3 text-sm">
+                <SelectTrigger className="w-full !h-11 rounded-xl border-0 bg-[#F4F1EA] px-4 py-3 text-sm">
                   <SelectValue placeholder="Select a location..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -180,7 +180,7 @@ export function ContactPage() {
                   setFormData({ ...formData, service: value })
                 }
               >
-                <SelectTrigger className="w-full rounded-xl border-0 bg-[#F4F1EA] px-4 py-3 text-sm">
+                <SelectTrigger className="w-full !h-11 rounded-xl border-0 bg-[#F4F1EA] px-4 py-3 text-sm">
                   <SelectValue placeholder="Select a service..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -295,7 +295,7 @@ export function ContactPage() {
                       <div className="rounded-xl overflow-hidden border border-border">
                         <iframe
                           width="100%"
-                          height="200"
+                          height="250"
                           style={{ border: 0 }}
                           src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${location.coordinates.lat},${location.coordinates.lng}&zoom=15`}
                           allowFullScreen

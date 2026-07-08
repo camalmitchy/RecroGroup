@@ -151,8 +151,8 @@ export function MediaPage() {
                                     key={c}
                                     onClick={() => setActive(c)}
                                     className={`shrink-0 rounded-full px-5 py-2 text-xs font-medium uppercase tracking-wider transition-all ${active === c
-                                            ? "bg-foreground text-background"
-                                            : "bg-transparent text-muted-foreground hover:bg-muted border border-border"
+                                        ? "bg-foreground text-background"
+                                        : "bg-transparent text-muted-foreground hover:bg-muted border border-border"
                                         }`}
                                 >
                                     {c}
@@ -229,7 +229,7 @@ export function MediaPage() {
                         </p>
                         <div className="mt-8">
                             <Button asChild size="lg" className="rounded-full">
-                                <Link href="/contact">Book a Session</Link>
+                                <Link href="/join-us">Book a Session</Link>
                             </Button>
                         </div>
                     </div>
