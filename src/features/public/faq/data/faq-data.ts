@@ -13,8 +13,8 @@ export const faqs: FAQCategory[] = [
         category: "Understanding Therapy",
         questions: [
             {
-                q: "What is the difference between Psychotherapy and Counselling?",
-                a: "Psychotherapy and counselling are often used interchangeably but are different. Counselling tends to be brief and focused on a single problem, while psychotherapy is longer, deeper, and uses a systemic framework that encompasses influences such as family, community, employment, and religion. It is provided by professionals trained specifically in psychotherapy.",
+                q: "What is the difference between Psychotherapy and therapy?",
+                a: "Psychotherapy and therapy are often used interchangeably but are different. therapy tends to be brief and focused on a single problem, while psychotherapy is longer, deeper, and uses a systemic framework that encompasses influences such as family, community, employment, and religion. It is provided by professionals trained specifically in psychotherapy.",
             },
             {
                 q: "How frequent are the sessions?",
@@ -42,7 +42,7 @@ export const faqs: FAQCategory[] = [
                 a: "Only you can decide to enter therapy. If a loved one suggests it, that may reflect care for you. Psychotherapy can offer helpful insight from a trained professional and may be worth trying even if you're unsure there's a problem.",
             },
             {
-                q: "What if I don't believe in Psychotherapy or Counselling — I think problems should not be discussed outside the home?",
+                q: "What if I don't believe in Psychotherapy or therapy — I think problems should not be discussed outside the home?",
                 a: "Recro Group respects cultural beliefs. However, sometimes the home environment can be unhealthy for facilitating change. A trained professional perspective can be helpful to understand issues that may not change otherwise.",
             },
             {

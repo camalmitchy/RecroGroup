@@ -151,7 +151,7 @@ export function MediaPage() {
                                     key={c}
                                     onClick={() => setActive(c)}
                                     className={`shrink-0 rounded-full px-5 py-2 text-xs font-medium uppercase tracking-wider transition-all ${active === c
-                                        ? "bg-foreground text-background"
+                                        ? "bg-primary text-white"
                                         : "bg-transparent text-muted-foreground hover:bg-muted border border-border"
                                         }`}
                                 >

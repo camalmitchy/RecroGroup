@@ -407,7 +407,7 @@ export const INITIAL_THERAPIST_RECORDS: MockTherapistRecord[] = [
   {
     id: "t2",
     fullName: "Grace Wanjiku",
-    title: "Counselling Psychologist",
+    title: "therapy Psychologist",
     email: "grace@recrogroup.org",
     phone: "+254 700 000 002",
     bio: "Works with children, adolescents, and families.",

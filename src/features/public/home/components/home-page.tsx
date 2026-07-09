@@ -144,11 +144,10 @@ export function HomePage() {
             />
             <figure className="absolute -bottom-8 -left-6 hidden max-w-xs rounded-2xl bg-card border border-border p-6 shadow-[var(--shadow-card)] md:block">
               <blockquote className="font-serif text-lg italic leading-snug text-foreground">
-                &ldquo;In the midst of winter, I found there was, within me, an
-                invincible summer.&rdquo;
+                &ldquo;Awareness in itself is healing&rdquo;
               </blockquote>
               <figcaption className="mt-3 text-xs font-semibold uppercase tracking-wider text-primary-deep">
-                — Albert Camus
+                — Fritz Perls
               </figcaption>
             </figure>
           </div>
@@ -203,96 +202,67 @@ export function HomePage() {
       </section>
 
       <section className="border-y border-border bg-surface">
-        <div className="container-page grid items-center gap-12 py-20 lg:grid-cols-2">
-          <div className="relative">
-            <div className="aspect-[4/3] overflow-hidden rounded-[2rem] shadow-[var(--shadow-lift)] ring-1 ring-border">
-              <Image
-                src="/assets/therapy-session.jpg"
-                alt="Two people in a calm therapy session"
-                width={1200}
-                height={900}
-                className="size-full object-cover"
-              />
-            </div>
-            <div className="absolute -right-6 -bottom-6 hidden max-w-64 rounded-2xl border border-border bg-background p-5 shadow-[var(--shadow-lift)] md:block">
-              <Leaf className="text-primary" size={20} />
-              <p className="mt-2 text-sm leading-snug font-medium text-foreground">
-                &ldquo;I left lighter than I came in.&rdquo; — A Recro client
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <span className="eyebrow">Our approach</span>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
+        <div className="container-page py-20">
+          <div className="mx-auto max-w-4xl text-center">
+            <span className="eyebrow">Systemic Approach</span>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl">
               A wholistic view of what it means to be well.
             </h2>
-            <p className="mt-4 leading-relaxed text-muted-foreground">
+            <p className="mt-6 leading-relaxed text-muted-foreground text-lg max-w-3xl mx-auto">
               Our distinguishing touch is reassuring and friendly — yet always
               holds a professional demeanor. Every session is designed to feel
               safe, human, and forward-moving.
             </p>
-            <ul className="mt-8 space-y-4">
-              {homeApproachPoints.map((p) => (
-                <li key={p} className="flex items-start gap-3">
-                  <span className="mt-1 grid h-5 w-5 place-items-center rounded-full bg-primary text-primary-foreground">
-                    <svg width="10" height="10" viewBox="0 0 12 12">
-                      <path
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M2 6.5L5 9.5L10 3"
-                      />
-                    </svg>
-                  </span>
-                  <span className="text-sm text-foreground">{p}</span>
-                </li>
-              ))}
-            </ul>
           </div>
+          <ul className="mt-12 grid gap-6 sm:grid-cols-2 max-w-5xl mx-auto">
+            {homeApproachPoints.map((p) => (
+              <li key={p} className="flex items-start gap-3 p-6 rounded-2xl bg-card border border-border">
+                <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+                  <svg width="10" height="10" viewBox="0 0 12 12">
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M2 6.5L5 9.5L10 3"
+                    />
+                  </svg>
+                </span>
+                <span className="text-sm text-foreground leading-relaxed">{p}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
       <section className="container-page bg-background py-20">
-        <div className="relative overflow-hidden rounded-[2rem] bg-[#3F5B43] shadow-[var(--shadow-lift)]">
-          <div className="grid lg:grid-cols-2">
-            <div className="p-8 text-primary-foreground md:p-12">
-              <span className="mb-4 inline-block text-xs font-semibold tracking-[0.18em] text-white/70 uppercase">
-                Signature Programme
-              </span>
-              <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                The Recro Grief Camp
-              </h2>
-              <p className="mt-4 max-w-md leading-relaxed text-white/85">
-                A child-safe, family-friendly therapeutic camp for adolescents
-                navigating the loss of a parent, sibling, or close caregiver.
-                Designed and led by licensed clinicians.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href="/grief-camp"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#3F5B43] transition hover:bg-white/90"
-                >
-                  Apply for Grief Camp
-                </Link>
-                <Link
-                  href="/grief-camp"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/50"
-                >
-                  Sponsor a Child
-                </Link>
-              </div>
-            </div>
-            <div className="relative min-h-[280px] lg:min-h-0">
-              <Image
-                src="/assets/grief-camp.jpg"
-                alt="Children in a therapeutic camp setting"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
+        <div className="relative overflow-hidden rounded-[2rem] bg-[#3F5B43] shadow-[var(--shadow-lift)] text-center p-12 md:p-16">
+          <div className="mx-auto max-w-3xl">
+            <span className="mb-4 inline-block text-xs font-semibold tracking-[0.18em] text-white/70 uppercase">
+              Signature Programme
+            </span>
+            <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl lg:text-5xl">
+              The Recro Grief Camp
+            </h2>
+            <p className="mt-6 leading-relaxed text-white/90 text-lg max-w-2xl mx-auto">
+              A child-safe, family-friendly therapeutic camp for adolescents
+              navigating the loss of a parent, sibling, or close caregiver.
+              Designed and led by licensed clinicians.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3 justify-center">
+              <Link
+                href="/join-us?service=grief-camp"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#3F5B43] transition hover:bg-white/90"
+              >
+                Apply for Grief Camp
+              </Link>
+              <Link
+                href="/join-us?service=grief-camp"
+                className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/50"
+              >
+                Sponsor a Child
+              </Link>
             </div>
           </div>
         </div>

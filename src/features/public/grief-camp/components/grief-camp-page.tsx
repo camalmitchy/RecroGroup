@@ -55,7 +55,7 @@ export function GriefCampPage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  href="/contact"
+                  href="/join-us?service=grief-camp"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-deep px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-deep/90"
                 >
                   Apply for Grief Camp
@@ -125,7 +125,7 @@ export function GriefCampPage() {
                     Age Group
                   </p>
                   <p className="font-serif text-2xl text-foreground">
-                    8–17 years
+                    10–16 years
                   </p>
                 </div>
 
@@ -152,7 +152,7 @@ export function GriefCampPage() {
                     Camp Fee
                   </p>
                   <p className="font-serif text-2xl text-foreground">
-                    From KES 12,000
+                    From KES 15,000
                   </p>
                 </div>
 
@@ -170,20 +170,20 @@ export function GriefCampPage() {
                     Capacity
                   </p>
                   <p className="font-serif text-2xl text-foreground">
-                    20 children / camp
+                    64 campers
                   </p>
                 </div>
               </div>
 
               <div className="mt-10 flex flex-wrap gap-3">
                 <Link
-                  href="/contact"
+                  href="/join-us?service=grief-camp"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-deep px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-deep/90"
                 >
                   Apply for Grief Camp
                 </Link>
                 <Link
-                  href="/contact"
+                  href="/join-us?service=grief-camp"
                   className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-border bg-transparent px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
                 >
                   Sponsor a Child
@@ -223,7 +223,7 @@ export function GriefCampPage() {
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted-foreground">Pricing</dt>
-                  <dd className="text-foreground">From KES 11,000</dd>
+                  <dd className="text-foreground">From KES 15,000</dd>
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted-foreground">Location</dt>
@@ -236,7 +236,7 @@ export function GriefCampPage() {
               </dl>
               <div className="mt-6">
                 <Link
-                  href="/contact"
+                  href="/join-us?service=grief-camp"
                   className="btn-primary block w-full rounded-full text-center"
                 >
                   Apply now
@@ -303,7 +303,7 @@ export function GriefCampPage() {
                 </div>
               </div>
               <p className="mt-4 text-xs text-muted-foreground">
-                Includes accommodation, meals, activities & counselling.
+                Includes accommodation, meals, activities & therapy.
               </p>
             </div>
           </aside>

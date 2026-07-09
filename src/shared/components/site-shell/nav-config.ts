@@ -32,7 +32,7 @@ export const serviceNavItems: ServiceNavItem[] = [
   {
     slug: "couples",
     label: "Couples Therapy",
-    description: "Relationship counselling",
+    description: "Relationship therapy",
     icon: "/assets/icons/couples-therapy.svg",
   },
   {

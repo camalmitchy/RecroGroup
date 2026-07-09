@@ -215,9 +215,9 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
   couples: {
     key: "couples",
     eyebrow: "Relational Care",
-    title: "Couples Counselling",
+    title: "Couples therapy",
     titleItalic: "Couples",
-    titleRest: "Counselling",
+    titleRest: "therapy",
     ctaLabel: "Book a couples session",
     icon: Users,
     heroImage: "/assets/couples.png",
@@ -226,7 +226,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     intro:
       "We work with couples to slow down reactive cycles, rebuild trust, and reconnect. Sessions are emotionally focused, non-blaming, and culturally attuned to relationships in Kenya today.",
     overview: [
-      "Couples counselling at Recro is not about picking sides. It is about understanding the dance you have been doing together — the patterns that escalate conflict, the moments of disconnection, and the hopes you still share beneath the frustration.",
+      "Couples therapy at Recro is not about picking sides. It is about understanding the dance you have been doing together — the patterns that escalate conflict, the moments of disconnection, and the hopes you still share beneath the frustration.",
       "We work with dating couples, engaged partners, married couples, and those considering separation. Sessions are 75 minutes to allow both voices adequate space.",
       "Using Emotionally Focused Therapy (EFT) and Gottman-informed techniques, we help partners move from blame to understanding, and from gridlock to repair.",
     ],
@@ -310,14 +310,14 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       },
       {
         q: "What if we're not sure we want to stay together?",
-        a: "Discernment counselling helps you clarify whether to repair or separate with dignity — we support both paths.",
+        a: "Discernment therapy helps you clarify whether to repair or separate with dignity — we support both paths.",
       },
     ],
     testimonial: {
       quote:
         "We came in ready to give up. Three months later, we had tools we still use every week.",
       author: "J. & P.",
-      role: "Couples counselling clients",
+      role: "Couples therapy clients",
     },
     duration: "50 min",
     pricing: "From KES 7,500",
@@ -744,7 +744,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       "We partner with organisations who take the mental health of their people seriously. Engagements range from a 60-minute keynote to a multi-session wellness programme, always grounded in clinical insight and delivered with our missions and vision in mind.",
     overview: [
       "Mental health at work is no longer a nice-to-have — it is a retention, productivity, and leadership imperative. Recro Group partners with HR teams, people leaders, and organisations across Kenya to design wellness programmes that actually get used.",
-      "Our corporate offerings range from one-off workshops on burnout and grief literacy to full Employee Assistance Programmes (EAPs) with confidential counselling access for your entire workforce.",
+      "Our corporate offerings range from one-off workshops on burnout and grief literacy to full Employee Assistance Programmes (EAPs) with confidential therapy access for your entire workforce.",
       "We also support managers — the front line of workplace mental health — with training on psychological safety, difficult conversations, and team debriefs after critical incidents.",
     ],
     whoFor:
@@ -781,7 +781,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       {
         name: "Employee Assistance Programmes (EAP)",
         description:
-          "Confidential counselling access for employees and dependents, with usage reporting for HR.",
+          "Confidential therapy access for employees and dependents, with usage reporting for HR.",
       },
       {
         name: "Workshops & Lunch-and-Learns",
