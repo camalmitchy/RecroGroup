@@ -25,6 +25,29 @@ export function SponsorChildPage() {
     const [message, setMessage] = useState("");
     const [anonymous, setAnonymous] = useState(false);
 
+    // Store original values to restore if unchecked
+    const [savedFullName, setSavedFullName] = useState("");
+    const [savedEmail, setSavedEmail] = useState("");
+    const [savedPhone, setSavedPhone] = useState("");
+
+    const handleAnonymousToggle = (checked: boolean) => {
+        if (checked) {
+            // Save current values and clear fields
+            setSavedFullName(fullName);
+            setSavedEmail(email);
+            setSavedPhone(phone);
+            setFullName("");
+            setEmail("");
+            setPhone("");
+        } else {
+            // Restore saved values
+            setFullName(savedFullName);
+            setEmail(savedEmail);
+            setPhone(savedPhone);
+        }
+        setAnonymous(checked);
+    };
+
     const effectiveAmount = customAmount
         ? Math.max(0, parseInt(customAmount.replace(/\D/g, ""), 10) || 0)
         : amount;
@@ -34,7 +57,7 @@ export function SponsorChildPage() {
             alert("Please enter your full name");
             return;
         }
-        if (!email.trim()) {
+        if (!anonymous && !email.trim()) {
             alert("Email is required");
             return;
         }
@@ -89,6 +112,7 @@ export function SponsorChildPage() {
                                 value={email}
                                 onChange={setEmail}
                                 placeholder="jane@example.com"
+                                disabled={anonymous}
                             />
                             <Field
                                 label="Phone"
@@ -115,8 +139,8 @@ export function SponsorChildPage() {
                                                 setCustomAmount("");
                                             }}
                                             className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${sel
-                                                    ? "bg-primary text-primary-foreground border-primary"
-                                                    : "border-border bg-card hover:border-primary"
+                                                ? "bg-primary text-primary-foreground border-primary"
+                                                : "border-border bg-card hover:border-primary"
                                                 }`}
                                         >
                                             Ksh {a.toLocaleString()}
@@ -155,14 +179,14 @@ export function SponsorChildPage() {
                             <input
                                 type="checkbox"
                                 checked={anonymous}
-                                onChange={(e) => setAnonymous(e.target.checked)}
+                                onChange={(e) => handleAnonymousToggle(e.target.checked)}
                                 className="accent-primary"
                             />
                             Sponsor anonymously
                         </label>
                         {anonymous && (
                             <p className="mt-2 text-xs text-muted-foreground italic pl-6">
-                                Your name and phone will not be shared. Only email is required for confirmation.
+                                Your personal information will remain completely private and will not be shared.
                             </p>
                         )}
 
@@ -503,8 +527,8 @@ function MethodCard({
         <button
             onClick={onClick}
             className={`text-left rounded-2xl border p-5 transition ${active
-                    ? "border-primary ring-1 ring-primary bg-background"
-                    : "border-border bg-card hover:border-primary"
+                ? "border-primary ring-1 ring-primary bg-background"
+                : "border-border bg-card hover:border-primary"
                 }`}
         >
             <div className="flex items-center gap-2.5 font-semibold">
