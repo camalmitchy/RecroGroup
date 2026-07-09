@@ -95,10 +95,10 @@ export function HomePage() {
               Restore your{" "}
               <span className="italic text-primary-deep">Life</span>.
             </h1>
-            <p className="mt-7 max-w-lg text-lg leading-relaxed text-muted-foreground">
-              A compassionate space for healing, growth, and emotional wellness
-              — for individuals, couples, families, and organisations navigating
-              life&rsquo;s most difficult moments.
+            <p className="mt-7 max-w-lg text-base leading-relaxed text-muted-foreground">
+              <strong className="text-foreground">Recro</strong>{" "}
+              <span className="text-sm text-muted-foreground/80">(rec·ro)</span>{" "}
+              <strong className="text-foreground">Group Limited</strong> is a Behavioral Health Organization that utilizes Psychotherapy to work with individuals, families, couples, groups and organizations dealing with relational challenges. By using a systemic view, Recro Group works from the Biopsychosocialspiritual Framework which employs a wholistic approach to treatment.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
               <Link href="/join-us" className="btn-primary">
@@ -258,7 +258,7 @@ export function HomePage() {
                 Apply for Grief Camp
               </Link>
               <Link
-                href="/join-us?service=grief-camp"
+                href="/sponsor-child"
                 className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/50"
               >
                 Sponsor a Child

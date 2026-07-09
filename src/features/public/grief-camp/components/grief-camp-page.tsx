@@ -183,7 +183,7 @@ export function GriefCampPage() {
                   Apply for Grief Camp
                 </Link>
                 <Link
-                  href="/join-us?service=grief-camp"
+                  href="/sponsor-child"
                   className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-border bg-transparent px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
                 >
                   Sponsor a Child

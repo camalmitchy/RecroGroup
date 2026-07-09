@@ -41,7 +41,7 @@ export const mftVideo = {
 } as const;
 
 export const framework = {
-  title: "The systemic framework",
+  title: "BioPsychosocialSpiritual Framework",
   body: "Systems framework is a hallmark way that MFTs work with clients; which sets them apart from other clinical disciplines. The systemic lens is one where the client is viewed from the perspective of their relationships.",
   highlight:
     "This whole person perspective garners insight into the patterns, connections, and contexts that shape wellbeing.",
