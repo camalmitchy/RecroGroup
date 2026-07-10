@@ -50,7 +50,7 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 <Link
-                  href={`/join-us?service=${service.key}`}
+                  href={`/booking?service=${service.key}`}
                   className="btn-primary rounded-full px-7"
                 >
                   {service.ctaLabel}

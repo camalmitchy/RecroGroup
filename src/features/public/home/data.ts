@@ -115,3 +115,24 @@ export const homeBookingPerks = [
   "In-person, online or phone",
   "Free 15-min orientation call available",
 ] as const;
+
+export const homeTestimonials = [
+  {
+    quote:
+      "I felt heard from the very first session. Recro gave me language for things I had carried silently for years.",
+    author: "A. M.",
+    role: "Individual therapy client",
+  },
+  {
+    quote:
+      "We came in ready to give up. Three months later, we had tools we still use every week.",
+    author: "J. & P.",
+    role: "Couples therapy clients",
+  },
+  {
+    quote:
+      "Camp gave my daughter friends who understood without her having to explain. It gave me hope.",
+    author: "Parent of camper",
+    role: "Grief Camp family",
+  },
+] as const;

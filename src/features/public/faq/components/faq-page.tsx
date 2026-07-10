@@ -113,7 +113,7 @@ export function FaqPage() {
                                 variant="outline"
                                 className="rounded-full"
                             >
-                                <Link href="/join-us">Book a session</Link>
+                                <Link href="/booking">Book a session</Link>
                             </Button>
                         </div>
                     </div>

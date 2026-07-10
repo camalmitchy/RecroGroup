@@ -229,7 +229,7 @@ export function MediaPage() {
                         </p>
                         <div className="mt-8">
                             <Button asChild size="lg" className="rounded-full">
-                                <Link href="/join-us">Book a Session</Link>
+                                <Link href="/booking">Book a Session</Link>
                             </Button>
                         </div>
                     </div>

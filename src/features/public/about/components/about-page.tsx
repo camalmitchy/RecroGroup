@@ -283,7 +283,7 @@ export function AboutPage() {
               We&apos;re here to listen and walk with you.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/join-us" className="btn-primary">
+              <Link href="/booking" className="btn-primary">
                 Book a Session
               </Link>
               <Link href="/contact" className="btn-secondary">

@@ -21,7 +21,7 @@ export function SiteHeader() {
             className="hidden rounded-full lg:inline-flex"
             size="lg"
           >
-            <Link href="/join-us">Book a Session</Link>
+            <Link href="/booking">Book a Session</Link>
           </Button>
           <Button
             asChild

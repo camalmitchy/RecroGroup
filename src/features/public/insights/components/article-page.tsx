@@ -215,7 +215,7 @@ export function ArticlePage({ article, sections }: ArticlePageProps) {
                 is a quiet, confidential place to start.
               </p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <Link href="/join-us" className="btn-primary">
+                <Link href="/booking" className="btn-primary">
                   Book a session
                 </Link>
                 <Link href="/contact" className="btn-secondary">

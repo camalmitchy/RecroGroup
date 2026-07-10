@@ -100,7 +100,7 @@ export default function ResourceArticlePage({ params }: Props) {
                             </p>
                             <div className="mt-6 flex justify-center">
                                 <Button asChild size="lg" className="rounded-full">
-                                    <Link href="/join-us">Book a Session</Link>
+                                    <Link href="/booking">Book a Session</Link>
                                 </Button>
                             </div>
                         </div>
