@@ -26,7 +26,7 @@ export const serviceNavItems: ServiceNavItem[] = [
   {
     slug: "individual",
     label: "Individual Therapy",
-    description: "One-on-one psychotherapy",
+    description: "Systems focus one-on-one psychotherapy for personal life's challenges",
     icon: "/assets/icons/individual-therapy.svg",
   },
   {
@@ -50,13 +50,19 @@ export const serviceNavItems: ServiceNavItem[] = [
   {
     slug: "children",
     label: "Grief Camps",
-    description: "Support for children",
+    description: "Therapeutic support for children processing the death of their loved one",
     icon: "/assets/icons/grief-camp.svg",
   },
   {
     slug: "corporate",
     label: "Corporate Speaking",
-    description: "Workplace wellness",
+    description: "Mental Health workshops and trainings to support your staff wellbeing",
     icon: "/assets/icons/corporate-speaking.svg",
+  },
+  {
+    slug: "consortium",
+    label: "Consortium",
+    description: "Professional network & collaboration",
+    icon: "/assets/icons/group-therapy.svg",
   },
 ];

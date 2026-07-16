@@ -18,7 +18,7 @@ export const journeyPillars = [
 ] as const;
 
 export const journeyChecklist = [
-  "Professional grief counsellors on-site 24/7",
+  "Professional grief therapists on-site 24/7",
   "Age-appropriate therapeutic activities",
   "Safe spaces for sharing and remembering",
   "Outdoor recreation and team building",

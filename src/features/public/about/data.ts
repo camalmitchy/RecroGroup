@@ -17,7 +17,7 @@ export const founderHighlights = [
   },
   {
     title: "Clinical practice",
-    body: "Over ten years in solo private practice. Sessions encompass individual, couples, children, group, and family therapy. She also runs the annual Recro Grief Camp for grieving children.",
+    body: "Over ten years in a solo private practice. Sessions encompass individual, couples, children, group, and family therapy. She also runs the annual Recro Grief Camp for grieving children.",
   },
   {
     title: "Corporate wellbeing",
@@ -43,8 +43,6 @@ export const mftVideo = {
 export const framework = {
   title: "BioPsychosocialSpiritual Framework",
   body: "Systems framework is a hallmark way that MFTs work with clients; which sets them apart from other clinical disciplines. The systemic lens is one where the client is viewed from the perspective of their relationships.",
-  highlight:
-    "This whole person perspective garners insight into the patterns, connections, and contexts that shape wellbeing.",
 } as const;
 
 export const recroCoreValues = {

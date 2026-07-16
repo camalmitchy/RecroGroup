@@ -55,7 +55,7 @@ export function GriefCampPage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  href="/booking?service=children"
+                  href="/grief-camp/apply"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-deep px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-deep/90"
                 >
                   Apply for Grief Camp
@@ -177,7 +177,7 @@ export function GriefCampPage() {
 
               <div className="mt-10 flex flex-wrap gap-3">
                 <Link
-                  href="/booking?service=children"
+                  href="/grief-camp/apply"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-deep px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-deep/90"
                 >
                   Apply for Grief Camp
@@ -236,7 +236,7 @@ export function GriefCampPage() {
               </dl>
               <div className="mt-6">
                 <Link
-                  href="/booking?service=children"
+                  href="/grief-camp/apply"
                   className="btn-primary block w-full rounded-full text-center"
                 >
                   Apply now

@@ -18,29 +18,32 @@ const locations = [
   {
     id: "nairobi",
     name: "Nairobi",
-    address: "Karen, Nairobi",
-    coordinates: { lat: -1.3195, lng: 36.7076 },
-    mapUrl: "https://www.google.com/maps?q=-1.3195,36.7076",
-    phone: "+254 700 000 000",
-    hours: "Mon–Sat, 8:30am – 6:00pm",
+    address: "Shanzu Rd, Nairobi, Kenya",
+    coordinates: { lat: -1.2548016309738, lng: 36.792812347412 },
+    mapUrl: "https://www.google.com/maps?q=-1.2548016309738,36.792812347412",
+    phones: ["0717-78-78-07", "0733-78-78-07"],
+    email: "info@recrogroup.org",
+    hours: "Weekdays 9am–5pm, Saturday 9am–1pm",
   },
   {
     id: "mombasa",
     name: "Mombasa",
-    address: "Nyali, Mombasa",
-    coordinates: { lat: -4.0435, lng: 39.6682 },
-    mapUrl: "https://www.google.com/maps?q=-4.0435,39.6682",
-    phone: "+254 700 000 001",
-    hours: "Mon–Sat, 9:00am – 5:30pm",
+    address: "Coming Soon",
+    coordinates: null,
+    mapUrl: null,
+    phones: ["0717-78-78-08", "0733-78-78-08"],
+    email: "info@recrogroup.org",
+    hours: "Weekdays 9am–5pm, Saturday 9am–1pm",
   },
   {
     id: "nakuru",
     name: "Nakuru",
-    address: "Milimani, Nakuru",
-    coordinates: { lat: -0.3031, lng: 36.0800 },
-    mapUrl: "https://www.google.com/maps?q=-0.3031,36.0800",
-    phone: "+254 700 000 002",
-    hours: "Mon–Sat, 9:00am – 5:30pm",
+    address: "Coming Soon",
+    coordinates: null,
+    mapUrl: null,
+    phones: ["0733-78-78-09"],
+    email: "info@recrogroup.org",
+    hours: "Weekdays 9am–5pm, Saturday 9am–1pm",
   },
 ];
 
@@ -247,22 +250,21 @@ export function ContactPage() {
                     <div className="space-y-4">
                       <div className="flex items-start gap-3">
                         <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10">
-                          <MapPin className="size-4 text-primary-deep" />
+                          <Phone className="size-4 text-primary-deep" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">{location.address}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Coordinates: {location.coordinates.lat}, {location.coordinates.lng}
-                          </p>
+                          {location.phones.map((phone, idx) => (
+                            <p key={idx} className="text-sm font-medium">{phone}</p>
+                          ))}
                         </div>
                       </div>
 
                       <div className="flex items-start gap-3">
                         <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10">
-                          <Phone className="size-4 text-primary-deep" />
+                          <Mail className="size-4 text-primary-deep" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">{location.phone}</p>
+                          <p className="text-sm font-medium">{location.email}</p>
                         </div>
                       </div>
 
@@ -275,33 +277,47 @@ export function ContactPage() {
                         </div>
                       </div>
 
-                      <div className="pt-2">
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="w-full rounded-full"
-                        >
-                          <a
-                            href={location.mapUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                      {location.mapUrl && (
+                        <div className="pt-2">
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="w-full rounded-full"
                           >
-                            View on Map
-                          </a>
-                        </Button>
-                      </div>
+                            <a
+                              href={location.mapUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              View on Map
+                            </a>
+                          </Button>
+                        </div>
+                      )}
 
                       {/* Embedded Map */}
-                      <div className="rounded-xl overflow-hidden border border-border">
-                        <iframe
-                          width="100%"
-                          height="250"
-                          style={{ border: 0 }}
-                          src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${location.coordinates.lat},${location.coordinates.lng}&zoom=15`}
-                          allowFullScreen
-                          title={`Map of ${location.name}`}
-                        />
-                      </div>
+                      {location.coordinates ? (
+                        <div className="rounded-xl overflow-hidden border border-border">
+                          <iframe
+                            width="100%"
+                            height="250"
+                            style={{ border: 0 }}
+                            src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${location.coordinates.lat},${location.coordinates.lng}&zoom=15`}
+                            allowFullScreen
+                            title={`Map of ${location.name}`}
+                          />
+                        </div>
+                      ) : (
+                        <div className="rounded-xl overflow-hidden border border-border bg-surface p-12 text-center">
+                          <MapPin className="size-8 mx-auto mb-3 text-muted-foreground/40" />
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Map Coming Soon
+                          </p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">
+                            Location details will be available shortly
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 ))}
@@ -319,7 +335,7 @@ export function ContactPage() {
                     <Mail className="size-4 text-primary-deep" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">hello@recrogroup.co.ke</p>
+                    <p className="text-sm font-medium">info@recrogroup.org</p>
                   </div>
                 </div>
               </div>

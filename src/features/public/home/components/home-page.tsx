@@ -13,9 +13,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import {
-  homeApproachPoints,
   homeBlogPosts,
   homeBookingPerks,
+  homeFramework,
   homeServices,
   homeTestimonials,
   homeTrustFeatures,
@@ -207,35 +207,34 @@ export function HomePage() {
       <section className="border-y border-border bg-surface">
         <div className="container-page py-20">
           <div className="mx-auto max-w-4xl text-center">
-            <span className="eyebrow">Systemic Approach</span>
+            <span className="eyebrow">{homeFramework.title}</span>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl">
               A wholistic view of what it means to be well.
             </h2>
             <p className="mt-6 leading-relaxed text-muted-foreground text-lg max-w-3xl mx-auto">
-              Our distinguishing touch is reassuring and friendly — yet always
-              holds a professional demeanor. Every session is designed to feel
-              safe, human, and forward-moving.
+              {homeFramework.body}
             </p>
           </div>
-          <ul className="mt-12 grid gap-6 sm:grid-cols-2 max-w-5xl mx-auto">
-            {homeApproachPoints.map((p) => (
-              <li key={p} className="flex items-start gap-3 p-6 rounded-2xl bg-card border border-border">
-                <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
-                  <svg width="10" height="10" viewBox="0 0 12 12">
-                    <path
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2 6.5L5 9.5L10 3"
-                    />
-                  </svg>
-                </span>
-                <span className="text-sm text-foreground leading-relaxed">{p}</span>
-              </li>
+          <div className="mt-12 grid gap-6 sm:grid-cols-3 max-w-4xl mx-auto">
+            {[
+              { label: "Biological", desc: "Body & health", icon: "🧬" },
+              { label: "Psychological", desc: "Mind & emotion", icon: "🧠" },
+              { label: "Spiritual", desc: "Meaning & purpose", icon: "✨" },
+            ].map((pillar) => (
+              <div
+                key={pillar.label}
+                className="rounded-2xl border border-border bg-card p-6 text-center shadow-[var(--shadow-soft)]"
+              >
+                <span className="text-3xl">{pillar.icon}</span>
+                <p className="mt-4 font-semibold text-foreground text-lg">
+                  {pillar.label}
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {pillar.desc}
+                </p>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       </section>
 
@@ -249,9 +248,7 @@ export function HomePage() {
               The Recro Grief Camp
             </h2>
             <p className="mt-6 leading-relaxed text-white/90 text-lg max-w-2xl mx-auto">
-              A child-safe, family-friendly therapeutic camp for adolescents
-              navigating the loss of a parent, sibling, or close caregiver.
-              Designed and led by licensed clinicians.
+              A therapeutic camp for children ages 10-16 who, through death have lost a sibling or parent.
             </p>
             <div className="mt-10 flex flex-wrap gap-3 justify-center">
               <Link
@@ -298,7 +295,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* <section className="bg-background">
+      <section className="bg-background">
         <div className="container-page grid gap-12 py-20 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <span className="eyebrow">Why Recro</span>
@@ -327,7 +324,7 @@ export function HomePage() {
             })}
           </div>
         </div>
-      </section> */}
+      </section>
 
       <section className="bg-primary-deep text-background">
         <div className="container-page py-20">
@@ -396,12 +393,14 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-border bg-surface">
-        <div className="container-page py-20">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="eyebrow">Testimonials</span>
-            <h2 className="mt-4 font-serif text-3xl tracking-tight text-foreground md:text-5xl">
-              Words from people we&apos;ve walked with
+      <section className="bg-background">
+        <div className="container-page py-20 ">
+          <div className="mx-auto max-w-4xl text-center">
+            <span className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground">
+              Testimonials
+            </span>
+            <h2 className="mt-6 font-serif text-4xl md:text-5xl lg:text-6xl text-foreground">
+              What our clients say
             </h2>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
@@ -410,14 +409,24 @@ export function HomePage() {
                 key={t.author}
                 className="flex flex-col rounded-3xl border border-border bg-card p-8 shadow-[var(--shadow-soft)]"
               >
-                <blockquote className="flex-1 font-serif text-lg leading-snug text-foreground">
+                <div className="flex gap-0.5 mb-4">
+                  {[...Array(t.rating)].map((_, i) => (
+                    <span key={i} className="text-primary-deep text-base">★</span>
+                  ))}
+                </div>
+                <blockquote className="flex-1 text-sm leading-relaxed text-muted-foreground">
                   &ldquo;{t.quote}&rdquo;
                 </blockquote>
-                <figcaption className="mt-6 border-t border-border pt-5">
-                  <p className="text-sm font-semibold text-foreground">
-                    {t.author}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">{t.role}</p>
+                <figcaption className="mt-6 flex items-center gap-3 border-t border-border pt-4">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full ${t.bgColor} text-white text-sm font-semibold`}>
+                    {t.initials}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {t.author}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t.location}</p>
+                  </div>
                 </figcaption>
               </figure>
             ))}
@@ -426,7 +435,7 @@ export function HomePage() {
       </section>
 
       <section className="bg-background">
-        <div className="container-page py-12 md:py-16">
+        <div className="container-page py-12 md:py-10">
           <div className="card-lift flex flex-col gap-6 rounded-3xl border border-border bg-card p-6 md:flex-row md:items-center md:gap-10 md:p-8">
             <div className="flex items-center gap-4 md:flex-1">
               <span className="inline-grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary-soft text-primary-deep">

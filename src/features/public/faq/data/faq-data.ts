@@ -64,11 +64,11 @@ export const faqs: FAQCategory[] = [
             },
             {
                 q: "Can I book for someone else?",
-                a: "Yes, you can book on behalf of a family member or friend. However, the person receiving therapy must be willing and ready to participate. For children and adolescents, a parent or guardian must book and provide consent.",
+                a: "If they are an adult we will request that they make the call for themselves. Guardians and Parents are to make calls for their children.",
             },
             {
                 q: "Can I reschedule or cancel my appointment?",
-                a: "Yes. Please notify us at least 24 hours in advance to reschedule or cancel. Late cancellations may be subject to a fee.",
+                a: "Yes. Please notify us at least 24 hours in advance to reschedule or cancel. Late cancellations are subject to a fee.",
             },
         ],
     },
@@ -77,7 +77,7 @@ export const faqs: FAQCategory[] = [
         questions: [
             {
                 q: "Can I use my insurance?",
-                a: "Currently, insurance companies do not cover mental health treatment at Recro Group, so payment must be made out of pocket.",
+                a: "Yes, by having your sessions reimbursed. You would need to pay for the session then bring us your Insurance Claim form for us to complete. It is encouraged to speak to your Insurer to make sure that they reimburse for mental health services.",
             },
             {
                 q: "What payment methods do you accept?",
@@ -85,7 +85,7 @@ export const faqs: FAQCategory[] = [
             },
             {
                 q: "Do you offer sliding-scale fees?",
-                a: "Yes, we offer sliding-scale spots for clients who need financial assistance. Please ask us about this when booking, and we'll work with you to find an arrangement that fits your situation.",
+                a: "No, however we do have sponsorships from time to time. Kindly ask about availability when making your booking.",
             },
         ],
     },

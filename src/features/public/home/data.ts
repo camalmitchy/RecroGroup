@@ -50,18 +50,25 @@ export const homeApproachPoints = [
   "Sliding-scale options for those in need",
 ] as const;
 
+export const homeFramework = {
+  title: "BioPsychosocialSpiritual Framework",
+  body: "Systems framework is a hallmark way that MFTs work with clients; which sets them apart from other clinical disciplines. The systemic lens is one where the client is viewed from the perspective of their relationships.",
+  highlight:
+    "This whole person perspective garners insight into the patterns, connections, and contexts that shape wellbeing.",
+} as const;
+
 export const homeTrustFeatures = [
   {
     title: "Confidential by design",
-    body: "All sessions and records are handled in line with the Kenya Data Protection Act.",
+    body: "All sessions and records are handled in line with HIPAA guidelines, Counsellors and Psychologists board, and AAMFT ethical guidelines.",
   },
   {
     title: "Therapist–client fit",
-    body: "We match you with a clinician suited to your goals — and you can change at any time.",
+    body: "Your goals are important to us, should you feel that Recro is not the right fit for you we will assist by giving you a referral for your consideration.",
   },
   {
-    title: "Evidence-based care",
-    body: "Modern approaches — CBT, EFT, trauma-informed care — adapted to your context.",
+    title: "Systems Based therapy",
+    body: "Modern Systemic approaches tailored to your goals.",
   },
 ] as const;
 
@@ -112,8 +119,8 @@ export const homeBlogPosts = [
 
 export const homeBookingPerks = [
   "M-Pesa & bank transfer supported",
-  "In-person, online or phone",
-  "Free 15-min orientation call available",
+  "In-person sessions",
+  "Free consultation call",
 ] as const;
 
 export const homeTestimonials = [
@@ -122,17 +129,29 @@ export const homeTestimonials = [
       "I felt heard from the very first session. Recro gave me language for things I had carried silently for years.",
     author: "A. M.",
     role: "Individual therapy client",
+    location: "Westlands, Nairobi",
+    rating: 5,
+    initials: "AM",
+    bgColor: "bg-primary-deep",
   },
   {
     quote:
       "We came in ready to give up. Three months later, we had tools we still use every week.",
     author: "J. & P.",
     role: "Couples therapy clients",
+    location: "Karen, Nairobi",
+    rating: 5,
+    initials: "JP",
+    bgColor: "bg-primary",
   },
   {
     quote:
       "Camp gave my daughter friends who understood without her having to explain. It gave me hope.",
     author: "Parent of camper",
     role: "Grief Camp family",
+    location: "Langata, Nairobi",
+    rating: 5,
+    initials: "PC",
+    bgColor: "bg-primary-deep",
   },
 ] as const;
