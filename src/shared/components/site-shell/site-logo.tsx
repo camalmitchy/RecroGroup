@@ -5,9 +5,9 @@ export function SiteLogo() {
   return (
     <Link href="/" className="flex items-center">
       <Image
-        src="/assets/Recro_logo.png"
+        src="/assets/r.png"
         alt="Recro Group"
-        width={224}
+        width={56}
         height={56}
         className="h-14 w-auto object-contain"
         priority

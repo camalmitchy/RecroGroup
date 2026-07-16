@@ -5,18 +5,19 @@ import Link from "next/link";
 import {
   ArrowRight,
   HeartHandshake,
-  Leaf,
+  Mail,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import {
-  homeApproachPoints,
   homeBlogPosts,
   homeBookingPerks,
+  homeFramework,
   homeServices,
-  homeStats,
+  homeTestimonials,
   homeTrustFeatures,
   homeVideos,
 } from "../data";
@@ -85,6 +86,8 @@ function HomeBookingForm() {
 }
 
 export function HomePage() {
+  const [email, setEmail] = useState("");
+
   return (
     <>
       {/* HERO */}
@@ -101,7 +104,7 @@ export function HomePage() {
               <strong className="text-foreground">Group Limited</strong> is a Behavioral Health Organization that utilizes Psychotherapy to work with individuals, families, couples, groups and organizations dealing with relational challenges. By using a systemic view, Recro Group works from the Biopsychosocialspiritual Framework which employs a wholistic approach to treatment.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
-              <Link href="/join-us" className="btn-primary">
+              <Link href="/booking" className="btn-primary">
                 Book a Session
               </Link>
               <Link href="/services" className="btn-secondary">
@@ -204,35 +207,34 @@ export function HomePage() {
       <section className="border-y border-border bg-surface">
         <div className="container-page py-20">
           <div className="mx-auto max-w-4xl text-center">
-            <span className="eyebrow">Systemic Approach</span>
+            <span className="eyebrow">{homeFramework.title}</span>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl">
               A wholistic view of what it means to be well.
             </h2>
             <p className="mt-6 leading-relaxed text-muted-foreground text-lg max-w-3xl mx-auto">
-              Our distinguishing touch is reassuring and friendly — yet always
-              holds a professional demeanor. Every session is designed to feel
-              safe, human, and forward-moving.
+              {homeFramework.body}
             </p>
           </div>
-          <ul className="mt-12 grid gap-6 sm:grid-cols-2 max-w-5xl mx-auto">
-            {homeApproachPoints.map((p) => (
-              <li key={p} className="flex items-start gap-3 p-6 rounded-2xl bg-card border border-border">
-                <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
-                  <svg width="10" height="10" viewBox="0 0 12 12">
-                    <path
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2 6.5L5 9.5L10 3"
-                    />
-                  </svg>
-                </span>
-                <span className="text-sm text-foreground leading-relaxed">{p}</span>
-              </li>
+          <div className="mt-12 grid gap-6 sm:grid-cols-3 max-w-4xl mx-auto">
+            {[
+              { label: "Biological", desc: "Body & health", icon: "🧬" },
+              { label: "Psychological", desc: "Mind & emotion", icon: "🧠" },
+              { label: "Spiritual", desc: "Meaning & purpose", icon: "✨" },
+            ].map((pillar) => (
+              <div
+                key={pillar.label}
+                className="rounded-2xl border border-border bg-card p-6 text-center shadow-[var(--shadow-soft)]"
+              >
+                <span className="text-3xl">{pillar.icon}</span>
+                <p className="mt-4 font-semibold text-foreground text-lg">
+                  {pillar.label}
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {pillar.desc}
+                </p>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       </section>
 
@@ -246,13 +248,11 @@ export function HomePage() {
               The Recro Grief Camp
             </h2>
             <p className="mt-6 leading-relaxed text-white/90 text-lg max-w-2xl mx-auto">
-              A child-safe, family-friendly therapeutic camp for adolescents
-              navigating the loss of a parent, sibling, or close caregiver.
-              Designed and led by licensed clinicians.
+              A therapeutic camp for children ages 10-16 who, through death have lost a sibling or parent.
             </p>
             <div className="mt-10 flex flex-wrap gap-3 justify-center">
               <Link
-                href="/join-us?service=grief-camp"
+                href="/booking?service=children"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#3F5B43] transition hover:bg-white/90"
               >
                 Apply for Grief Camp
@@ -393,26 +393,86 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="container-page bg-background py-20">
-        <div className="relative overflow-hidden rounded-[2rem] bg-surface px-8 py-16 text-center">
-          <div className="mx-auto max-w-3xl">
-            <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
-              Restoration begins with a conversation.
+      <section className="bg-background">
+        <div className="container-page py-20 ">
+          <div className="mx-auto max-w-4xl text-center">
+            <span className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground">
+              Testimonials
+            </span>
+            <h2 className="mt-6 font-serif text-4xl md:text-5xl lg:text-6xl text-foreground">
+              What our clients say
             </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
-              Whether you&apos;re navigating personal challenges or arranging
-              support for your team, Recro Group is here. Friendly,
-              professional, and entirely confidential.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/join-us" className="btn-primary">
-                Book a Session
-              </Link>
-              <Link href="/contact" className="btn-secondary">
-                Contact Recro
-              </Link>
-            </div>
           </div>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {homeTestimonials.map((t) => (
+              <figure
+                key={t.author}
+                className="flex flex-col rounded-3xl border border-border bg-card p-8 shadow-[var(--shadow-soft)]"
+              >
+                <div className="flex gap-0.5 mb-4">
+                  {[...Array(t.rating)].map((_, i) => (
+                    <span key={i} className="text-primary-deep text-base">★</span>
+                  ))}
+                </div>
+                <blockquote className="flex-1 text-sm leading-relaxed text-muted-foreground">
+                  &ldquo;{t.quote}&rdquo;
+                </blockquote>
+                <figcaption className="mt-6 flex items-center gap-3 border-t border-border pt-4">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full ${t.bgColor} text-white text-sm font-semibold`}>
+                    {t.initials}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {t.author}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t.location}</p>
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-background">
+        <div className="container-page py-12 md:py-10">
+          <div className="card-lift flex flex-col gap-6 rounded-3xl border border-border bg-card p-6 md:flex-row md:items-center md:gap-10 md:p-8">
+            <div className="flex items-center gap-4 md:flex-1">
+              <span className="inline-grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary-soft text-primary-deep">
+                <Mail size={24} strokeWidth={1.5} />
+              </span>
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
+                  Stay connected
+                </h2>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  Get new insights, videos, and resources delivered to your
+                  inbox.
+                </p>
+              </div>
+            </div>
+            <form
+              className="flex flex-col gap-3 sm:flex-row md:min-w-[380px]"
+              onSubmit={(e) => {
+                e.preventDefault();
+              }}
+            >
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Your email address"
+                required
+                className="flex-1 rounded-full border border-border bg-background px-5 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
+              />
+              <button type="submit" className="btn-primary shrink-0">
+                Subscribe
+              </button>
+            </form>
+          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground md:text-left">
+            We respect your privacy. Unsubscribe anytime.
+          </p>
         </div>
       </section>
     </>

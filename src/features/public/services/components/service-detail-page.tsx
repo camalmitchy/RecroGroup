@@ -50,7 +50,13 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 <Link
-                  href={`/join-us?service=${service.key}`}
+                  href={
+                    service.key === "consortium"
+                      ? `/services/consortium/apply`
+                      : service.key === "corporate"
+                        ? `/services/corporate/apply`
+                        : `/booking?service=${service.key}`
+                  }
                   className="btn-primary rounded-full px-7"
                 >
                   {service.ctaLabel}
@@ -325,10 +331,17 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
               </div>
 
               <Link
-                href={`/join-us?service=${service.key}`}
+                href={
+                  service.key === "consortium"
+                    ? `/services/consortium/apply`
+                    : service.key === "corporate"
+                      ? `/services/corporate/apply`
+                      : `/booking?service=${service.key}`
+                }
                 className="btn-primary mt-8 w-full rounded-full"
               >
-                Book now <ArrowRight className="ml-2 size-4" />
+                {service.key === "consortium" || service.key === "corporate" ? "Apply Now" : "Book now"}{" "}
+                <ArrowRight className="ml-2 size-4" />
               </Link>
             </div>
           </div>

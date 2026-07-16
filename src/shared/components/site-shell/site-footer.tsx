@@ -45,7 +45,7 @@ export function SiteFooter() {
           <h4 className="text-sm font-semibold text-foreground">Engage</h4>
           <ul className="mt-4 space-y-2.5 text-sm text-muted-foreground">
             <li>
-              <Link href="/join-us" className="hover:text-primary">
+              <Link href="/booking" className="hover:text-primary">
                 Book a Session
               </Link>
             </li>

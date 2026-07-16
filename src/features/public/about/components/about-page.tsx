@@ -8,7 +8,6 @@ import {
   GraduationCap,
   HeartHandshake,
   Quote,
-  Sparkles,
 } from "lucide-react";
 
 import { serviceList } from "@/features/public/services/data";
@@ -16,7 +15,6 @@ import { serviceList } from "@/features/public/services/data";
 import {
   founder,
   founderHighlights,
-  framework,
   mftVideo,
   recroCoreValues,
 } from "../data";
@@ -147,43 +145,6 @@ export function AboutPage() {
         </div>
       </section>
 
-      {/* Framework */}
-      <section className="bg-primary-deep py-16 text-primary-foreground lg:py-20">
-        <div className="container-page grid gap-12 lg:grid-cols-2 lg:items-center">
-          <div>
-            <span className="text-xs font-semibold tracking-[0.2em] text-accent uppercase">
-              {framework.title}
-            </span>
-            <p className="mt-5 text-lg leading-relaxed text-primary-foreground/90">
-              {framework.body}
-            </p>
-            <p className="mt-5 font-serif text-xl leading-relaxed text-primary-foreground md:text-2xl">
-              {framework.highlight}
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-            {[
-              { label: "Biological", desc: "Body & health" },
-              { label: "Psychological", desc: "Mind & emotion" },
-              { label: "Spiritual", desc: "Meaning & purpose" },
-            ].map((pillar) => (
-              <div
-                key={pillar.label}
-                className="rounded-2xl border border-primary-foreground/15 bg-primary-foreground/10 p-5 backdrop-blur-sm"
-              >
-                <Sparkles size={18} className="text-accent" />
-                <p className="mt-3 font-semibold text-primary-foreground">
-                  {pillar.label}
-                </p>
-                <p className="mt-1 text-sm text-primary-foreground/70">
-                  {pillar.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Vision & Mission */}
       <section className="container-page py-16 lg:py-20">
         <div className="text-center">
@@ -283,7 +244,7 @@ export function AboutPage() {
               We&apos;re here to listen and walk with you.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/join-us" className="btn-primary">
+              <Link href="/booking" className="btn-primary">
                 Book a Session
               </Link>
               <Link href="/contact" className="btn-secondary">
