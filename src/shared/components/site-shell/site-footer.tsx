@@ -72,15 +72,18 @@ export function SiteFooter() {
           <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
             <li className="flex items-start gap-2.5">
               <Phone className="mt-0.5 size-4 text-primary" />
-              +254 700 000 000
+              <div>
+                <div>0717-78-78-07</div>
+                <div>0733-78-78-07</div>
+              </div>
             </li>
             <li className="flex items-start gap-2.5">
               <Mail className="mt-0.5 size-4 text-primary" />
-              hello@recrogroup.org
+              info@recrogroup.org
             </li>
             <li className="flex items-start gap-2.5">
               <MapPin className="mt-0.5 size-4 text-primary" />
-              Nairobi, Kenya
+              Shanzu Rd, Nairobi, Kenya
             </li>
           </ul>
         </div>

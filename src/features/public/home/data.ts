@@ -35,6 +35,12 @@ export const homeServices = [
     body: "Workshops, EAP programs and team check-ins that protect your people's wellbeing.",
     serviceKey: "corporate",
   },
+  {
+    icon: "/assets/icons/group-therapy.svg",
+    title: "Consortium",
+    body: "A collaborative network of mental health professionals advancing behavioral health services across Kenya.",
+    serviceKey: "consortium",
+  },
 ] as const;
 
 export const homeStats = [
