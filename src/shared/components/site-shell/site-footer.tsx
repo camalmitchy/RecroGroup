@@ -34,8 +34,8 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link href="/insights" className="hover:text-primary">
-                Insights
+              <Link href="/media" className="hover:text-primary">
+                Media
               </Link>
             </li>
           </ul>
