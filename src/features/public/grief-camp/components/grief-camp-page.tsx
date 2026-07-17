@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ArrowRight, Heart, Home, Sparkles, Users } from "lucide-react";
+import { Check, ArrowRight, Heart, Home, Sparkles, Users, Download, Calendar } from "lucide-react";
 
 import {
   camperPricing,
@@ -307,6 +307,116 @@ export function GriefCampPage() {
               </p>
             </div>
           </aside>
+        </div>
+      </section>
+
+      {/* 2027 Camp Information */}
+      <section className="bg-primary-deep/5 px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-4 py-1.5 text-xs font-semibold tracking-[0.18em] uppercase text-primary-deep">
+              <Calendar className="size-3.5" />
+              Upcoming Camp
+            </span>
+            <h2 className="mt-6 font-serif text-4xl text-foreground md:text-5xl">
+              2027 Grief Camp
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground font-medium">
+              Tentative Dates: August 13th - 15th, 2027
+            </p>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-2">
+            {/* Camper Pricing */}
+            <div className="rounded-3xl border border-border bg-card p-8 shadow-[var(--shadow-soft)]">
+              <h3 className="text-xl font-serif font-semibold text-foreground mb-6">
+                Campers
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between py-3 border-b border-border">
+                  <div>
+                    <p className="font-semibold text-foreground">Mega deal</p>
+                    <p className="text-sm text-muted-foreground">by February 28th</p>
+                  </div>
+                  <p className="text-2xl font-serif font-semibold text-primary-deep">
+                    KES 11,500/-
+                  </p>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-border">
+                  <div>
+                    <p className="font-semibold text-foreground">Early price</p>
+                    <p className="text-sm text-muted-foreground">after March 1st</p>
+                  </div>
+                  <p className="text-2xl font-serif font-semibold text-primary-deep">
+                    KES 13,500/-
+                  </p>
+                </div>
+                <div className="flex items-center justify-between py-3">
+                  <div>
+                    <p className="font-semibold text-foreground">Regular price</p>
+                    <p className="text-sm text-muted-foreground">after June 30th</p>
+                  </div>
+                  <p className="text-2xl font-serif font-semibold text-primary-deep">
+                    KES 15,500/-
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Parent Pricing */}
+            <div className="rounded-3xl border border-border bg-card p-8 shadow-[var(--shadow-soft)]">
+              <h3 className="text-xl font-serif font-semibold text-foreground mb-6">
+                Parents
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between py-3 border-b border-border">
+                  <div>
+                    <p className="font-semibold text-foreground">Super saver</p>
+                    <p className="text-sm text-muted-foreground">by February 28th</p>
+                  </div>
+                  <p className="text-2xl font-serif font-semibold text-primary-deep">
+                    KES 3,000/-
+                  </p>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-border">
+                  <div>
+                    <p className="font-semibold text-foreground">Early pricing</p>
+                    <p className="text-sm text-muted-foreground">after March 1st</p>
+                  </div>
+                  <p className="text-2xl font-serif font-semibold text-primary-deep">
+                    KES 5,000/-
+                  </p>
+                </div>
+                <div className="flex items-center justify-between py-3">
+                  <div>
+                    <p className="font-semibold text-foreground">Regular pricing</p>
+                    <p className="text-sm text-muted-foreground">after June 30th</p>
+                  </div>
+                  <p className="text-2xl font-serif font-semibold text-primary-deep">
+                    KES 7,000/-
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Download Flyer Section */}
+          <div className="mt-10 text-center">
+            <p className="text-sm text-muted-foreground mb-4">
+              Download the full camp flyer for more details
+            </p>
+            <Link
+              href="/downloads/grief-camp-2027-flyer.pdf"
+              download
+              className="inline-flex items-center gap-2 rounded-full bg-primary-deep px-8 py-3 text-sm font-semibold text-white transition hover:bg-primary-deep/90"
+            >
+              <Download className="size-4" />
+              Download 2027 Camp Flyer
+            </Link>
+            <p className="mt-4 text-xs text-muted-foreground">
+              *Dates are tentative and subject to confirmation
+            </p>
+          </div>
         </div>
       </section>
 

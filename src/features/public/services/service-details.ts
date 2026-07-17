@@ -238,7 +238,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     overview: [
       "Couples therapy at Recro is not about picking sides. It is about understanding the dance you have been doing together — the patterns that escalate conflict, the moments of disconnection, and the hopes you still share beneath the frustration.",
       "We work with dating couples, engaged partners, married couples, and those considering separation. Sessions are 75 minutes to allow both voices adequate space.",
-      "Using Emotionally Focused Therapy (EFT) and Gottman-informed techniques, we help partners move from blame to understanding, and from gridlock to repair.",
+      "Using systemic therapies, we help partners move from blame to understanding, and from gridlock to repair.",
     ],
     whoFor:
       "Partners at any relationship stage who want to improve communication, rebuild trust after rupture, or navigate major decisions together.",
@@ -754,7 +754,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
       "We partner with organisations who take the mental health of their people seriously. Engagements range from a 60-minute keynote to a multi-session wellness programme, always grounded in clinical insight and delivered with our missions and vision in mind.",
     overview: [
       "Mental health at work is no longer a nice-to-have — it is a retention, productivity, and leadership imperative. Recro Group partners with HR teams, people leaders, and organisations across Kenya to design wellness programmes that actually get used.",
-      "Our corporate offerings range from one-off workshops on burnout and grief literacy to full Employee Assistance Programmes (EAPs) with confidential therapy access for your entire workforce.",
+      "Our corporate offerings range from one-off workshops on stress managemement, burnout or leadership training with confidential therapy access for your entire workforce.",
       "We also support managers — the front line of workplace mental health — with training on psychological safety, difficult conversations, and team debriefs after critical incidents.",
     ],
     whoFor:
