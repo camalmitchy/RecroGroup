@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
     LayoutDashboard,
     Calendar,
@@ -14,6 +15,9 @@ import {
     Search,
     Bell,
     ArrowLeft,
+    User,
+    LogOut,
+    ChevronDown,
 } from "lucide-react";
 
 interface AdminShellProps {
@@ -23,6 +27,35 @@ interface AdminShellProps {
 
 export function AdminShell({ children, isAdmin = false }: AdminShellProps) {
     const pathname = usePathname();
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+    // Mock notifications - TODO: Replace with real data
+    const notifications = [
+        {
+            id: "1",
+            title: "New booking request",
+            message: "Jane Doe requested a session for July 15",
+            time: "5 min ago",
+            unread: true,
+        },
+        {
+            id: "2",
+            title: "Payment received",
+            message: "M-Pesa payment of KES 5,000 received",
+            time: "1 hour ago",
+            unread: true,
+        },
+        {
+            id: "3",
+            title: "Grief camp application",
+            message: "New application from Sarah Kimani",
+            time: "2 hours ago",
+            unread: false,
+        },
+    ];
+
+    const unreadCount = notifications.filter((n) => n.unread).length;
 
     const navItems = [
         { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
@@ -37,6 +70,14 @@ export function AdminShell({ children, isAdmin = false }: AdminShellProps) {
 
     const visibleItems = navItems.filter((item) => !item.adminOnly || isAdmin);
 
+    const handleSignOut = () => {
+        // TODO: Implement sign out logic
+        if (confirm("Sign out of admin panel?")) {
+            alert("Sign out functionality - coming soon");
+            // window.location.href = "/auth/sign-in";
+        }
+    };
+
     return (
         <div className="flex min-h-screen bg-[#fafafa]">
             {/* Sidebar */}
@@ -49,7 +90,9 @@ export function AdminShell({ children, isAdmin = false }: AdminShellProps) {
                         </div>
                         <div>
                             <p className="text-sm font-semibold">Recro Admin</p>
-                            <p className="text-xs text-muted-foreground">Staff</p>
+                            <p className="text-xs text-muted-foreground">
+                                {isAdmin ? "Admin" : "Staff"}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -64,8 +107,8 @@ export function AdminShell({ children, isAdmin = false }: AdminShellProps) {
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${isActive
-                                    ? "bg-primary-soft text-primary-deep"
-                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                        ? "bg-primary-soft text-primary-deep"
+                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                     }`}
                             >
                                 <Icon size={18} />
@@ -100,17 +143,127 @@ export function AdminShell({ children, isAdmin = false }: AdminShellProps) {
                             <input
                                 type="search"
                                 placeholder="Search bookings, customers..."
-                                className="w-full pl-9 pr-3 h-9 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="w-full pl-9 pr-3 h-9 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-deep/30"
                             />
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button className="h-9 w-9 grid place-items-center rounded-lg hover:bg-gray-100 text-gray-600">
-                            <Bell size={18} />
-                        </button>
-                        <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
-                            <span className="text-xs font-semibold text-gray-600">AD</span>
-                            <span className="text-sm font-medium text-gray-900">Staff</span>
+                        {/* Notifications */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowNotifications(!showNotifications)}
+                                className="relative h-9 w-9 grid place-items-center rounded-lg hover:bg-gray-100 text-gray-600"
+                            >
+                                <Bell size={18} />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Notifications Dropdown */}
+                            {showNotifications && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 z-10"
+                                        onClick={() => setShowNotifications(false)}
+                                    />
+                                    <div className="absolute right-0 top-12 z-20 w-80 bg-white border border-gray-200 rounded-lg shadow-lg">
+                                        <div className="border-b border-gray-200 px-4 py-3">
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-sm font-semibold text-gray-900">
+                                                    Notifications
+                                                </h3>
+                                                {unreadCount > 0 && (
+                                                    <span className="text-xs text-primary-deep font-medium">
+                                                        {unreadCount} new
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="max-h-96 overflow-y-auto">
+                                            {notifications.map((notif) => (
+                                                <div
+                                                    key={notif.id}
+                                                    className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 ${notif.unread ? "bg-blue-50/50" : ""
+                                                        }`}
+                                                >
+                                                    <div className="flex items-start gap-2">
+                                                        {notif.unread && (
+                                                            <div className="mt-2 h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
+                                                        )}
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium text-gray-900">
+                                                                {notif.title}
+                                                            </p>
+                                                            <p className="text-xs text-gray-600 mt-0.5">
+                                                                {notif.message}
+                                                            </p>
+                                                            <p className="text-xs text-gray-500 mt-1">
+                                                                {notif.time}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="border-t border-gray-200 px-4 py-2">
+                                            <Link
+                                                href="/admin/notifications"
+                                                className="text-xs text-primary-deep font-medium hover:underline"
+                                            >
+                                                View all notifications
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Profile Menu */}
+                        <div className="relative pl-3 border-l border-gray-200">
+                            <button
+                                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                                className="flex items-center gap-2 hover:opacity-80 transition"
+                            >
+                                <div className="h-8 w-8 rounded-full bg-primary-deep text-white grid place-items-center text-sm font-semibold">
+                                    AD
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-sm font-medium text-gray-900">Admin User</p>
+                                    <p className="text-xs text-gray-500">admin@recrogroup.org</p>
+                                </div>
+                                <ChevronDown size={14} className="text-gray-400" />
+                            </button>
+
+                            {/* Profile Dropdown */}
+                            {showProfileMenu && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 z-10"
+                                        onClick={() => setShowProfileMenu(false)}
+                                    />
+                                    <div className="absolute right-0 top-12 z-20 w-56 bg-white border border-gray-200 rounded-lg shadow-lg">
+                                        <div className="p-2">
+                                            <Link
+                                                href="/admin/profile"
+                                                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                            >
+                                                <User size={16} />
+                                                Profile Settings
+                                            </Link>
+                                            <button
+                                                onClick={handleSignOut}
+                                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50"
+                                            >
+                                                <LogOut size={16} />
+                                                Sign Out
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </header>

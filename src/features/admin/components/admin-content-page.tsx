@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AdminShell, Card, PageHeader, DataTable, StatusBadge } from "./admin-shell";
-import { Plus } from "lucide-react";
+import { Plus, Edit2, Trash2 } from "lucide-react";
 
 export function AdminContentPage() {
     const [tab, setTab] = useState<"blog" | "media" | "faqs" | "testimonials">("blog");
@@ -54,6 +54,25 @@ export function AdminContentPage() {
         },
     ];
 
+    const handleAdd = (type: string) => {
+        // TODO: Open modal or navigate to add form
+        console.log(`Adding new ${type}`);
+        alert(`Add new ${type} - Form coming soon`);
+    };
+
+    const handleEdit = (type: string, id: string) => {
+        // TODO: Open modal or navigate to edit form
+        console.log(`Editing ${type} ${id}`);
+        alert(`Edit ${type} ${id} - Form coming soon`);
+    };
+
+    const handleDelete = (type: string, id: string) => {
+        if (!confirm(`Delete this ${type}? This action cannot be undone.`)) return;
+        // TODO: Implement delete logic with Prisma
+        console.log(`Deleting ${type} ${id}`);
+        alert(`${type} deleted`);
+    };
+
     const tabs: Array<{ k: typeof tab; label: string }> = [
         { k: "blog", label: "Blog" },
         { k: "media", label: "Media" },
@@ -71,8 +90,8 @@ export function AdminContentPage() {
                             key={t.k}
                             onClick={() => setTab(t.k)}
                             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${tab === t.k
-                                    ? "border-primary text-primary-deep"
-                                    : "border-transparent text-gray-600 hover:text-gray-900"
+                                ? "border-primary-deep text-primary-deep"
+                                : "border-transparent text-gray-600 hover:text-gray-900"
                                 }`}
                         >
                             {t.label}
@@ -87,14 +106,17 @@ export function AdminContentPage() {
                             title="Blog posts"
                             description="Articles published on the public site."
                             actions={
-                                <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90">
+                                <button
+                                    onClick={() => handleAdd("blog post")}
+                                    className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary-deep text-white text-sm font-semibold hover:bg-primary-deep/90"
+                                >
                                     <Plus size={14} /> Add post
                                 </button>
                             }
                         />
                         <Card>
                             <DataTable
-                                columns={["Title", "Slug", "Category", "Status"]}
+                                columns={["Title", "Slug", "Category", "Status", "Actions"]}
                                 rows={blogPosts.map((r) => [
                                     r.title,
                                     r.slug,
@@ -102,6 +124,22 @@ export function AdminContentPage() {
                                     <StatusBadge key="s" tone={r.is_published ? "success" : "muted"}>
                                         {r.is_published ? "Published" : "Draft"}
                                     </StatusBadge>,
+                                    <div key="a" className="flex gap-2">
+                                        <button
+                                            onClick={() => handleEdit("blog post", r.id)}
+                                            className="rounded-md bg-blue-100 p-2 text-blue-700 hover:bg-blue-200"
+                                            title="Edit"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete("blog post", r.id)}
+                                            className="rounded-md bg-gray-100 p-2 text-gray-700 hover:bg-gray-200"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>,
                                 ])}
                             />
                         </Card>
@@ -115,14 +153,17 @@ export function AdminContentPage() {
                             title="Media"
                             description="Videos and podcast episodes."
                             actions={
-                                <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90">
+                                <button
+                                    onClick={() => handleAdd("media")}
+                                    className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary-deep text-white text-sm font-semibold hover:bg-primary-deep/90"
+                                >
                                     <Plus size={14} /> Add media
                                 </button>
                             }
                         />
                         <Card>
                             <DataTable
-                                columns={["Title", "Type", "Status"]}
+                                columns={["Title", "Type", "Status", "Actions"]}
                                 rows={mediaItems.map((r) => [
                                     r.title,
                                     <span key="k" className="capitalize">
@@ -131,6 +172,22 @@ export function AdminContentPage() {
                                     <StatusBadge key="s" tone={r.is_published ? "success" : "muted"}>
                                         {r.is_published ? "Live" : "Draft"}
                                     </StatusBadge>,
+                                    <div key="a" className="flex gap-2">
+                                        <button
+                                            onClick={() => handleEdit("media", r.id)}
+                                            className="rounded-md bg-blue-100 p-2 text-blue-700 hover:bg-blue-200"
+                                            title="Edit"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete("media", r.id)}
+                                            className="rounded-md bg-gray-100 p-2 text-gray-700 hover:bg-gray-200"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>,
                                 ])}
                             />
                         </Card>
@@ -144,14 +201,17 @@ export function AdminContentPage() {
                             title="FAQs"
                             description="Frequently asked questions on the public site."
                             actions={
-                                <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90">
+                                <button
+                                    onClick={() => handleAdd("FAQ")}
+                                    className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary-deep text-white text-sm font-semibold hover:bg-primary-deep/90"
+                                >
                                     <Plus size={14} /> Add FAQ
                                 </button>
                             }
                         />
                         <Card>
                             <DataTable
-                                columns={["Question", "Category", "Order", "Status"]}
+                                columns={["Question", "Category", "Order", "Status", "Actions"]}
                                 rows={faqs.map((r) => [
                                     r.question,
                                     r.category,
@@ -159,6 +219,22 @@ export function AdminContentPage() {
                                     <StatusBadge key="s" tone={r.is_published ? "success" : "muted"}>
                                         {r.is_published ? "Live" : "Hidden"}
                                     </StatusBadge>,
+                                    <div key="a" className="flex gap-2">
+                                        <button
+                                            onClick={() => handleEdit("FAQ", r.id)}
+                                            className="rounded-md bg-blue-100 p-2 text-blue-700 hover:bg-blue-200"
+                                            title="Edit"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete("FAQ", r.id)}
+                                            className="rounded-md bg-gray-100 p-2 text-gray-700 hover:bg-gray-200"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>,
                                 ])}
                             />
                         </Card>
@@ -172,14 +248,17 @@ export function AdminContentPage() {
                             title="Testimonials"
                             description="Client testimonials shown across the site."
                             actions={
-                                <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90">
+                                <button
+                                    onClick={() => handleAdd("testimonial")}
+                                    className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary-deep text-white text-sm font-semibold hover:bg-primary-deep/90"
+                                >
                                     <Plus size={14} /> Add testimonial
                                 </button>
                             }
                         />
                         <Card>
                             <DataTable
-                                columns={["Author", "Role", "Rating", "Status"]}
+                                columns={["Author", "Role", "Rating", "Status", "Actions"]}
                                 rows={testimonials.map((r) => [
                                     r.author_name,
                                     r.role,
@@ -187,6 +266,22 @@ export function AdminContentPage() {
                                     <StatusBadge key="s" tone={r.is_published ? "success" : "muted"}>
                                         {r.is_published ? "Live" : "Draft"}
                                     </StatusBadge>,
+                                    <div key="a" className="flex gap-2">
+                                        <button
+                                            onClick={() => handleEdit("testimonial", r.id)}
+                                            className="rounded-md bg-blue-100 p-2 text-blue-700 hover:bg-blue-200"
+                                            title="Edit"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete("testimonial", r.id)}
+                                            className="rounded-md bg-gray-100 p-2 text-gray-700 hover:bg-gray-200"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>,
                                 ])}
                             />
                         </Card>

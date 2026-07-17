@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { Check, X, Download, Filter } from "lucide-react";
 import { AdminShell, Card, PageHeader, DataTable, StatusBadge } from "./admin-shell";
 
 export function AdminBookingsPage() {
-    // TODO: Replace with real data from Prisma
     const [bookings] = useState([
         {
             id: "1",
@@ -26,6 +26,16 @@ export function AdminBookingsPage() {
             status: "confirmed",
             payment_status: "paid",
         },
+        {
+            id: "3",
+            reference: "RQ-ABC123",
+            client_name: "Mary Johnson",
+            client_email: "mary@example.com",
+            preferred_date: "2026-07-17",
+            therapist_id: "2",
+            status: "completed",
+            payment_status: "paid",
+        },
     ]);
 
     const [therapists] = useState([
@@ -34,11 +44,49 @@ export function AdminBookingsPage() {
         { id: "3", full_name: "Dr. Amina Hassan" },
     ]);
 
+    const [selectedTherapist, setSelectedTherapist] = useState<string>("all");
+    const [selectedStatus, setSelectedStatus] = useState<string>("all");
+
     const handleUpdate = (id: string, patch: Record<string, any>, msg = "Updated") => {
         // TODO: Implement update logic with Prisma
         console.log("Update booking", id, patch);
         alert(msg);
     };
+
+    const handleExport = () => {
+        // TODO: Implement CSV export
+        const csv = [
+            ["Reference", "Client", "Email", "Date", "Therapist", "Status", "Payment"],
+            ...filteredBookings.map((b) => [
+                b.reference,
+                b.client_name,
+                b.client_email,
+                b.preferred_date,
+                therapists.find((t) => t.id === b.therapist_id)?.full_name ?? "Unassigned",
+                b.status,
+                b.payment_status,
+            ]),
+        ]
+            .map((row) => row.join(","))
+            .join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `bookings-${new Date().toISOString().split("T")[0]}.csv`;
+        a.click();
+    };
+
+    const filteredBookings = bookings.filter((booking) => {
+        if (selectedTherapist !== "all" && booking.therapist_id !== selectedTherapist) {
+            return false;
+        }
+        if (selectedStatus !== "all" && booking.status !== selectedStatus) {
+            return false;
+        }
+        return true;
+    });
 
     const statusTone = (s: string) =>
         s === "confirmed" ? "info" : s === "completed" ? "success" : s === "cancelled" ? "danger" : "warning";
@@ -51,20 +99,59 @@ export function AdminBookingsPage() {
                     description="Incoming booking requests and lifecycle actions."
                 />
 
+                {/* Filters and Export */}
+                <div className="mt-6 flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <Filter size={18} className="text-gray-500" />
+                        <select
+                            value={selectedTherapist}
+                            onChange={(e) => setSelectedTherapist(e.target.value)}
+                            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-deep focus:outline-none focus:ring-1 focus:ring-primary-deep"
+                        >
+                            <option value="all">All Therapists</option>
+                            {therapists.map((t) => (
+                                <option key={t.id} value={t.id}>
+                                    {t.full_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <select
+                        value={selectedStatus}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-deep focus:outline-none focus:ring-1 focus:ring-primary-deep"
+                    >
+                        <option value="all">All Statuses</option>
+                        <option value="requested">Requested</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+
+                    <button
+                        onClick={handleExport}
+                        className="ml-auto flex items-center gap-2 rounded-lg bg-primary-deep px-4 py-2 text-sm font-semibold text-white hover:bg-primary-deep/90"
+                    >
+                        <Download size={16} />
+                        Export CSV
+                    </button>
+                </div>
+
                 <Card className="mt-6">
-                    {bookings.length === 0 ? (
-                        <div className="p-10 text-center text-gray-600 text-sm">
-                            No bookings yet.
+                    {filteredBookings.length === 0 ? (
+                        <div className="p-10 text-center text-sm text-gray-600">
+                            No bookings found matching the filters.
                         </div>
                     ) : (
                         <DataTable
                             columns={["Ref", "Client", "Date", "Therapist", "Status", "Payment", "Actions"]}
-                            rows={bookings.map((r) => [
+                            rows={filteredBookings.map((r) => [
                                 <span key="r" className="font-mono text-xs">
                                     {r.reference}
                                 </span>,
                                 <div key="c">
-                                    <div className="font-medium text-sm">{r.client_name}</div>
+                                    <div className="text-sm font-medium">{r.client_name}</div>
                                     <div className="text-xs text-gray-600">{r.client_email}</div>
                                 </div>,
                                 r.preferred_date ?? "—",
@@ -78,7 +165,7 @@ export function AdminBookingsPage() {
                                             "Therapist assigned"
                                         )
                                     }
-                                    className="text-sm bg-white border border-gray-200 rounded-md px-2 py-1"
+                                    className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm"
                                 >
                                     <option value="">— assign —</option>
                                     {therapists.map((t) => (
@@ -102,31 +189,32 @@ export function AdminBookingsPage() {
                                 >
                                     {r.payment_status}
                                 </StatusBadge>,
-                                <div key="a" className="flex gap-2 text-xs font-semibold">
+                                <div key="a" className="flex gap-2">
                                     {r.status === "requested" && (
-                                        <button
-                                            onClick={() => handleUpdate(r.id, { status: "confirmed" }, "Confirmed")}
-                                            className="text-primary-deep hover:underline"
-                                        >
-                                            Confirm
-                                        </button>
+                                        <>
+                                            <button
+                                                onClick={() => handleUpdate(r.id, { status: "confirmed" }, "Confirmed")}
+                                                className="rounded-md bg-green-100 p-2 text-green-700 hover:bg-green-200"
+                                                title="Confirm"
+                                            >
+                                                <Check size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleUpdate(r.id, { status: "cancelled" }, "Cancelled")}
+                                                className="rounded-md bg-red-100 p-2 text-red-700 hover:bg-red-200"
+                                                title="Cancel"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </>
                                     )}
-                                    {r.status !== "completed" && r.status !== "cancelled" && (
-                                        <button
-                                            onClick={() =>
-                                                handleUpdate(r.id, { status: "completed" }, "Marked completed")
-                                            }
-                                            className="text-primary-deep hover:underline"
-                                        >
-                                            Complete
-                                        </button>
-                                    )}
-                                    {r.status !== "cancelled" && (
+                                    {r.status === "confirmed" && (
                                         <button
                                             onClick={() => handleUpdate(r.id, { status: "cancelled" }, "Cancelled")}
-                                            className="text-red-600 hover:underline"
+                                            className="rounded-md bg-red-100 p-2 text-red-700 hover:bg-red-200"
+                                            title="Cancel"
                                         >
-                                            Cancel
+                                            <X size={16} />
                                         </button>
                                     )}
                                 </div>,
@@ -134,6 +222,10 @@ export function AdminBookingsPage() {
                         />
                     )}
                 </Card>
+
+                <div className="mt-4 text-sm text-gray-600">
+                    Showing {filteredBookings.length} of {bookings.length} booking(s)
+                </div>
             </div>
         </AdminShell>
     );

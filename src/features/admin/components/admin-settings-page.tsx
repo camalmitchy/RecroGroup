@@ -29,8 +29,8 @@ export function AdminSettingsPage() {
                             key={t.k}
                             onClick={() => setTab(t.k)}
                             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${tab === t.k
-                                    ? "border-primary text-primary-deep"
-                                    : "border-transparent text-gray-600 hover:text-gray-900"
+                                ? "border-primary text-primary-deep"
+                                : "border-transparent text-gray-600 hover:text-gray-900"
                                 }`}
                         >
                             {t.label}
@@ -146,7 +146,6 @@ function TeamRoles() {
 }
 
 function ServicesCrud() {
-    // TODO: Implement full CRUD
     const services = [
         {
             id: "1",
@@ -156,7 +155,31 @@ function ServicesCrud() {
             price_kes: 5000,
             is_published: true,
         },
+        {
+            id: "2",
+            title: "Couples Therapy",
+            slug: "couples",
+            category: "Therapy",
+            price_kes: 7000,
+            is_published: true,
+        },
     ];
+
+    const handleAdd = () => {
+        // TODO: Open add service form
+        alert("Add Service - Form coming soon");
+    };
+
+    const handleEdit = (id: string) => {
+        // TODO: Open edit service form
+        alert(`Edit Service ${id} - Form coming soon`);
+    };
+
+    const handleDelete = (id: string) => {
+        if (!confirm("Delete this service? This action cannot be undone.")) return;
+        // TODO: Implement delete logic
+        alert("Service deleted");
+    };
 
     return (
         <>
@@ -167,13 +190,16 @@ function ServicesCrud() {
                         Therapy and program services shown publicly.
                     </p>
                 </div>
-                <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90">
+                <button
+                    onClick={handleAdd}
+                    className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary-deep text-white text-sm font-semibold hover:bg-primary-deep/90"
+                >
                     <Plus size={14} /> Add service
                 </button>
             </div>
             <Card>
                 <DataTable
-                    columns={["Title", "Slug", "Category", "Price (KES)", "Status"]}
+                    columns={["Title", "Slug", "Category", "Price (KES)", "Status", "Actions"]}
                     rows={services.map((r) => [
                         r.title,
                         r.slug,
@@ -182,6 +208,49 @@ function ServicesCrud() {
                         <StatusBadge key="s" tone={r.is_published ? "success" : "muted"}>
                             {r.is_published ? "Published" : "Draft"}
                         </StatusBadge>,
+                        <div key="a" className="flex gap-2">
+                            <button
+                                onClick={() => handleEdit(r.id)}
+                                className="rounded-md bg-blue-100 p-2 text-blue-700 hover:bg-blue-200"
+                                title="Edit"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                            </button>
+                            <button
+                                onClick={() => handleDelete(r.id)}
+                                className="rounded-md bg-gray-100 p-2 text-gray-700 hover:bg-gray-200"
+                                title="Delete"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M3 6h18" />
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                </svg>
+                            </button>
+                        </div>,
                     ])}
                 />
             </Card>
@@ -190,7 +259,6 @@ function ServicesCrud() {
 }
 
 function TherapistsCrud() {
-    // TODO: Implement full CRUD
     const therapists = [
         {
             id: "1",
@@ -200,7 +268,31 @@ function TherapistsCrud() {
             phone: "+254 700 000 001",
             is_active: true,
         },
+        {
+            id: "2",
+            full_name: "Dr. Michael Chen",
+            title: "Family Therapist",
+            email: "michael@recrogroup.org",
+            phone: "+254 700 000 002",
+            is_active: true,
+        },
     ];
+
+    const handleAdd = () => {
+        // TODO: Open add therapist form
+        alert("Add Therapist - Form coming soon");
+    };
+
+    const handleEdit = (id: string) => {
+        // TODO: Open edit therapist form
+        alert(`Edit Therapist ${id} - Form coming soon`);
+    };
+
+    const handleDelete = (id: string) => {
+        if (!confirm("Delete this therapist? This action cannot be undone.")) return;
+        // TODO: Implement delete logic
+        alert("Therapist deleted");
+    };
 
     return (
         <>
@@ -211,13 +303,16 @@ function TherapistsCrud() {
                         Clinical team — visible on public services pages.
                     </p>
                 </div>
-                <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90">
+                <button
+                    onClick={handleAdd}
+                    className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary-deep text-white text-sm font-semibold hover:bg-primary-deep/90"
+                >
                     <Plus size={14} /> Add therapist
                 </button>
             </div>
             <Card>
                 <DataTable
-                    columns={["Name", "Title", "Email", "Phone", "Status"]}
+                    columns={["Name", "Title", "Email", "Phone", "Status", "Actions"]}
                     rows={therapists.map((r) => [
                         r.full_name,
                         r.title,
@@ -226,6 +321,49 @@ function TherapistsCrud() {
                         <StatusBadge key="s" tone={r.is_active ? "success" : "muted"}>
                             {r.is_active ? "Active" : "Hidden"}
                         </StatusBadge>,
+                        <div key="a" className="flex gap-2">
+                            <button
+                                onClick={() => handleEdit(r.id)}
+                                className="rounded-md bg-blue-100 p-2 text-blue-700 hover:bg-blue-200"
+                                title="Edit"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                            </button>
+                            <button
+                                onClick={() => handleDelete(r.id)}
+                                className="rounded-md bg-gray-100 p-2 text-gray-700 hover:bg-gray-200"
+                                title="Delete"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M3 6h18" />
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                </svg>
+                            </button>
+                        </div>,
                     ])}
                 />
             </Card>
