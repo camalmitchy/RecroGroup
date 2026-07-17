@@ -104,8 +104,7 @@ export function HomePage() {
             <p className="mt-7 max-w-lg text-base leading-relaxed text-muted-foreground">
               <strong className="text-foreground">Recro</strong>{" "}
               <span className="text-sm text-muted-foreground/80">(rec·ro)</span>{" "}
-              <strong className="text-foreground">Group Limited</strong> is a Behavioral Health Organization that utilizes Psychotherapy to work with individuals, families, couples, groups and organizations dealing with relational challenges. By using a systemic view, Recro Group works from the Biopsychosocialspiritual Framework which employs a wholistic approach to treatment.
-            </p>
+              <strong className="text-foreground">Group Limited</strong> is a Behavioral Health Organization that utilizes Psychotherapy to work with individuals, families, couples, groups and organizations dealing with relational challenges. By using a systemic framework. Recro works with individuals,  couples, families and groups. </p>
             <div className="mt-10 flex flex-wrap gap-3">
               <Link href="/booking" className="btn-primary">
                 Book a Session
