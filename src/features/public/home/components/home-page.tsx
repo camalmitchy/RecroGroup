@@ -214,9 +214,6 @@ export function HomePage() {
             <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl">
               A wholistic view of what it means to be well.
             </h2>
-            <p className="mt-6 leading-relaxed text-muted-foreground text-lg max-w-3xl mx-auto">
-              {homeFramework.body}
-            </p>
           </div>
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
             {[

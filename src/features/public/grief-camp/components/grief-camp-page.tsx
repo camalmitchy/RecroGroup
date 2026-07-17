@@ -230,18 +230,10 @@ export function GriefCampPage() {
                   <dd className="text-foreground">Residential camp</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Next camp</dt>
+                  <dt className="text-muted-foreground">Date</dt>
                   <dd className="text-foreground">Aug 14-16, 2026</dd>
                 </div>
               </dl>
-              <div className="mt-6">
-                <Link
-                  href="/grief-camp/apply"
-                  className="btn-primary block w-full rounded-full text-center"
-                >
-                  Apply now
-                </Link>
-              </div>
             </div>
 
             {/* Pricing breakdown */}
