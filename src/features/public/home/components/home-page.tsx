@@ -4,10 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
+  Brain,
+  Dna,
   HeartHandshake,
   Mail,
   ShieldCheck,
   Sparkles,
+  Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -132,7 +135,7 @@ export function HomePage() {
                 <dt className="text-xs uppercase tracking-wider text-muted-foreground">
                   Therapists
                 </dt>
-                <dd className="mt-1 font-serif text-2xl text-foreground">14</dd>
+                <dd className="mt-1 font-serif text-2xl text-foreground"></dd>
               </div>
             </dl>
           </div>
@@ -215,25 +218,31 @@ export function HomePage() {
               {homeFramework.body}
             </p>
           </div>
-          <div className="mt-12 grid gap-6 sm:grid-cols-3 max-w-4xl mx-auto">
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
             {[
-              { label: "Biological", desc: "Body & health", icon: "🧬" },
-              { label: "Psychological", desc: "Mind & emotion", icon: "🧠" },
-              { label: "Spiritual", desc: "Meaning & purpose", icon: "✨" },
-            ].map((pillar) => (
-              <div
-                key={pillar.label}
-                className="rounded-2xl border border-border bg-card p-6 text-center shadow-[var(--shadow-soft)]"
-              >
-                <span className="text-3xl">{pillar.icon}</span>
-                <p className="mt-4 font-semibold text-foreground text-lg">
-                  {pillar.label}
-                </p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {pillar.desc}
-                </p>
-              </div>
-            ))}
+              { label: "Biological", desc: "Body & health", icon: Dna },
+              { label: "Psychological", desc: "Mind & emotion", icon: Brain },
+              { label: "Social", desc: "Relationships & community", icon: Users },
+              { label: "Spiritual", desc: "Meaning & purpose", icon: Sparkles },
+            ].map((pillar) => {
+              const IconComponent = pillar.icon;
+              return (
+                <div
+                  key={pillar.label}
+                  className="rounded-2xl border border-border bg-card p-6 text-center shadow-[var(--shadow-soft)]"
+                >
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft">
+                    <IconComponent className="h-7 w-7 text-primary-deep" strokeWidth={2} />
+                  </div>
+                  <p className="mt-4 font-semibold text-foreground text-lg">
+                    {pillar.label}
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {pillar.desc}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -310,8 +319,8 @@ export function HomePage() {
               const Icon = trustIcons[i];
               return (
                 <div key={f.title}>
-                  <span className="grid h-11 w-11 place-items-center rounded-full bg-surface-2 text-primary-deep">
-                    <Icon size={18} />
+                  <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-primary-deep">
+                    <Icon size={18} strokeWidth={2} />
                   </span>
                   <h3 className="mt-5 text-lg font-semibold text-foreground">
                     {f.title}
