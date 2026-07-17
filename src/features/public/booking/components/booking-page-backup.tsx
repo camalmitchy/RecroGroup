@@ -82,7 +82,7 @@ const CLINICIANS = [
         name: "Dr. Michelle Karume",
         title: "Founder & Licensed Psychotherapist",
         photo: "/assets/founder-portrait.jpg",
-        specialties: ["Grief & Loss", "Family Systems", "Trauma"],
+        specialties: ["Medical family therapy", "Marriage $ family"],
     },
 ];
 

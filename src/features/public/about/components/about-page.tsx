@@ -3,11 +3,15 @@ import Link from "next/link";
 import {
   ArrowRight,
   BookOpen,
+  Brain,
   Briefcase,
+  Dna,
   FlaskConical,
   GraduationCap,
   HeartHandshake,
   Quote,
+  Sparkles,
+  Users,
 } from "lucide-react";
 
 import { serviceList } from "@/features/public/services/data";
@@ -141,6 +145,18 @@ export function AboutPage() {
                 className="absolute inset-0 size-full"
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BioPsychosocialSpiritual Framework */}
+      <section className="border-y border-border bg-surface">
+        <div className="container-page py-20">
+          <div className="mx-auto max-w-4xl text-center">
+            <span className="eyebrow">Systemic Framework</span>
+            <p className="mt-6 leading-relaxed text-muted-foreground text-lg max-w-3xl mx-auto">
+              Systems framework is a hallmark way that MFTs work with clients; which sets them apart from other clinical disciplines. The systemic lens is one where the client is viewed from the perspective of their relationships.
+            </p>
           </div>
         </div>
       </section>

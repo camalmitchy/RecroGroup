@@ -50,9 +50,9 @@ export function ResourcesPage() {
                         <h1 className="mt-4 font-serif text-5xl md:text-6xl lg:text-7xl">
                             Read, reflect, <em className="italic">recover</em>.
                         </h1>
-                        <p className="mx-auto mt-6 max-w-2xl text-base md:text-lg leading-relaxed">
+                        {/* <p className="mx-auto mt-6 max-w-2xl text-base md:text-lg leading-relaxed">
                             Honest articles and guides written by our clinical team.
-                        </p>
+                        </p> */}
                     </div>
                 </div>
             </section>
