@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ShoppingCart, Filter, Search } from "lucide-react";
+import { ShoppingCart, Filter, Search, Truck, CreditCard, Heart } from "lucide-react";
 import { products, categories, type Product } from "../data/products-data";
 
 export function MerchandisePage() {
@@ -208,7 +208,7 @@ export function MerchandisePage() {
                         <div className="text-center">
                             <div className="mb-4 flex justify-center">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft">
-                                    <span className="text-2xl">🚚</span>
+                                    <Truck className="text-primary-deep" size={24} />
                                 </div>
                             </div>
                             <h3 className="mb-2 font-semibold text-foreground">
@@ -221,7 +221,7 @@ export function MerchandisePage() {
                         <div className="text-center">
                             <div className="mb-4 flex justify-center">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft">
-                                    <span className="text-2xl">💳</span>
+                                    <CreditCard className="text-primary-deep" size={24} />
                                 </div>
                             </div>
                             <h3 className="mb-2 font-semibold text-foreground">
@@ -234,7 +234,7 @@ export function MerchandisePage() {
                         <div className="text-center">
                             <div className="mb-4 flex justify-center">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft">
-                                    <span className="text-2xl">❤️</span>
+                                    <Heart className="text-primary-deep" size={24} />
                                 </div>
                             </div>
                             <h3 className="mb-2 font-semibold text-foreground">
