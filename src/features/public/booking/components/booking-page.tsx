@@ -8,9 +8,7 @@ import {
     Calendar,
     Clock,
     User,
-    Video,
     MapPin,
-    FileText,
     CreditCard,
     Check,
     ArrowLeft,
@@ -18,7 +16,7 @@ import {
     Smartphone,
     Building2,
     Loader2,
-    Upload,
+    Mail,
 } from "lucide-react";
 
 type Step = "service" | "time" | "intake" | "pay" | "done";
@@ -107,7 +105,6 @@ export function BookingPage() {
     const [clinician, setClinician] = useState<string>("dr-karume");
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string>("");
-    const [sessionMode, setSessionMode] = useState<"in-person" | "video">("in-person");
 
     // Intake step
     const [clientName, setClientName] = useState("");
@@ -272,8 +269,6 @@ export function BookingPage() {
                         setSelectedDate={setSelectedDate}
                         selectedTime={selectedTime}
                         setSelectedTime={setSelectedTime}
-                        sessionMode={sessionMode}
-                        setSessionMode={setSessionMode}
                         availableDates={availableDates}
                         timeSlots={TIME_SLOTS}
                         onBack={() => setStep("service")}
@@ -301,7 +296,6 @@ export function BookingPage() {
                         service={selectedService}
                         date={selectedDate}
                         time={selectedTime}
-                        sessionMode={sessionMode}
                         clientName={clientName}
                         paymentMethod={paymentMethod}
                         setPaymentMethod={setPaymentMethod}
@@ -317,8 +311,13 @@ export function BookingPage() {
                     />
                 )}
 
-                {step === "done" && (
-                    <ConfirmationStep clientName={clientName} />
+                {step === "done" && selectedService && selectedDate && (
+                    <ConfirmationStep
+                        clientName={clientName}
+                        date={selectedDate}
+                        time={selectedTime}
+                        commitmentFee={Math.round(selectedService.price / 2)}
+                    />
                 )}
             </div>
         </section>
@@ -366,7 +365,11 @@ function ServiceStep({
                                 <div className="flex-1">
                                     <h3 className="font-semibold">{service.title}</h3>
                                     <p className="text-sm text-muted-foreground mt-1">
-                                        {service.duration} · Ksh {service.price.toLocaleString()}
+                                        {service.duration} · Ksh {service.price.toLocaleString()}{" "}
+                                        <span className="text-muted-foreground/80">
+                                            (commitment Ksh{" "}
+                                            {Math.round(service.price / 2).toLocaleString()})
+                                        </span>
                                     </p>
                                 </div>
                             </div>
@@ -401,8 +404,6 @@ function TimeStep({
     setSelectedDate,
     selectedTime,
     setSelectedTime,
-    sessionMode,
-    setSessionMode,
     availableDates,
     timeSlots,
     onBack,
@@ -414,20 +415,14 @@ function TimeStep({
     setSelectedDate: (d: Date) => void;
     selectedTime: string;
     setSelectedTime: (t: string) => void;
-    sessionMode: "in-person" | "video";
-    setSessionMode: (m: "in-person" | "video") => void;
     availableDates: Date[];
     timeSlots: string[];
     onBack: () => void;
     onNext: () => void;
 }) {
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString("en-US", {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-        });
-    };
+    const weekdayLabel = selectedDate
+        ? selectedDate.toLocaleDateString("en-US", { weekday: "long" })
+        : null;
 
     return (
         <div className="space-y-6">
@@ -516,43 +511,50 @@ function TimeStep({
                             );
                         })}
                     </div>
+                    {selectedTime && weekdayLabel && (
+                        <p className="mt-4 rounded-2xl border border-border bg-primary-soft/60 px-4 py-3 text-sm leading-relaxed text-foreground">
+                            This becomes your permanent slot: every{" "}
+                            <strong>
+                                {weekdayLabel} at {selectedTime}
+                            </strong>{" "}
+                            is reserved for you until your sessions finish. Our office
+                            manager will reopen the slot once it is available again.
+                        </p>
+                    )}
                 </div>
             )}
 
-            {/* Session Mode */}
-            <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block">
-                    Session Format
-                </label>
-                <div className="grid sm:grid-cols-2 gap-3">
-                    <button
-                        onClick={() => setSessionMode("in-person")}
-                        className={`text-left rounded-2xl border-2 p-5 transition bg-background shadow-sm ${sessionMode === "in-person"
-                            ? "border-primary"
-                            : "border-border hover:border-primary/50"
-                            }`}
-                    >
-                        <div className="flex items-center gap-2.5 font-semibold">
-                            <MapPin size={18} /> In-Person
-                        </div>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Visit our clinic in Nairobi
+            {/* In-person only + diaspora note */}
+            <div className="rounded-2xl border-2 border-border bg-background p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                    <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary-deep">
+                        <MapPin size={18} />
+                    </span>
+                    <div>
+                        <h3 className="font-semibold text-foreground">
+                            In-person sessions only
+                        </h3>
+                        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                            Online calendar booking is for clinic visits in Nairobi.
+                            Diaspora clients should email or contact us to arrange
+                            support — online booking is not available for remote
+                            clients.
                         </p>
-                    </button>
-                    <button
-                        onClick={() => setSessionMode("video")}
-                        className={`text-left rounded-2xl border-2 p-5 transition bg-background shadow-sm ${sessionMode === "video"
-                            ? "border-primary"
-                            : "border-border hover:border-primary/50"
-                            }`}
-                    >
-                        <div className="flex items-center gap-2.5 font-semibold">
-                            <Video size={18} /> Video Call
+                        <div className="mt-3 flex flex-wrap gap-3">
+                            <a
+                                href="mailto:hello@recrogroup.org"
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-deep"
+                            >
+                                <Mail size={14} /> hello@recrogroup.org
+                            </a>
+                            <Link
+                                href="/contact"
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-deep"
+                            >
+                                Contact us <ArrowRight size={13} />
+                            </Link>
                         </div>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Secure online session
-                        </p>
-                    </button>
+                    </div>
                 </div>
             </div>
 
@@ -662,7 +664,6 @@ function PaymentStep({
     service,
     date,
     time,
-    sessionMode,
     clientName,
     paymentMethod,
     setPaymentMethod,
@@ -679,7 +680,6 @@ function PaymentStep({
     service: ServiceOption;
     date: Date;
     time: string;
-    sessionMode: string;
     clientName: string;
     paymentMethod: "mpesa" | "card" | "bank";
     setPaymentMethod: (m: "mpesa" | "card" | "bank") => void;
@@ -702,13 +702,21 @@ function PaymentStep({
         });
     };
 
+    const commitmentFee = Math.round(service.price / 2);
+    const balanceDue = service.price - commitmentFee;
+    const weekdayLabel = date.toLocaleDateString("en-US", { weekday: "long" });
+
     return (
         <div className="grid lg:grid-cols-3 gap-8">
             {/* Payment Form */}
             <div className="lg:col-span-2 bg-background rounded-2xl border-2 border-border p-7 shadow-sm">
-                <h2 className="font-serif text-2xl font-semibold text-primary-deep mb-6">
-                    Payment
+                <h2 className="font-serif text-2xl font-semibold text-primary-deep mb-2">
+                    Commitment fee
                 </h2>
+                <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
+                    Pay half the session fee now to secure your slot. The remaining
+                    balance is paid when you attend your session.
+                </p>
 
                 {/* Payment Methods */}
                 <div>
@@ -776,8 +784,8 @@ function PaymentStep({
                     {paymentMethod === "card" && (
                         <div className="mt-6 space-y-4">
                             <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground leading-relaxed">
-                                You'll be redirected to Pesapal's secure checkout to complete
-                                your payment. Card details are never stored on our servers.
+                                You&apos;ll be redirected to Pesapal&apos;s secure checkout to complete
+                                your commitment fee. Card details are never stored on our servers.
                             </div>
                         </div>
                     )}
@@ -861,7 +869,8 @@ function PaymentStep({
                             </>
                         ) : (
                             <>
-                                <CreditCard size={16} /> Complete Booking
+                                <CreditCard size={16} /> Pay Ksh{" "}
+                                {commitmentFee.toLocaleString()} commitment
                             </>
                         )}
                     </button>
@@ -900,24 +909,33 @@ function PaymentStep({
                                 <span>{time}</span>
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
-                                {sessionMode === "in-person" ? (
-                                    <MapPin size={14} className="shrink-0" />
-                                ) : (
-                                    <Video size={14} className="shrink-0" />
-                                )}
-                                <span>
-                                    {sessionMode === "in-person" ? "In-Person" : "Video Call"}
-                                </span>
+                                <MapPin size={14} className="shrink-0" />
+                                <span>In-Person</span>
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <User size={14} className="shrink-0" />
                                 <span>{clientName || "—"}</span>
                             </div>
                         </div>
-                        <div className="pt-4 border-t border-border">
-                            <div className="flex items-center justify-between text-base font-semibold">
-                                <span>Total</span>
+                        <p className="rounded-xl bg-surface px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+                            Permanent slot: every{" "}
+                            <strong className="text-foreground">
+                                {weekdayLabel} at {time}
+                            </strong>{" "}
+                            until your sessions finish.
+                        </p>
+                        <div className="pt-4 border-t border-border space-y-2">
+                            <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                <span>Session fee</span>
                                 <span>Ksh {service.price.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                <span>Balance at session</span>
+                                <span>Ksh {balanceDue.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-base font-semibold pt-2 border-t border-border">
+                                <span>Due now</span>
+                                <span>Ksh {commitmentFee.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
@@ -927,9 +945,21 @@ function PaymentStep({
     );
 }
 
-function ConfirmationStep({ clientName }: { clientName: string }) {
+function ConfirmationStep({
+    clientName,
+    date,
+    time,
+    commitmentFee,
+}: {
+    clientName: string;
+    date: Date;
+    time: string;
+    commitmentFee: number;
+}) {
+    const weekdayLabel = date.toLocaleDateString("en-US", { weekday: "long" });
+
     return (
-        <div className="text-center py-14 rounded-3xl border border-border bg-card max-w-2xl mx-auto">
+        <div className="text-center py-14 rounded-3xl border border-border bg-card max-w-2xl mx-auto px-6">
             <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-glow)]">
                 <Check size={32} />
             </span>
@@ -937,8 +967,19 @@ function ConfirmationStep({ clientName }: { clientName: string }) {
                 Booking Confirmed!
             </h2>
             <p className="mt-3 text-muted-foreground max-w-md mx-auto leading-relaxed">
-                Thank you, {clientName}. Your booking is confirmed. We've sent a
-                confirmation email with all the details and next steps.
+                Thank you, {clientName}. Your commitment fee of{" "}
+                <strong className="text-foreground">
+                    Ksh {commitmentFee.toLocaleString()}
+                </strong>{" "}
+                is recorded. Please pay the remaining balance when you attend your
+                session.
+            </p>
+            <p className="mt-4 max-w-md mx-auto rounded-2xl bg-surface px-4 py-3 text-sm leading-relaxed text-foreground">
+                Your permanent slot is every{" "}
+                <strong>
+                    {weekdayLabel} at {time}
+                </strong>
+                . It stays reserved for you until your sessions finish.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                 <Link href="/" className="btn-primary">

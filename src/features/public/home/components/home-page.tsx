@@ -76,11 +76,16 @@ function HomeBookingForm() {
             className="w-full cursor-pointer appearance-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
           >
             <option>In-person</option>
-            <option>Online</option>
-            <option>Phone</option>
           </select>
         </label>
       </div>
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Online booking is for Nairobi clinic visits. Diaspora clients:{" "}
+        <Link href="/contact" className="font-semibold text-primary-deep">
+          contact us
+        </Link>{" "}
+        or email hello@recrogroup.org.
+      </p>
       <button type="submit" className="btn-primary mt-2 w-full justify-center">
         Continue to booking <ArrowRight size={16} />
       </button>
@@ -134,7 +139,9 @@ export function HomePage() {
                 <dt className="text-xs uppercase tracking-wider text-muted-foreground">
                   Therapists
                 </dt>
-                <dd className="mt-1 font-serif text-2xl text-foreground"></dd>
+                <dd className="mt-1 font-serif text-2xl text-foreground">
+                  Dr. Karume
+                </dd>
               </div>
             </dl>
           </div>
