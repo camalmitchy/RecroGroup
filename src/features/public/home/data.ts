@@ -102,27 +102,6 @@ export const homeVideos = [
   },
 ] as const;
 
-export const homeBlogPosts = [
-  {
-    category: "Therapy",
-    title: "What to expect from your first therapy session",
-    desc: "A gentle walkthrough of what really happens in a first session — and what doesn't.",
-    read: "6 min read",
-  },
-  {
-    category: "Grief",
-    title: "Supporting a grieving child: a guide for parents",
-    desc: "Practical, age-appropriate ways to be with a child after loss — without rushing the healing.",
-    read: "9 min read",
-  },
-  {
-    category: "Workplace wellness",
-    title: "Recognising burnout before it breaks you",
-    desc: "The early signals most of us miss — and what to do once you spot them.",
-    read: "7 min read",
-  },
-] as const;
-
 export const homeBookingPerks = [
   "Commitment fee: half now, balance at session",
   "In-person sessions in Nairobi",

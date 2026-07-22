@@ -16,7 +16,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import {
-  homeBlogPosts,
   homeBookingPerks,
   homeFramework,
   homeServices,
@@ -24,6 +23,7 @@ import {
   homeTrustFeatures,
   homeVideos,
 } from "../data";
+import { resources } from "@/features/public/resources/data/resources-data";
 import { HomeVideoCard } from "./home-video-card";
 
 const trustIcons = [ShieldCheck, HeartHandshake, Sparkles] as const;
@@ -376,17 +376,17 @@ export function HomePage() {
               </h2>
             </div>
             <Link
-              href="/insights"
+              href="/resources"
               className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-primary-deep uppercase transition-all hover:gap-3"
             >
               All blogs <ArrowRight size={14} />
             </Link>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {homeBlogPosts.map((b) => (
+            {resources.map((b) => (
               <Link
-                key={b.title}
-                href="/insights"
+                key={b.slug}
+                href={`/resources/${b.slug}`}
                 className="group card-lift block rounded-3xl border border-border bg-card p-8 shadow-[var(--shadow-soft)]"
               >
                 <span className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
@@ -396,9 +396,9 @@ export function HomePage() {
                   {b.title}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  {b.desc}
+                  {b.excerpt}
                 </p>
-                <p className="mt-6 text-xs text-muted-foreground">{b.read}</p>
+                <p className="mt-6 text-xs text-muted-foreground">{b.readingTime}</p>
               </Link>
             ))}
           </div>

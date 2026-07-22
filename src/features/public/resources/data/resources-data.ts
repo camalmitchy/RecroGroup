@@ -13,7 +13,7 @@ export const resources: Resource[] = [
         slug: "the-perfect-storm",
         title: "The Perfect Storm",
         excerpt: "Examining the complex dynamics of age-gap relationships and what they reveal about societal values, gender expectations, and the changing landscape of modern relationships.",
-        category: "Uncategorized",
+        category: "Relationships",
         readingTime: "7 min read",
         publishedAt: "2017-05-10",
         content: `As years go by relationships tend to move and take all kinds of turns and twists. Technology changes, social norms change, needs change but perhaps the change were not ready to fully embrace is that of the younger, ladies dating and purposefully approaching and looking for the older gentlemen.
@@ -30,7 +30,7 @@ Dr.Michelle, DMFT, Psychotherapist`,
         slug: "from-foxhole-to-front-porch",
         title: "From the Foxhole to the Front Porch - A Family Perspective",
         excerpt: "Understanding the reintegration challenges families face when troops return home and how to navigate this critical transition period.",
-        category: "Uncategorized",
+        category: "Mental Health",
         readingTime: "6 min read",
         publishedAt: "2017-12-19",
         content: `With great joy and sadness Kenya welcomed home its troops. Joy for the troops that made it home alive and sad for those who died in the line of duty. We cannot thank them enough for all they do for our nation and what their families go through while their loved ones are deployed. The return of soldiers is always a great encounter but often the most difficult. Here are some critical points that we don't often consider with the deployment and return of the troops: the readjustment from the family unit. Whereas the greatest gift for that family is to have their loved one home and safe, we often don't consider the reintegration and readjustment process that both parties have to endure.
