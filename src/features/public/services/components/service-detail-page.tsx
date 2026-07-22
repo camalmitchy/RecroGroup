@@ -55,11 +55,13 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
                       ? `/services/consortium/apply`
                       : service.key === "corporate"
                         ? `/services/corporate/apply`
-                        : `/booking?service=${service.key}`
+                        : service.key === "children"
+                          ? `/grief-camp/apply`
+                          : `/booking?service=${service.key}`
                   }
                   className="btn-primary rounded-full px-7"
                 >
-                  {service.ctaLabel}
+                  {service.key === "children" ? "Register for camp" : service.ctaLabel}
                 </Link>
                 <Link href="/contact" className="btn-secondary rounded-full px-7">
                   Ask a question

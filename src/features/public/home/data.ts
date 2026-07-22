@@ -124,9 +124,9 @@ export const homeBlogPosts = [
 ] as const;
 
 export const homeBookingPerks = [
-  "M-Pesa & bank transfer supported",
-  "In-person sessions",
-  "Free consultation call",
+  "Commitment fee: half now, balance at session",
+  "In-person sessions in Nairobi",
+  "Your chosen day & time becomes your permanent slot",
 ] as const;
 
 export const homeTestimonials = [
