@@ -745,7 +745,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
     title: "Corporate Speaking",
     titleItalic: "Corporate",
     titleRest: "Speaking",
-    ctaLabel: "Join our corporate team",
+    ctaLabel: "Apply for Corporate Training",
     icon: Briefcase,
     heroImage: "/assets/corporate.png",
     glanceImage: "/assets/hero-4.jpg",
