@@ -10,7 +10,7 @@ import {
   GraduationCap,
   HeartHandshake,
   Quote,
-  Sparkles,
+  Flame,
   Users,
 } from "lucide-react";
 

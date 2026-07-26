@@ -11,7 +11,7 @@ import {
   Lock,
   MapPin,
   Settings,
-  Sparkles,
+  Flame,
   Tag,
   Users as UsersIcon,
 } from "lucide-react";
@@ -54,7 +54,7 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
                     service.key === "consortium"
                       ? `/services/consortium/apply`
                       : service.key === "corporate"
-                        ? `/services/corporate/apply`
+                        ? `/services/corporate/inquiry`
                         : service.key === "children"
                           ? `/grief-camp/apply`
                           : `/booking?service=${service.key}`
@@ -231,7 +231,7 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
                   className="rounded-2xl border border-border bg-card p-6"
                 >
                   <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
-                    <Sparkles className="size-5 text-primary" strokeWidth={2} />
+                    <Flame className="size-5 text-primary" strokeWidth={2} />
                   </div>
                   <p className="mt-4 text-sm leading-relaxed text-foreground/80">
                     {benefit}
@@ -337,7 +337,7 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
                   service.key === "consortium"
                     ? `/services/consortium/apply`
                     : service.key === "corporate"
-                      ? `/services/corporate/apply`
+                      ? `/services/corporate/inquiry`
                       : `/booking?service=${service.key}`
                 }
                 className="btn-primary mt-8 w-full rounded-full"
@@ -375,11 +375,11 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
                 couples: Heart,
                 family: Home,
                 group: UsersIcon,
-                children: Sparkles,
+                children: Flame,
                 corporate: Settings,
               };
 
-              const IconComponent = iconMap[relatedService.slug] || Sparkles;
+              const IconComponent = iconMap[relatedService.slug] || Flame;
 
               return (
                 <Link
