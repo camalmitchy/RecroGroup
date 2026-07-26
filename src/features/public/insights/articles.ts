@@ -127,7 +127,7 @@ export const articleBodies: Record<string, ArticleFull> = {
       {
         type: "paragraph",
         content:
-          "Managers and HR teams often want to do the right thing but lack language for it. Recro's corporate wellness programmes include grief literacy workshops that equip leaders to respond with dignity and clarity — protecting both the grieving employee and team cohesion.",
+          "Managers and HR teams often want to do the right thing but lack language for it. Recro's corporate speaking programmes include grief literacy workshops that equip leaders to respond with dignity and clarity — protecting both the grieving employee and team cohesion.",
       },
       {
         type: "quote",

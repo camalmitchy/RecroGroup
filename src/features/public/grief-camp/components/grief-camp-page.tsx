@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ArrowRight, Heart, Home, Sparkles, Users, Download, Calendar } from "lucide-react";
+import { Check, ArrowRight, Heart, Home, Flame, Users, Download, Calendar } from "lucide-react";
 
 import {
   camperPricing,
@@ -302,6 +302,108 @@ export function GriefCampPage() {
         </div>
       </section>
 
+      {/* Get Involved Section */}
+      <section className="bg-surface px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <span className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground">
+              Get Involved
+            </span>
+            <h2 className="mt-6 font-serif text-4xl text-foreground md:text-5xl">
+              Join Our Mission
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              Be part of our grief camp community through volunteering or team building activities.
+            </p>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-2">
+            {/* Grief Camp Therapist Card */}
+            <div className="group card-lift rounded-3xl border border-border bg-card p-10 shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-lift)] hover:border-primary/40">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-soft text-primary-deep">
+                  <Heart size={32} strokeWidth={2} />
+                </div>
+                <h3 className="font-serif text-2xl text-foreground">
+                  Volunteer as Therapist
+                </h3>
+              </div>
+
+              <p className="text-lg font-semibold text-foreground mb-4">
+                Would you like to volunteer to be a grief camp therapist?
+              </p>
+
+              <p className="text-sm text-muted-foreground leading-relaxed mb-8">
+                Join our team of licensed mental health professionals who provide compassionate care to grieving children. Share your expertise and make a lasting impact on young lives navigating loss.
+              </p>
+
+              <ul className="space-y-3 mb-8">
+                {[
+                  "Licensed therapists & counselors welcome",
+                  "Orientation & training provided",
+                  "Meals and accommodation included"
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-foreground">
+                    <Check className="mt-0.5 size-5 shrink-0 text-primary-deep" strokeWidth={2.5} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href="/grief-camp/therapist-application"
+                className="btn-primary w-full justify-center"
+              >
+                Group Therapist Application
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+
+            {/* Team Building Card */}
+            <div className="group card-lift rounded-3xl border border-border bg-card p-10 shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-lift)] hover:border-primary/40">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-soft text-primary-deep">
+                  <Users size={32} strokeWidth={2} />
+                </div>
+                <h3 className="font-serif text-2xl text-foreground">
+                  Team Building
+                </h3>
+              </div>
+
+              <p className="text-lg font-semibold text-foreground mb-4">
+                Would you like to have a team building activity?
+              </p>
+
+              <p className="text-sm text-muted-foreground leading-relaxed mb-8">
+                Bring your organization, church group, or community team to support our grief camp through meaningful team building experiences. Strengthen bonds while making a difference.
+              </p>
+
+              <ul className="space-y-3 mb-8">
+                {[
+                  "Corporate & community groups",
+                  "Customized activities available",
+                  "Support camp operations & setup",
+                  "Volunteer opportunities year-round"
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-foreground">
+                    <Check className="mt-0.5 size-5 shrink-0 text-primary-deep" strokeWidth={2.5} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href="/grief-camp/team-building"
+                className="btn-primary w-full justify-center"
+              >
+                Apply for Team Building
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 2027 Camp Information */}
       <section className="bg-primary-deep/5 px-6 py-20">
         <div className="mx-auto max-w-6xl">
@@ -496,7 +598,7 @@ export function GriefCampPage() {
                 description:
                   "Group therapy reminds us we are not alone. Held in a small, carefully facilitated space, groups offer connection, perspective, and skills practice that complements individual work beautifully.",
                 href: "/services/group",
-                icon: Sparkles,
+                icon: Flame,
               },
             ].map((s) => {
               const IconComponent = s.icon;

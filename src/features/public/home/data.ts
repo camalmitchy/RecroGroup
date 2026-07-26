@@ -108,35 +108,39 @@ export const homeBookingPerks = [
   "Your chosen day & time becomes your permanent slot",
 ] as const;
 
-export const homeTestimonials = [
+export const homeSelfCareTips = [
   {
-    quote:
-      "I felt heard from the very first session. Recro gave me language for things I had carried silently for years.",
-    author: "A. M.",
-    role: "Individual therapy client",
-    location: "Westlands, Nairobi",
-    rating: 5,
-    initials: "AM",
+    frequency: "Daily",
+    description: "Small actions, lasting impact",
+    tips: [
+      { text: "Self care", icon: "Heart" },
+      { text: "Daily progress", icon: "TrendingUp" },
+      { text: "Journaling", icon: "BookOpen" },
+      { text: "Exercise", icon: "Dumbbell" },
+    ],
     bgColor: "bg-primary-deep",
+    badgeIcon: "Sun",
   },
   {
-    quote:
-      "We came in ready to give up. Three months later, we had tools we still use every week.",
-    author: "J. & P.",
-    role: "Couples therapy clients",
-    location: "Karen, Nairobi",
-    rating: 5,
-    initials: "JP",
+    frequency: "Monthly",
+    description: "Deeper nourishment rituals",
+    tips: [
+      { text: "Socializing", icon: "Users" },
+      { text: "Massage therapy", icon: "Flame" },
+      { text: "Mental Health day", icon: "Brain" },
+      { text: "Leisure Reading", icon: "Book" },
+    ],
     bgColor: "bg-primary",
+    badgeIcon: "Calendar",
   },
   {
-    quote:
-      "Camp gave my daughter friends who understood without her having to explain. It gave me hope.",
-    author: "Parent of camper",
-    role: "Grief Camp family",
-    location: "Langata, Nairobi",
-    rating: 5,
-    initials: "PC",
+    frequency: "Annually",
+    description: "Reset and recharge",
+    tips: [
+      { text: "Trips/Vacation", icon: "Plane" },
+      { text: "Retreat (Personal/Family)", icon: "Home" },
+    ],
     bgColor: "bg-primary-deep",
+    badgeIcon: "Star",
   },
 ] as const;

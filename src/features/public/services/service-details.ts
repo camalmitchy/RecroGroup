@@ -7,7 +7,7 @@ import {
   Lock,
   MessageCircle,
   ShieldCheck,
-  Sparkles,
+  Flame,
   UserRound,
   Users,
 } from "lucide-react";
@@ -427,7 +427,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
         body: "We work with the family, not just the 'identified patient.'",
       },
       {
-        icon: Sparkles,
+        icon: Flame,
         title: "Age-inclusive",
         body: "Sessions adapted for children, teens, and adults in the same room.",
       },
@@ -565,7 +565,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
         body: "Regular updates and coaching so therapy extends into daily life.",
       },
       {
-        icon: Sparkles,
+        icon: Flame,
         title: "Creative methods",
         body: "Play, art, and storytelling — not just talking.",
       },
@@ -742,9 +742,9 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
   corporate: {
     key: "corporate",
     eyebrow: "Workplace Wellness",
-    title: "Corporate Wellness",
+    title: "Corporate Speaking",
     titleItalic: "Corporate",
-    titleRest: "Wellness",
+    titleRest: "Speaking",
     ctaLabel: "Join our corporate team",
     icon: Briefcase,
     heroImage: "/assets/corporate.png",
@@ -949,7 +949,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
         body: "Members must be part of professional governing bodies (CPB, AAMFT, APA, KMA, etc.).",
       },
       {
-        icon: Sparkles,
+        icon: Flame,
         title: "Skill development",
         body: "Continuous learning through resource sharing and collaboration.",
       },

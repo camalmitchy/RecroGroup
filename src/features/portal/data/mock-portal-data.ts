@@ -162,7 +162,7 @@ export const INITIAL_INQUIRIES: MockInquiry[] = [
     name: "James K.",
     email: "james@example.com",
     subject: "Partnership question",
-    message: "We would like to explore a corporate wellness partnership.",
+    message: "We would like to explore a corporate speaking partnership.",
     status: "NEW",
     createdAt: "2026-06-26",
   },

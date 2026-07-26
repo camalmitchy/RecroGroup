@@ -9,8 +9,19 @@ import {
   HeartHandshake,
   Mail,
   ShieldCheck,
-  Sparkles,
+  Flame,
   Users,
+  Heart,
+  TrendingUp,
+  BookOpen,
+  Dumbbell,
+  Calendar,
+  Book,
+  Plane,
+  Home,
+  Sun,
+  Star,
+  MoveRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -19,14 +30,14 @@ import {
   homeBookingPerks,
   homeFramework,
   homeServices,
-  homeTestimonials,
+  homeSelfCareTips,
   homeTrustFeatures,
   homeVideos,
 } from "../data";
 import { resources } from "@/features/public/resources/data/resources-data";
 import { HomeVideoCard } from "./home-video-card";
 
-const trustIcons = [ShieldCheck, HeartHandshake, Sparkles] as const;
+const trustIcons = [ShieldCheck, HeartHandshake, Flame] as const;
 
 function HomeBookingForm() {
   const router = useRouter();
@@ -53,7 +64,7 @@ function HomeBookingForm() {
           <option value="individual">Individual Therapy</option>
           <option value="couples">Couples &amp; Families</option>
           <option value="children">Children &amp; Grief</option>
-          <option value="corporate">Corporate Wellness</option>
+          <option value="corporate">Corporate speaking</option>
         </select>
       </label>
       <div className="grid grid-cols-2 gap-4">
@@ -226,7 +237,7 @@ export function HomePage() {
               { label: "Biological", desc: "Body & health", icon: Dna },
               { label: "Psychological", desc: "Mind & emotion", icon: Brain },
               { label: "Social", desc: "Relationships & community", icon: Users },
-              { label: "Spiritual", desc: "Meaning & purpose", icon: Sparkles },
+              { label: "Spiritual", desc: "Meaning & purpose", icon: Flame },
             ].map((pillar) => {
               const IconComponent = pillar.icon;
               return (
@@ -406,42 +417,98 @@ export function HomePage() {
       </section>
 
       <section className="bg-background">
-        <div className="container-page py-20 ">
+        <div className="container-page py-16">
           <div className="mx-auto max-w-4xl text-center">
             <span className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground">
-              Testimonials
+              Wellness Guide
             </span>
-            <h2 className="mt-6 font-serif text-4xl md:text-5xl lg:text-6xl text-foreground">
-              What our clients say
+            <h2 className="mt-4 font-serif text-3xl md:text-4xl text-foreground">
+              Your Self Care Journey
             </h2>
+            <p className="mt-4 text-sm md:text-base text-muted-foreground mx-auto max-w-2xl">
+              Building sustainable wellness through intentional practices—progressing from daily habits to annual renewal.
+            </p>
           </div>
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {homeTestimonials.map((t) => (
-              <figure
-                key={t.author}
-                className="flex flex-col rounded-3xl border border-border bg-card p-8 shadow-[var(--shadow-soft)]"
-              >
-                <div className="flex gap-0.5 mb-4">
-                  {[...Array(t.rating)].map((_, i) => (
-                    <span key={i} className="text-primary-deep text-base">★</span>
-                  ))}
-                </div>
-                <blockquote className="flex-1 text-sm leading-relaxed text-muted-foreground">
-                  &ldquo;{t.quote}&rdquo;
-                </blockquote>
-                <figcaption className="mt-6 flex items-center gap-3 border-t border-border pt-4">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full ${t.bgColor} text-white text-sm font-semibold`}>
-                    {t.initials}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {t.author}
+
+          {/* Timeline/Progression Layout */}
+          <div className="mt-12 relative max-w-6xl mx-auto">
+            {/* Connection Line (Desktop) */}
+            <div className="hidden md:block absolute top-16 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-deep/20 via-primary/30 to-primary-deep/20" />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+              {homeSelfCareTips.map((tip, tipIndex) => {
+                // Map icon names to components
+                const iconMap: Record<string, any> = {
+                  Sun, Calendar, Star, Heart, TrendingUp, BookOpen, Dumbbell,
+                  Users, Flame, Brain, Book, Plane, Home
+                };
+                const BadgeIcon = iconMap[tip.badgeIcon];
+
+                return (
+                  <div key={tip.frequency} className="relative flex flex-col items-center">
+                    {/* Step Number Badge */}
+                    <div className="relative z-10 mb-4">
+                      <div className={`flex items-center justify-center w-16 h-16 rounded-full ${tip.bgColor} text-white shadow-lg ring-4 ring-background transition-all group-hover:scale-110`}>
+                        <BadgeIcon size={24} strokeWidth={2} />
+                      </div>
+                      {/* Step Number */}
+                      <div className="absolute -top-1 -right-1 flex items-center justify-center w-6 h-6 rounded-full bg-background border-2 border-primary text-xs font-bold text-primary shadow-sm">
+                        {tipIndex + 1}
+                      </div>
+                    </div>
+
+                    {/* Frequency Label with Arrow */}
+                    <div className="mb-3 flex items-center gap-2">
+                      <h3 className="text-xl font-bold text-foreground">
+                        {tip.frequency}
+                      </h3>
+                      {tipIndex < 2 && (
+                        <MoveRight className="hidden md:block text-primary/40" size={16} />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-4 text-center">
+                      {tip.description}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t.location}</p>
+
+                    {/* Card with same gradient for all */}
+                    <div className="group card-lift w-full h-full flex flex-col rounded-3xl border border-border shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-lift)] hover:border-primary/40 overflow-hidden bg-gradient-to-br from-primary-soft/30 via-primary-soft/15 to-background">
+                      <div className="p-6 flex-1 flex flex-col">
+                        {/* Tips List */}
+                        <ul className="space-y-3 flex-1">
+                          {tip.tips.map((item, index) => {
+                            const TipIcon = iconMap[item.icon];
+                            return (
+                              <li key={index} className="flex items-start gap-2 group/item">
+                                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/80 backdrop-blur-sm text-primary-deep shadow-sm transition-all group-hover/item:bg-primary-deep group-hover/item:text-white group-hover/item:scale-110">
+                                  <TipIcon size={16} strokeWidth={2} />
+                                </span>
+                                <div className="flex-1 pt-1">
+                                  <span className="text-sm font-medium text-foreground leading-relaxed">
+                                    {item.text}
+                                  </span>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+
+                        {/* Progress Indicator */}
+                        <div className="mt-6 pt-4 border-t border-primary/10 flex items-center justify-between">
+                          <p className="text-xs text-muted-foreground/80 font-semibold tracking-wider uppercase">
+                            {tip.tips.length} practices
+                          </p>
+                          <div className="flex items-center gap-1">
+                            {tip.tips.map((_, i) => (
+                              <div key={i} className="h-1.5 w-1.5 rounded-full bg-primary-deep/30 transition-all hover:bg-primary-deep hover:scale-125" />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </figcaption>
-              </figure>
-            ))}
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
