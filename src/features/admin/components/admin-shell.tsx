@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
     LayoutDashboard,
@@ -20,40 +20,43 @@ import {
     ChevronDown,
 } from "lucide-react";
 
+import { useSignOut } from "@/features/auth/lib/queries";
+import { useAdminUser } from "@/features/admin/lib/admin-user-context";
+
+export type AdminNotification = {
+    id: string;
+    title: string;
+    message: string;
+    time: string;
+    unread: boolean;
+};
+
 interface AdminShellProps {
     children: React.ReactNode;
     isAdmin?: boolean;
+    notifications?: AdminNotification[];
+    user?: { name: string | null; email: string } | null;
 }
 
-export function AdminShell({ children, isAdmin = false }: AdminShellProps) {
+function initialsFor(name: string | null, email: string) {
+    const source = name?.trim() || email;
+    const parts = source.split(/[\s@._-]+/).filter(Boolean);
+    return (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
+}
+
+export function AdminShell({
+    children,
+    isAdmin = false,
+    notifications = [],
+    user: userProp,
+}: AdminShellProps) {
+    const contextUser = useAdminUser();
+    const user = userProp ?? contextUser;
     const pathname = usePathname();
+    const router = useRouter();
+    const signOut = useSignOut();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
-
-    // Mock notifications - TODO: Replace with real data
-    const notifications = [
-        {
-            id: "1",
-            title: "New booking request",
-            message: "Jane Doe requested a session for July 15",
-            time: "5 min ago",
-            unread: true,
-        },
-        {
-            id: "2",
-            title: "Payment received",
-            message: "M-Pesa payment of KES 5,000 received",
-            time: "1 hour ago",
-            unread: true,
-        },
-        {
-            id: "3",
-            title: "Grief camp application",
-            message: "New application from Sarah Kimani",
-            time: "2 hours ago",
-            unread: false,
-        },
-    ];
 
     const unreadCount = notifications.filter((n) => n.unread).length;
 
@@ -70,12 +73,10 @@ export function AdminShell({ children, isAdmin = false }: AdminShellProps) {
 
     const visibleItems = navItems.filter((item) => !item.adminOnly || isAdmin);
 
-    const handleSignOut = () => {
-        // TODO: Implement sign out logic
-        if (confirm("Sign out of admin panel?")) {
-            alert("Sign out functionality - coming soon");
-            // window.location.href = "/auth/sign-in";
-        }
+    const handleSignOut = async () => {
+        await signOut.mutateAsync();
+        router.push("/login");
+        router.refresh();
     };
 
     return (
@@ -183,6 +184,11 @@ export function AdminShell({ children, isAdmin = false }: AdminShellProps) {
                                             </div>
                                         </div>
                                         <div className="max-h-96 overflow-y-auto">
+                                            {notifications.length === 0 && (
+                                                <p className="px-4 py-6 text-center text-sm text-gray-500">
+                                                    Nothing new right now.
+                                                </p>
+                                            )}
                                             {notifications.map((notif) => (
                                                 <div
                                                     key={notif.id}
@@ -227,12 +233,14 @@ export function AdminShell({ children, isAdmin = false }: AdminShellProps) {
                                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                                 className="flex items-center gap-2 hover:opacity-80 transition"
                             >
-                                <div className="h-8 w-8 rounded-full bg-primary-deep text-white grid place-items-center text-sm font-semibold">
-                                    AD
+                                <div className="h-8 w-8 rounded-full bg-primary-deep text-white grid place-items-center text-sm font-semibold uppercase">
+                                    {user ? initialsFor(user.name, user.email) : "—"}
                                 </div>
                                 <div className="text-left">
-                                    <p className="text-sm font-medium text-gray-900">Admin User</p>
-                                    <p className="text-xs text-gray-500">admin@recrogroup.org</p>
+                                    <p className="text-sm font-medium text-gray-900">
+                                        {user?.name || user?.email || "Signed out"}
+                                    </p>
+                                    <p className="text-xs text-gray-500">{user?.email ?? ""}</p>
                                 </div>
                                 <ChevronDown size={14} className="text-gray-400" />
                             </button>
@@ -255,10 +263,11 @@ export function AdminShell({ children, isAdmin = false }: AdminShellProps) {
                                             </Link>
                                             <button
                                                 onClick={handleSignOut}
-                                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50"
+                                                disabled={signOut.isPending}
+                                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
                                             >
                                                 <LogOut size={16} />
-                                                Sign Out
+                                                {signOut.isPending ? "Signing out…" : "Sign Out"}
                                             </button>
                                         </div>
                                     </div>

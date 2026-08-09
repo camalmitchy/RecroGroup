@@ -1,19 +1,24 @@
 import { Metadata } from "next";
 
+import { requireAdminArea } from "@/features/admin/lib/admin-guard";
+import { AdminUserProvider } from "@/features/admin/lib/admin-user-context";
+
 export const metadata: Metadata = {
     title: "Admin · Recro Group",
     description: "Recro Group internal admin dashboard.",
     robots: "noindex,nofollow",
 };
 
-export default function AdminLayoutWrapper({
+export default async function AdminLayoutWrapper({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    // Note: Authentication and role checking should be done here
-    // For now, we'll just render the children
-    // TODO: Add authentication check and redirect if not admin/receptionist
+    const session = await requireAdminArea();
 
-    return <>{children}</>;
+    return (
+        <AdminUserProvider user={{ name: session.name, email: session.email }}>
+            {children}
+        </AdminUserProvider>
+    );
 }

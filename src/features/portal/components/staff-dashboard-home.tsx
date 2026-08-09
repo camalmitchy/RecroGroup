@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import {
   ArrowRight,
@@ -9,7 +7,6 @@ import {
   HeartHandshake,
   MessageSquare,
   TrendingUp,
-  Users,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,96 +15,63 @@ import {
   StatusBadge,
   bookingStatusTone,
 } from "@/features/portal/components/status-badge";
-import {
-  INITIAL_BOOKINGS,
-  INITIAL_GRIEF_APPLICATIONS,
-  INITIAL_INQUIRIES,
-  INITIAL_PAYMENTS,
-  MOCK_CUSTOMERS,
-} from "@/features/portal/data/mock-portal-data";
+import type { DashboardStats } from "@/server/queries/dashboard";
 
-const todayIso = new Date().toISOString().slice(0, 10);
+export type DashboardBookingRow = {
+  id: string;
+  reference: string;
+  clientName: string;
+  preferredDateLabel: string;
+  status: string;
+};
 
-function buildCounts() {
-  const todayBookings = INITIAL_BOOKINGS.filter(
-    (row) => row.preferredDate === todayIso,
-  ).length;
-  const pendingBookings = INITIAL_BOOKINGS.filter(
-    (row) => row.status === "REQUESTED",
-  ).length;
-  const pendingPayments = INITIAL_PAYMENTS.filter(
-    (row) => row.status === "PENDING",
-  ).length;
-  const bankToVerify = INITIAL_PAYMENTS.filter(
-    (row) => row.method === "BANK" && row.status !== "PAID",
-  ).length;
-  const griefApps = INITIAL_GRIEF_APPLICATIONS.filter(
-    (row) => row.status === "PENDING" || row.status === "REVIEWING",
-  ).length;
-  const newInquiries = INITIAL_INQUIRIES.filter(
-    (row) => row.status === "NEW",
-  ).length;
+type StaffDashboardHomeProps = {
+  stats: DashboardStats;
+  pending: DashboardBookingRow[];
+  recent: DashboardBookingRow[];
+};
 
-  return {
-    todayBookings,
-    pendingBookings,
-    pendingPayments,
-    bankToVerify,
-    griefApps,
-    newInquiries,
-    customers: MOCK_CUSTOMERS.length,
-  };
-}
-
-export function StaffDashboardHome() {
-  const counts = buildCounts();
-  const pendingList = INITIAL_BOOKINGS.filter((row) => row.status === "REQUESTED");
-  const recent = [...INITIAL_BOOKINGS]
-    .sort((a, b) => b.reference.localeCompare(a.reference))
-    .slice(0, 6);
-
+export function StaffDashboardHome({
+  stats,
+  pending,
+  recent,
+}: StaffDashboardHomeProps) {
   const kpis = [
     {
-      label: "Today's bookings",
-      value: counts.todayBookings,
+      label: "Total bookings",
+      value: stats.bookings.total,
       href: "/dashboard/bookings",
       icon: CalendarDays,
     },
     {
       label: "Awaiting confirmation",
-      value: counts.pendingBookings,
+      value: stats.bookings.requested,
       href: "/dashboard/bookings",
       icon: Clock,
     },
     {
       label: "Pending payments",
-      value: counts.pendingPayments,
+      value: stats.payments.pending,
       href: "/dashboard/payments",
       icon: CreditCard,
     },
     {
-      label: "Bank transfers to verify",
-      value: counts.bankToVerify,
+      label: "Revenue collected",
+      value: `KES ${stats.revenueKes.toLocaleString()}`,
       href: "/dashboard/payments",
       icon: TrendingUp,
     },
     {
       label: "Grief camp applications",
-      value: counts.griefApps,
+      value: stats.applications.pending,
       href: "/dashboard/programs",
       icon: HeartHandshake,
     },
     {
-      label: "New messages",
-      value: counts.newInquiries,
+      label: "Open messages",
+      value: stats.inquiries.unresolved,
       href: "/dashboard/inquiries",
       icon: MessageSquare,
-    },
-    {
-      label: "Total customers",
-      value: counts.customers,
-      href: "/dashboard/people",
-      icon: Users,
     },
   ];
 
@@ -151,13 +115,13 @@ export function StaffDashboardHome() {
                 <ArrowRight className="size-3" />
               </Link>
             </div>
-            {pendingList.length === 0 ? (
+            {pending.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Nothing pending. Great work.
               </p>
             ) : (
               <ul className="divide-y divide-[var(--admin-border)]">
-                {pendingList.map((row) => (
+                {pending.map((row) => (
                   <li
                     key={row.id}
                     className="flex items-center justify-between gap-3 py-2.5"
@@ -167,7 +131,7 @@ export function StaffDashboardHome() {
                         {row.clientName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {row.reference} · {row.preferredDate ?? "no date"}
+                        {row.reference} · {row.preferredDateLabel}
                       </p>
                     </div>
                     <StatusBadge tone="warning">Confirm</StatusBadge>

@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
-import type { PersonalInformationData } from "../../../types/facilitator-types";
+import type {
+    FacilitatorApplicationData,
+    PersonalInformationData,
+} from "../../../types/facilitator-types";
 
 interface PersonalInformationStepProps {
-    data: any;
+    data: Partial<FacilitatorApplicationData>;
     onNext: (data: { personalInformation: PersonalInformationData }) => void;
 }
 

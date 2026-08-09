@@ -16,67 +16,48 @@ export interface ParentQuestionnaireData {
 }
 
 export interface BehaviorResponse {
-    beforeDeath: ScaleValue;
-    currently: ScaleValue;
+    before?: ScaleValue;
+    current?: ScaleValue;
 }
 
 export interface EmotionResponse {
-    beforeDeath: EmotionScaleValue;
-    currently: EmotionScaleValue;
+    before?: EmotionScaleValue;
+    current?: EmotionScaleValue;
 }
 
 export interface YesNoResponse {
-    beforeDeath: boolean;
-    currently: boolean;
+    before?: boolean;
+    current?: boolean;
 }
 
 export interface CamperSelfReportData {
-    behaviors: {
-        [key: string]: BehaviorResponse;
-    };
-    emotions: {
-        [key: string]: EmotionResponse;
-    };
-    generalInfo: {
-        [key: string]: YesNoResponse | boolean;
-    };
-    currentStatus: {
-        mentalIllness: boolean;
-        abused: boolean;
-        allergiesAsthma: boolean;
-        visualHearingSpeech: boolean;
-        attendedFuneral: boolean;
-        inTherapy: boolean;
-        onMedication: boolean;
-    };
-    temperamentBefore: string[];
-    temperamentCurrent: string[];
-    circumstancesOfDeath: string;
-    relationshipAndImpact: string;
-    whoToldChild: string;
-    dietaryNeeds: string;
+    behaviors: Record<string, BehaviorResponse>;
+    emotions?: Record<string, EmotionResponse>;
+    generalInfo?: Record<string, YesNoResponse | boolean>;
+    currentStatus?: Record<string, boolean>;
+    temperamentBefore?: string[];
+    temperamentCurrent?: string[];
+    circumstancesOfDeath?: string;
+    relationshipAndImpact?: string;
+    whoToldChild?: string;
+    dietaryNeeds?: string;
 }
 
 export interface OtherLossesData {
-    divorce?: { date: string };
-    movingCommunity?: { date: string };
-    friendsMoving?: { date: string };
-    otherDeaths?: { date: string; who: string };
-    petDeaths?: { date: string };
-    parentsChangingJobs?: { date: string };
-    parentsJobLoss?: { date: string };
-    fireTheftLoss?: { date: string };
+    divorceDate?: string;
+    movingDate?: string;
+    friendsMovingDate?: string;
+    otherDeathsDate?: string;
+    otherDeathsWho?: string;
+    petDeathsDate?: string;
+    parentsJobChangeDate?: string;
+    parentsJobLossDate?: string;
+    fireTheftDate?: string;
     otherChanges?: string;
     howChildHandled?: string;
 }
 
-export interface ParentSelfReportData {
-    lostInterest: ParentScaleValue;
-    needToDoThings: ParentScaleValue;
-    stillCries: ParentScaleValue;
-    painfulMemories: ParentScaleValue;
-    struggleToFunction: ParentScaleValue;
-}
+export type ParentSelfReportData = Record<string, ParentScaleValue>;
 
 export interface RegistrationFormData {
     childName: string;
@@ -121,8 +102,26 @@ export interface ConsentData {
     attendingParentSession: boolean;
 }
 
-export interface PaymentData {
-    mpesaPaymentCode: string;
+export interface CampPriceTierView {
+    attendeeType: "CAMPER" | "PARENT";
+    label: string;
+    amountKes: number;
+    effectiveFrom: string;
+    effectiveTo: string | null;
+}
+
+export interface CampPricing {
+    campSessionId: string;
+    campName: string;
+    location: string | null;
+    dateRange: string;
+    tiers: CampPriceTierView[];
+    current: {
+        camperTierLabel: string;
+        camperAmountKes: number;
+        parentTierLabel: string | null;
+        parentAmountKes: number;
+    };
 }
 
 export interface GriefCampApplicationData {
@@ -133,5 +132,4 @@ export interface GriefCampApplicationData {
     registration: RegistrationFormData;
     healthHistory: HealthHistoryData;
     consent: ConsentData;
-    payment: PaymentData;
 }

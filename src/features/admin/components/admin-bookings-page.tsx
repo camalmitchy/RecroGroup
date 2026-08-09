@@ -1,232 +1,368 @@
 "use client";
 
-import { useState } from "react";
-import { Check, X, Download, Filter } from "lucide-react";
-import { AdminShell, Card, PageHeader, DataTable, StatusBadge } from "./admin-shell";
+import { useMemo, useState, useTransition } from "react";
+import { Check, Download, Filter, RotateCcw, X } from "lucide-react";
+import { toast } from "sonner";
 
-export function AdminBookingsPage() {
-    const [bookings] = useState([
-        {
-            id: "1",
-            reference: "RQ-XGPRP",
-            client_name: "Jane Doe",
-            client_email: "jane@example.com",
-            preferred_date: "2026-07-15",
-            therapist_id: null,
-            status: "requested",
-            payment_status: "pending",
-        },
-        {
-            id: "2",
-            reference: "RQ-TQ1VZ",
-            client_name: "John Smith",
-            client_email: "john@example.com",
-            preferred_date: "2026-07-16",
-            therapist_id: "1",
-            status: "confirmed",
-            payment_status: "paid",
-        },
-        {
-            id: "3",
-            reference: "RQ-ABC123",
-            client_name: "Mary Johnson",
-            client_email: "mary@example.com",
-            preferred_date: "2026-07-17",
-            therapist_id: "2",
-            status: "completed",
-            payment_status: "paid",
-        },
-    ]);
+import type { BookingStatus } from "@prisma/client";
+import { downloadCsv, toCsv } from "@/features/admin/lib/csv";
+import { assignTherapist, setBookingStatus } from "@/server/actions/operations";
+import type { ActionResult } from "@/server/result";
 
-    const [therapists] = useState([
-        { id: "1", full_name: "Dr. Sarah Johnson" },
-        { id: "2", full_name: "Dr. Michael Chen" },
-        { id: "3", full_name: "Dr. Amina Hassan" },
-    ]);
+import { AdminShell, Card, DataTable, PageHeader, StatusBadge } from "./admin-shell";
 
-    const [selectedTherapist, setSelectedTherapist] = useState<string>("all");
-    const [selectedStatus, setSelectedStatus] = useState<string>("all");
+export type AdminBookingRow = {
+  id: string;
+  reference: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string | null;
+  serviceTitle: string | null;
+  therapistId: string | null;
+  therapistName: string | null;
+  preferredDateLabel: string;
+  preferredTime: string | null;
+  status: BookingStatus;
+  paymentStatus: string;
+  amountKes: number | null;
+  amountPaidKes: number;
+  createdAtLabel: string;
+};
 
-    const handleUpdate = (id: string, patch: Record<string, any>, msg = "Updated") => {
-        // TODO: Implement update logic with Prisma
-        console.log("Update booking", id, patch);
-        alert(msg);
-    };
+export type AdminTherapistOption = {
+  id: string;
+  fullName: string;
+};
 
-    const handleExport = () => {
-        // TODO: Implement CSV export
-        const csv = [
-            ["Reference", "Client", "Email", "Date", "Therapist", "Status", "Payment"],
-            ...filteredBookings.map((b) => [
-                b.reference,
-                b.client_name,
-                b.client_email,
-                b.preferred_date,
-                therapists.find((t) => t.id === b.therapist_id)?.full_name ?? "Unassigned",
-                b.status,
-                b.payment_status,
-            ]),
-        ]
-            .map((row) => row.join(","))
-            .join("\n");
+type AdminBookingsPageProps = {
+  bookings: AdminBookingRow[];
+  therapists: AdminTherapistOption[];
+  total: number;
+  isAdmin: boolean;
+};
 
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `bookings-${new Date().toISOString().split("T")[0]}.csv`;
-        a.click();
-    };
+const STATUSES: BookingStatus[] = [
+  "REQUESTED",
+  "CONFIRMED",
+  "COMPLETED",
+  "CANCELLED",
+];
 
-    const filteredBookings = bookings.filter((booking) => {
-        if (selectedTherapist !== "all" && booking.therapist_id !== selectedTherapist) {
-            return false;
+const CSV_COLUMNS = [
+  "Reference",
+  "Client",
+  "Email",
+  "Phone",
+  "Service",
+  "Preferred date",
+  "Preferred time",
+  "Therapist",
+  "Status",
+  "Payment",
+  "Amount",
+  "Paid",
+  "Created",
+];
+
+function humanize(value: string) {
+  return value.toLowerCase().replace(/_/g, " ");
+}
+
+function statusTone(status: BookingStatus) {
+  if (status === "COMPLETED") return "success" as const;
+  if (status === "CONFIRMED") return "info" as const;
+  if (status === "CANCELLED") return "danger" as const;
+  return "warning" as const;
+}
+
+function paymentTone(status: string) {
+  if (status === "PAID") return "success" as const;
+  if (status === "FAILED" || status === "REFUNDED") return "danger" as const;
+  if (status === "CANCELLED") return "muted" as const;
+  return "warning" as const;
+}
+
+export function AdminBookingsPage({
+  bookings,
+  therapists,
+  total,
+  isAdmin,
+}: AdminBookingsPageProps) {
+  const [therapistFilter, setTherapistFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const rows = useMemo(
+    () =>
+      bookings.filter((booking) => {
+        if (therapistFilter === "unassigned" && booking.therapistId !== null) {
+          return false;
         }
-        if (selectedStatus !== "all" && booking.status !== selectedStatus) {
-            return false;
+        if (
+          therapistFilter !== "all" &&
+          therapistFilter !== "unassigned" &&
+          booking.therapistId !== therapistFilter
+        ) {
+          return false;
         }
-        return true;
+        return statusFilter === "all" || booking.status === statusFilter;
+      }),
+    [bookings, therapistFilter, statusFilter],
+  );
+
+  const run = (
+    id: string,
+    action: () => Promise<ActionResult<unknown>>,
+    successMessage: string,
+  ) => {
+    setPendingId(id);
+    startTransition(async () => {
+      const result = await action();
+      setPendingId(null);
+      if (result.ok) {
+        toast.success(successMessage);
+      } else {
+        toast.error(result.error);
+      }
     });
+  };
 
-    const statusTone = (s: string) =>
-        s === "confirmed" ? "info" : s === "completed" ? "success" : s === "cancelled" ? "danger" : "warning";
-
-    return (
-        <AdminShell isAdmin={true}>
-            <div className="p-6 lg:p-8">
-                <PageHeader
-                    title="Bookings"
-                    description="Incoming booking requests and lifecycle actions."
-                />
-
-                {/* Filters and Export */}
-                <div className="mt-6 flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <Filter size={18} className="text-gray-500" />
-                        <select
-                            value={selectedTherapist}
-                            onChange={(e) => setSelectedTherapist(e.target.value)}
-                            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-deep focus:outline-none focus:ring-1 focus:ring-primary-deep"
-                        >
-                            <option value="all">All Therapists</option>
-                            {therapists.map((t) => (
-                                <option key={t.id} value={t.id}>
-                                    {t.full_name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <select
-                        value={selectedStatus}
-                        onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-deep focus:outline-none focus:ring-1 focus:ring-primary-deep"
-                    >
-                        <option value="all">All Statuses</option>
-                        <option value="requested">Requested</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-
-                    <button
-                        onClick={handleExport}
-                        className="ml-auto flex items-center gap-2 rounded-lg bg-primary-deep px-4 py-2 text-sm font-semibold text-white hover:bg-primary-deep/90"
-                    >
-                        <Download size={16} />
-                        Export CSV
-                    </button>
-                </div>
-
-                <Card className="mt-6">
-                    {filteredBookings.length === 0 ? (
-                        <div className="p-10 text-center text-sm text-gray-600">
-                            No bookings found matching the filters.
-                        </div>
-                    ) : (
-                        <DataTable
-                            columns={["Ref", "Client", "Date", "Therapist", "Status", "Payment", "Actions"]}
-                            rows={filteredBookings.map((r) => [
-                                <span key="r" className="font-mono text-xs">
-                                    {r.reference}
-                                </span>,
-                                <div key="c">
-                                    <div className="text-sm font-medium">{r.client_name}</div>
-                                    <div className="text-xs text-gray-600">{r.client_email}</div>
-                                </div>,
-                                r.preferred_date ?? "—",
-                                <select
-                                    key="t"
-                                    value={r.therapist_id ?? ""}
-                                    onChange={(e) =>
-                                        handleUpdate(
-                                            r.id,
-                                            { therapist_id: e.target.value || null },
-                                            "Therapist assigned"
-                                        )
-                                    }
-                                    className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm"
-                                >
-                                    <option value="">— assign —</option>
-                                    {therapists.map((t) => (
-                                        <option key={t.id} value={t.id}>
-                                            {t.full_name}
-                                        </option>
-                                    ))}
-                                </select>,
-                                <StatusBadge key="s" tone={statusTone(r.status) as any}>
-                                    {r.status}
-                                </StatusBadge>,
-                                <StatusBadge
-                                    key="p"
-                                    tone={
-                                        r.payment_status === "paid"
-                                            ? "success"
-                                            : r.payment_status === "failed"
-                                                ? "danger"
-                                                : "warning"
-                                    }
-                                >
-                                    {r.payment_status}
-                                </StatusBadge>,
-                                <div key="a" className="flex gap-2">
-                                    {r.status === "requested" && (
-                                        <>
-                                            <button
-                                                onClick={() => handleUpdate(r.id, { status: "confirmed" }, "Confirmed")}
-                                                className="rounded-md bg-green-100 p-2 text-green-700 hover:bg-green-200"
-                                                title="Confirm"
-                                            >
-                                                <Check size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleUpdate(r.id, { status: "cancelled" }, "Cancelled")}
-                                                className="rounded-md bg-red-100 p-2 text-red-700 hover:bg-red-200"
-                                                title="Cancel"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        </>
-                                    )}
-                                    {r.status === "confirmed" && (
-                                        <button
-                                            onClick={() => handleUpdate(r.id, { status: "cancelled" }, "Cancelled")}
-                                            className="rounded-md bg-red-100 p-2 text-red-700 hover:bg-red-200"
-                                            title="Cancel"
-                                        >
-                                            <X size={16} />
-                                        </button>
-                                    )}
-                                </div>,
-                            ])}
-                        />
-                    )}
-                </Card>
-
-                <div className="mt-4 text-sm text-gray-600">
-                    Showing {filteredBookings.length} of {bookings.length} booking(s)
-                </div>
-            </div>
-        </AdminShell>
+  const handleExport = () => {
+    const csv = toCsv(
+      CSV_COLUMNS,
+      rows.map((row) => [
+        row.reference,
+        row.clientName,
+        row.clientEmail,
+        row.clientPhone,
+        row.serviceTitle,
+        row.preferredDateLabel,
+        row.preferredTime,
+        row.therapistName ?? "Unassigned",
+        row.status,
+        row.paymentStatus,
+        row.amountKes,
+        row.amountPaidKes,
+        row.createdAtLabel,
+      ]),
     );
+
+    downloadCsv(`bookings-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+  };
+
+  return (
+    <AdminShell isAdmin={isAdmin}>
+      <div className="p-6 lg:p-8">
+        <PageHeader
+          title="Bookings"
+          description="Incoming booking requests and lifecycle actions."
+        />
+
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter size={18} className="text-gray-500" />
+            <select
+              value={therapistFilter}
+              onChange={(event) => setTherapistFilter(event.target.value)}
+              aria-label="Filter by therapist"
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-deep focus:ring-1 focus:ring-primary-deep focus:outline-none"
+            >
+              <option value="all">All Therapists</option>
+              <option value="unassigned">Unassigned</option>
+              {therapists.map((therapist) => (
+                <option key={therapist.id} value={therapist.id}>
+                  {therapist.fullName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            aria-label="Filter by status"
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm capitalize focus:border-primary-deep focus:ring-1 focus:ring-primary-deep focus:outline-none"
+          >
+            <option value="all">All Statuses</option>
+            {STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {humanize(status)}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={rows.length === 0}
+            className="ml-auto flex items-center gap-2 rounded-lg bg-primary-deep px-4 py-2 text-sm font-semibold text-white hover:bg-primary-deep/90 disabled:opacity-50"
+          >
+            <Download size={16} />
+            Export CSV
+          </button>
+        </div>
+
+        <Card className="mt-6">
+          {rows.length === 0 ? (
+            <div className="p-10 text-center text-sm text-gray-600">
+              {bookings.length === 0
+                ? "No bookings yet."
+                : "No bookings match the selected filters."}
+            </div>
+          ) : (
+            <DataTable
+              columns={[
+                "Reference",
+                "Client",
+                "Service",
+                "Preferred",
+                "Therapist",
+                "Status",
+                "Payment",
+                "Actions",
+              ]}
+              rows={rows.map((row) => {
+                const busy = isPending && pendingId === row.id;
+
+                return [
+                  <span key="ref" className="font-mono text-xs">
+                    {row.reference}
+                  </span>,
+                  <div key="client">
+                    <div className="text-sm font-medium">{row.clientName}</div>
+                    <div className="text-xs text-gray-600">{row.clientEmail}</div>
+                    {row.clientPhone && (
+                      <div className="text-xs text-gray-500">{row.clientPhone}</div>
+                    )}
+                  </div>,
+                  <span key="service" className="text-sm">
+                    {row.serviceTitle ?? "—"}
+                  </span>,
+                  <div key="preferred">
+                    <div className="text-xs">{row.preferredDateLabel}</div>
+                    <div className="text-xs text-gray-500">
+                      {row.preferredTime ?? "—"}
+                    </div>
+                  </div>,
+                  <select
+                    key="therapist"
+                    value={row.therapistId ?? ""}
+                    disabled={busy}
+                    aria-label={`Therapist for ${row.reference}`}
+                    onChange={(event) =>
+                      run(
+                        row.id,
+                        () =>
+                          assignTherapist(row.id, event.target.value || null),
+                        event.target.value
+                          ? "Therapist assigned"
+                          : "Therapist unassigned",
+                      )
+                    }
+                    className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm disabled:opacity-50"
+                  >
+                    <option value="">— assign —</option>
+                    {therapists.map((therapist) => (
+                      <option key={therapist.id} value={therapist.id}>
+                        {therapist.fullName}
+                      </option>
+                    ))}
+                  </select>,
+                  <StatusBadge key="status" tone={statusTone(row.status)}>
+                    {humanize(row.status)}
+                  </StatusBadge>,
+                  <div key="payment">
+                    <StatusBadge tone={paymentTone(row.paymentStatus)}>
+                      {humanize(row.paymentStatus)}
+                    </StatusBadge>
+                    {row.amountKes !== null && (
+                      <div className="mt-1 text-xs text-gray-500">
+                        {row.amountPaidKes.toLocaleString()} /{" "}
+                        {row.amountKes.toLocaleString()}
+                      </div>
+                    )}
+                  </div>,
+                  <div key="actions" className="flex gap-2">
+                    {row.status === "REQUESTED" && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          run(
+                            row.id,
+                            () => setBookingStatus(row.id, "CONFIRMED"),
+                            "Booking confirmed",
+                          )
+                        }
+                        className="rounded-md bg-green-100 p-2 text-green-700 hover:bg-green-200 disabled:opacity-50"
+                        title="Confirm"
+                      >
+                        <Check size={16} />
+                      </button>
+                    )}
+                    {row.status === "CONFIRMED" && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          run(
+                            row.id,
+                            () => setBookingStatus(row.id, "COMPLETED"),
+                            "Booking completed",
+                          )
+                        }
+                        className="rounded-md bg-green-100 p-2 text-green-700 hover:bg-green-200 disabled:opacity-50"
+                        title="Mark completed"
+                      >
+                        <Check size={16} />
+                      </button>
+                    )}
+                    {row.status !== "CANCELLED" && row.status !== "COMPLETED" && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          run(
+                            row.id,
+                            () => setBookingStatus(row.id, "CANCELLED"),
+                            "Booking cancelled",
+                          )
+                        }
+                        className="rounded-md bg-red-100 p-2 text-red-700 hover:bg-red-200 disabled:opacity-50"
+                        title="Cancel"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                    {row.status === "CANCELLED" && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          run(
+                            row.id,
+                            () => setBookingStatus(row.id, "REQUESTED"),
+                            "Booking reopened",
+                          )
+                        }
+                        className="rounded-md bg-gray-100 p-2 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                        title="Reopen"
+                      >
+                        <RotateCcw size={16} />
+                      </button>
+                    )}
+                  </div>,
+                ];
+              })}
+            />
+          )}
+        </Card>
+
+        <div className="mt-4 text-sm text-gray-600">
+          Showing {rows.length} of {total} booking(s)
+        </div>
+      </div>
+    </AdminShell>
+  );
 }
