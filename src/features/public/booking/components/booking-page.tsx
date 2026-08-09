@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "sonner";
 import {
     Calendar,
     Clock,
@@ -19,60 +20,61 @@ import {
     Mail,
 } from "lucide-react";
 
+import { createBooking } from "@/server/actions/booking";
+import { recordBankTransfer } from "@/server/actions/payments";
+
 type Step = "service" | "time" | "intake" | "pay" | "done";
 
-type ServiceOption = {
+export type ServiceOption = {
     key: string;
     title: string;
     duration: string;
     icon: string;
     price: number;
+    depositKes: number;
 };
 
-const SERVICES: ServiceOption[] = [
-    {
-        key: "individual",
-        title: "Individual Therapy",
-        duration: "50 min",
-        icon: "/assets/icons/individual-therapy.svg",
-        price: 5000,
-    },
-    {
-        key: "couples",
-        title: "Couples Therapy",
-        duration: "50 min",
-        icon: "/assets/icons/couples-therapy.svg",
-        price: 7500,
-    },
-    {
-        key: "family",
-        title: "Family Therapy",
-        duration: "50 min",
-        icon: "/assets/icons/family-therapy.svg",
-        price: 8000,
-    },
-    {
-        key: "group",
-        title: "Group Therapy",
-        duration: "2 hrs",
-        icon: "/assets/icons/group-therapy.svg",
-        price: 3500,
-    },
-    {
-        key: "children",
-        title: "Grief Camp",
-        duration: "3 days",
-        icon: "/assets/icons/grief-camp.svg",
-        price: 15000,
-    },
-    {
-        key: "corporate",
-        title: "Corporate Speaking",
-        duration: "2+ hrs",
-        icon: "/assets/icons/corporate-speaking.svg",
-        price: 25000,
-    },
-];
+type PaymentMethodKey = "mpesa" | "card" | "bank";
+
+type PaymentStatus =
+    | "PENDING"
+    | "PROCESSING"
+    | "PAID"
+    | "FAILED"
+    | "CANCELLED"
+    | "REFUNDED";
+
+type InitiateResponse = {
+    paymentId: string;
+    reference: string;
+    status: PaymentStatus;
+    amountKes: number;
+    redirectUrl?: string | null;
+    customerMessage?: string | null;
+};
+
+type StatusResponse = {
+    reference: string;
+    status: PaymentStatus;
+    amountKes: number;
+    settledAmountKes: number | null;
+    method: string;
+    mpesaReceipt: string | null;
+    failureReason: string | null;
+    paidAt: string | null;
+};
+
+type BookingRecord = {
+    bookingId: string;
+    reference: string;
+    totalKes: number;
+    depositKes: number;
+    balanceKes: number;
+    signature: string;
+};
+
+const POLL_INTERVAL_MS = 3000;
+const POLL_TIMEOUT_MS = 120_000;
 
 const CLINICIANS = [
     {
@@ -92,14 +94,16 @@ const TIME_SLOTS = Array.from({ length: 9 }, (_, i) => {
     return `${displayHour}:00 ${ampm}`;
 });
 
-export function BookingPage() {
+export function BookingPage({ services }: { services: ServiceOption[] }) {
     const searchParams = useSearchParams();
     const serviceParam = searchParams.get("service");
 
     const [step, setStep] = useState<Step>("service");
 
     // Service step
-    const [selectedService, setSelectedService] = useState<ServiceOption | null>(null);
+    const [selectedService, setSelectedService] = useState<ServiceOption | null>(
+        () => services.find((s) => s.key === serviceParam) ?? null,
+    );
 
     // Time step
     const [clinician, setClinician] = useState<string>("dr-karume");
@@ -111,23 +115,50 @@ export function BookingPage() {
     const [clientEmail, setClientEmail] = useState("");
     const [clientPhone, setClientPhone] = useState("");
     const [notes, setNotes] = useState("");
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+    const [creatingBooking, setCreatingBooking] = useState(false);
 
     // Payment step
-    const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "card" | "bank">("mpesa");
+    const [booking, setBooking] = useState<BookingRecord | null>(null);
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethodKey>("mpesa");
     const [mpesaPhone, setMpesaPhone] = useState("");
     const [bankRef, setBankRef] = useState("");
     const [proofFile, setProofFile] = useState<File | null>(null);
     const [busy, setBusy] = useState(false);
+    const [idempotencyKey, setIdempotencyKey] = useState<string>(() =>
+        crypto.randomUUID(),
+    );
+    const [pending, setPending] = useState<{
+        reference: string;
+        amountKes: number;
+        message: string | null;
+    } | null>(null);
+    const [secondsLeft, setSecondsLeft] = useState(0);
+    const [timedOut, setTimedOut] = useState(false);
+    const [payError, setPayError] = useState<string | null>(null);
+    const [paidAmountKes, setPaidAmountKes] = useState<number | null>(null);
 
-    // Pre-select service from URL param
-    useEffect(() => {
-        if (serviceParam) {
-            const service = SERVICES.find((s) => s.key === serviceParam);
-            if (service) {
-                setSelectedService(service);
-            }
+    const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    const stopPolling = useCallback(() => {
+        if (pollRef.current !== null) {
+            clearInterval(pollRef.current);
+            pollRef.current = null;
         }
-    }, [serviceParam]);
+    }, []);
+
+    useEffect(() => stopPolling, [stopPolling]);
+
+    useEffect(() => {
+        if (step !== "pay") stopPolling();
+    }, [step, stopPolling]);
+
+    const [lastServiceParam, setLastServiceParam] = useState(serviceParam);
+    if (serviceParam !== lastServiceParam) {
+        setLastServiceParam(serviceParam);
+        const preselected = services.find((s) => s.key === serviceParam);
+        if (preselected) setSelectedService(preselected);
+    }
 
     // Generate available dates (next 14 days, excluding Sundays)
     const generateAvailableDates = () => {
@@ -154,7 +185,8 @@ export function BookingPage() {
 
     const canProceedFromService = selectedService !== null;
     const canProceedFromTime = selectedDate && selectedTime && clinician;
-    const canProceedFromIntake = clientName.trim() && clientEmail.trim();
+    const canProceedFromIntake =
+        clientName.trim() && clientEmail.trim() && clientPhone.trim();
 
     const handleServiceNext = () => {
         if (canProceedFromService) setStep("time");
@@ -164,41 +196,229 @@ export function BookingPage() {
         if (canProceedFromTime) setStep("intake");
     };
 
-    const handleIntakeNext = () => {
-        if (canProceedFromIntake) setStep("pay");
+    const handleIntakeNext = async () => {
+        if (creatingBooking || !canProceedFromIntake || !selectedService || !selectedDate)
+            return;
+
+        const signature = JSON.stringify([
+            selectedService.key,
+            clientName.trim(),
+            clientEmail.trim(),
+            clientPhone.trim(),
+            toDateOnly(selectedDate),
+            selectedTime,
+            notes.trim(),
+        ]);
+
+        if (booking && booking.signature === signature) {
+            setStep("pay");
+            return;
+        }
+
+        setCreatingBooking(true);
+        setFieldErrors({});
+
+        try {
+            const result = await createBooking({
+                serviceSlug: selectedService.key,
+                clientName,
+                clientEmail,
+                clientPhone,
+                preferredDate: toDateOnly(selectedDate),
+                preferredTime: selectedTime,
+                sessionMode: "IN_PERSON",
+                notes: notes.trim() || undefined,
+                therapistId: undefined,
+            });
+
+            if (!result.ok) {
+                setFieldErrors(result.fieldErrors ?? {});
+                if (!result.fieldErrors) toast.error(result.error);
+                return;
+            }
+
+            setBooking({ ...result.data, signature });
+            handleRetry();
+            if (!mpesaPhone) setMpesaPhone(toLocalDigits(clientPhone));
+            setStep("pay");
+        } finally {
+            setCreatingBooking(false);
+        }
+    };
+
+    const pollUntilSettled = useCallback(
+        (reference: string) => {
+            stopPolling();
+            const deadline = Date.now() + POLL_TIMEOUT_MS;
+            setSecondsLeft(Math.round(POLL_TIMEOUT_MS / 1000));
+
+            pollRef.current = setInterval(async () => {
+                if (Date.now() >= deadline) {
+                    stopPolling();
+                    setBusy(false);
+                    setTimedOut(true);
+                    setSecondsLeft(0);
+                    return;
+                }
+
+                setSecondsLeft(Math.max(0, Math.round((deadline - Date.now()) / 1000)));
+
+                let status: StatusResponse;
+                try {
+                    const response = await fetch(`/api/payments/status/${reference}`, {
+                        cache: "no-store",
+                    });
+                    if (!response.ok) return;
+                    status = (await response.json()) as StatusResponse;
+                } catch {
+                    return;
+                }
+
+                if (status.status === "PAID") {
+                    stopPolling();
+                    setBusy(false);
+                    setPaidAmountKes(status.settledAmountKes ?? status.amountKes);
+                    setStep("done");
+                    return;
+                }
+
+                if (status.status === "FAILED" || status.status === "CANCELLED") {
+                    stopPolling();
+                    setBusy(false);
+                    setPending(null);
+                    setIdempotencyKey(crypto.randomUUID());
+                    setPayError(
+                        status.failureReason ??
+                            (status.status === "CANCELLED"
+                                ? "The payment was cancelled."
+                                : "The payment did not go through."),
+                    );
+                }
+            }, POLL_INTERVAL_MS);
+        },
+        [stopPolling],
+    );
+
+    const initiatePayment = async (
+        method: "MPESA" | "CARD",
+        phone?: string,
+    ): Promise<InitiateResponse | null> => {
+        if (!booking) return null;
+
+        const response = await fetch("/api/payments/initiate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                method,
+                bookingId: booking.bookingId,
+                phone,
+                email: clientEmail,
+                name: clientName,
+                idempotencyKey,
+            }),
+        });
+
+        const payload: unknown = await response.json().catch(() => null);
+
+        if (!response.ok) {
+            const message =
+                payload && typeof payload === "object" && "error" in payload
+                    ? String((payload as { error: unknown }).error)
+                    : "Could not start payment. Please try again.";
+            throw new Error(message);
+        }
+
+        return payload as InitiateResponse;
     };
 
     const handlePayment = async () => {
+        if (busy || !booking) return;
+
+        setPayError(null);
+        setTimedOut(false);
+
         if (paymentMethod === "mpesa") {
             if (mpesaPhone.length !== 9) {
-                alert("Please enter a valid 9-digit M-Pesa number");
+                setPayError("Enter a valid 9-digit M-Pesa number");
                 return;
             }
+
             setBusy(true);
-            // TODO: Implement M-Pesa STK push
-            setTimeout(() => {
+            try {
+                const result = await initiatePayment("MPESA", `254${mpesaPhone}`);
+                if (!result) return;
+
+                if (result.status === "PAID") {
+                    setPaidAmountKes(result.amountKes);
+                    setBusy(false);
+                    setStep("done");
+                    return;
+                }
+
+                setPending({
+                    reference: result.reference,
+                    amountKes: result.amountKes,
+                    message: result.customerMessage ?? null,
+                });
+                pollUntilSettled(result.reference);
+            } catch (error) {
                 setBusy(false);
-                setStep("done");
-            }, 1500);
-        } else if (paymentMethod === "card") {
-            setBusy(true);
-            // TODO: Implement Pesapal card payment
-            setTimeout(() => {
-                setBusy(false);
-                setStep("done");
-            }, 1500);
-        } else if (paymentMethod === "bank") {
-            if (!bankRef.trim() || !proofFile) {
-                alert("Please upload your bank slip and enter the reference");
-                return;
+                toast.error(
+                    error instanceof Error ? error.message : "Could not start payment",
+                );
             }
-            setBusy(true);
-            // TODO: Upload proof and create booking
-            setTimeout(() => {
-                setBusy(false);
-                setStep("done");
-            }, 1500);
+            return;
         }
+
+        if (paymentMethod === "card") {
+            setBusy(true);
+            try {
+                const result = await initiatePayment("CARD");
+                if (!result) return;
+
+                if (!result.redirectUrl) {
+                    throw new Error("The card provider did not return a checkout link.");
+                }
+
+                window.location.href = result.redirectUrl;
+            } catch (error) {
+                setBusy(false);
+                toast.error(
+                    error instanceof Error ? error.message : "Could not start payment",
+                );
+            }
+            return;
+        }
+
+        if (!bankRef.trim()) {
+            setPayError("Enter the bank reference from your transfer slip");
+            return;
+        }
+
+        setBusy(true);
+        const result = await recordBankTransfer({
+            bookingId: booking.bookingId,
+            bankReference: bankRef.trim(),
+        });
+        setBusy(false);
+
+        if (!result.ok) {
+            setPayError(result.error);
+            return;
+        }
+
+        setPaidAmountKes(result.data.amountKes);
+        setStep("done");
+    };
+
+    const handleRetry = () => {
+        stopPolling();
+        setPending(null);
+        setPayError(null);
+        setTimedOut(false);
+        setBusy(false);
+        setSecondsLeft(0);
+        setIdempotencyKey(crypto.randomUUID());
     };
 
     const stepIndex = ["service", "time", "intake", "pay"].indexOf(step);
@@ -254,7 +474,7 @@ export function BookingPage() {
                 {/* Steps Content */}
                 {step === "service" && (
                     <ServiceStep
-                        services={SERVICES}
+                        services={services}
                         selectedService={selectedService}
                         onSelectService={setSelectedService}
                         onNext={handleServiceNext}
@@ -286,19 +506,25 @@ export function BookingPage() {
                         setClientPhone={setClientPhone}
                         notes={notes}
                         setNotes={setNotes}
+                        fieldErrors={fieldErrors}
+                        busy={creatingBooking}
                         onBack={() => setStep("time")}
                         onNext={handleIntakeNext}
                     />
                 )}
 
-                {step === "pay" && selectedService && selectedDate && (
+                {step === "pay" && selectedService && selectedDate && booking && (
                     <PaymentStep
                         service={selectedService}
+                        booking={booking}
                         date={selectedDate}
                         time={selectedTime}
                         clientName={clientName}
                         paymentMethod={paymentMethod}
-                        setPaymentMethod={setPaymentMethod}
+                        setPaymentMethod={(method) => {
+                            handleRetry();
+                            setPaymentMethod(method);
+                        }}
                         mpesaPhone={mpesaPhone}
                         setMpesaPhone={setMpesaPhone}
                         bankRef={bankRef}
@@ -306,6 +532,11 @@ export function BookingPage() {
                         proofFile={proofFile}
                         setProofFile={setProofFile}
                         busy={busy}
+                        pending={pending}
+                        secondsLeft={secondsLeft}
+                        timedOut={timedOut}
+                        payError={payError}
+                        onRetry={handleRetry}
                         onBack={() => setStep("intake")}
                         onPay={handlePayment}
                     />
@@ -316,7 +547,11 @@ export function BookingPage() {
                         clientName={clientName}
                         date={selectedDate}
                         time={selectedTime}
-                        commitmentFee={Math.round(selectedService.price / 2)}
+                        method={paymentMethod}
+                        reference={booking?.reference ?? null}
+                        commitmentFee={
+                            paidAmountKes ?? booking?.depositKes ?? 0
+                        }
                     />
                 )}
             </div>
@@ -368,7 +603,7 @@ function ServiceStep({
                                         {service.duration} · Ksh {service.price.toLocaleString()}{" "}
                                         <span className="text-muted-foreground/80">
                                             (commitment Ksh{" "}
-                                            {Math.round(service.price / 2).toLocaleString()})
+                                            {service.depositKes.toLocaleString()})
                                         </span>
                                     </p>
                                 </div>
@@ -586,6 +821,8 @@ function IntakeStep({
     setClientPhone,
     notes,
     setNotes,
+    fieldErrors,
+    busy,
     onBack,
     onNext,
 }: {
@@ -597,9 +834,17 @@ function IntakeStep({
     setClientPhone: (v: string) => void;
     notes: string;
     setNotes: (v: string) => void;
+    fieldErrors: Record<string, string[]>;
+    busy: boolean;
     onBack: () => void;
     onNext: () => void;
 }) {
+    const formError = fieldErrors._form?.[0];
+    const scheduleError =
+        fieldErrors.preferredDate?.[0] ??
+        fieldErrors.preferredTime?.[0] ??
+        fieldErrors.serviceSlug?.[0];
+
     return (
         <div className="space-y-6">
             <div className="bg-background rounded-2xl border-2 border-border p-7 md:p-9 shadow-sm">
@@ -609,6 +854,7 @@ function IntakeStep({
                         value={clientName}
                         onChange={setClientName}
                         placeholder="Jane Doe"
+                        error={fieldErrors.clientName?.[0]}
                     />
                     <div className="grid sm:grid-cols-2 gap-4">
                         <Field
@@ -617,12 +863,14 @@ function IntakeStep({
                             value={clientEmail}
                             onChange={setClientEmail}
                             placeholder="jane@example.com"
+                            error={fieldErrors.clientEmail?.[0]}
                         />
                         <Field
-                            label="Phone"
+                            label="Phone *"
                             value={clientPhone}
                             onChange={setClientPhone}
                             placeholder="+254 7XX XXX XXX"
+                            error={fieldErrors.clientPhone?.[0]}
                         />
                     </div>
 
@@ -637,7 +885,18 @@ function IntakeStep({
                             placeholder="Share anything you'd like your therapist to know before your first session..."
                             className="mt-2 w-full rounded-2xl border border-border bg-card px-5 py-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-y"
                         />
+                        {fieldErrors.notes?.[0] && (
+                            <p className="mt-2 text-xs text-red-500">
+                                {fieldErrors.notes[0]}
+                            </p>
+                        )}
                     </div>
+
+                    {(formError || scheduleError) && (
+                        <p className="text-sm text-red-500">
+                            {formError ?? scheduleError}
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -650,10 +909,23 @@ function IntakeStep({
                 </button>
                 <button
                     onClick={onNext}
-                    disabled={!clientName.trim() || !clientEmail.trim()}
+                    disabled={
+                        busy ||
+                        !clientName.trim() ||
+                        !clientEmail.trim() ||
+                        !clientPhone.trim()
+                    }
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Continue to Payment <ArrowRight size={16} />
+                    {busy ? (
+                        <>
+                            <Loader2 size={16} className="animate-spin" /> Saving...
+                        </>
+                    ) : (
+                        <>
+                            Continue to Payment <ArrowRight size={16} />
+                        </>
+                    )}
                 </button>
             </div>
         </div>
@@ -662,6 +934,7 @@ function IntakeStep({
 
 function PaymentStep({
     service,
+    booking,
     date,
     time,
     clientName,
@@ -674,15 +947,21 @@ function PaymentStep({
     proofFile,
     setProofFile,
     busy,
+    pending,
+    secondsLeft,
+    timedOut,
+    payError,
+    onRetry,
     onBack,
     onPay,
 }: {
     service: ServiceOption;
+    booking: BookingRecord;
     date: Date;
     time: string;
     clientName: string;
-    paymentMethod: "mpesa" | "card" | "bank";
-    setPaymentMethod: (m: "mpesa" | "card" | "bank") => void;
+    paymentMethod: PaymentMethodKey;
+    setPaymentMethod: (m: PaymentMethodKey) => void;
     mpesaPhone: string;
     setMpesaPhone: (v: string) => void;
     bankRef: string;
@@ -690,6 +969,11 @@ function PaymentStep({
     proofFile: File | null;
     setProofFile: (f: File | null) => void;
     busy: boolean;
+    pending: { reference: string; amountKes: number; message: string | null } | null;
+    secondsLeft: number;
+    timedOut: boolean;
+    payError: string | null;
+    onRetry: () => void;
     onBack: () => void;
     onPay: () => void;
 }) {
@@ -702,9 +986,10 @@ function PaymentStep({
         });
     };
 
-    const commitmentFee = Math.round(service.price / 2);
-    const balanceDue = service.price - commitmentFee;
+    const commitmentFee = pending?.amountKes ?? booking.depositKes;
+    const balanceDue = Math.max(0, booking.totalKes - commitmentFee);
     const weekdayLabel = date.toLocaleDateString("en-US", { weekday: "long" });
+    const waiting = busy && pending !== null && !timedOut;
 
     return (
         <div className="grid lg:grid-cols-3 gap-8">
@@ -717,6 +1002,73 @@ function PaymentStep({
                     Pay half the session fee now to secure your slot. The remaining
                     balance is paid when you attend your session.
                 </p>
+
+                {waiting && (
+                    <div className="mb-6 rounded-2xl border-2 border-primary bg-primary-soft/60 p-6">
+                        <div className="flex items-start gap-3">
+                            <Loader2
+                                size={20}
+                                className="mt-0.5 shrink-0 animate-spin text-primary-deep"
+                            />
+                            <div>
+                                <p className="font-semibold text-primary-deep">
+                                    Check your phone for the M-Pesa prompt
+                                </p>
+                                <p className="mt-1 text-sm leading-relaxed text-foreground">
+                                    {pending?.message ??
+                                        `Enter your M-Pesa PIN to pay Ksh ${commitmentFee.toLocaleString()}. Keep this page open.`}
+                                </p>
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                    Waiting for confirmation · {formatCountdown(secondsLeft)}{" "}
+                                    remaining · Ref {pending?.reference}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {timedOut && pending && (
+                    <div className="mb-6 rounded-2xl border-2 border-amber-500/60 bg-amber-50 p-6 dark:bg-amber-950/30">
+                        <p className="font-semibold text-amber-900 dark:text-amber-200">
+                            Still waiting on M-Pesa
+                        </p>
+                        <p className="mt-1 text-sm leading-relaxed text-amber-900/90 dark:text-amber-200/90">
+                            We haven&apos;t had confirmation yet. If you approved the prompt,
+                            it may still come through — we&apos;ll email you once it does.
+                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-4">
+                            <Link
+                                href={`/payments/${pending.reference}`}
+                                className="text-sm font-semibold text-primary-deep underline"
+                            >
+                                Check payment status
+                            </Link>
+                            <button
+                                onClick={onRetry}
+                                className="text-sm font-semibold text-primary-deep underline"
+                            >
+                                Try a different method
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {payError && (
+                    <div className="mb-6 rounded-2xl border-2 border-destructive/40 bg-destructive/5 p-6">
+                        <p className="font-semibold text-destructive">
+                            Payment did not go through
+                        </p>
+                        <p className="mt-1 text-sm leading-relaxed text-foreground">
+                            {payError}
+                        </p>
+                        <button
+                            onClick={onRetry}
+                            className="mt-3 text-sm font-semibold text-primary-deep underline"
+                        >
+                            Try again
+                        </button>
+                    </div>
+                )}
 
                 {/* Payment Methods */}
                 <div>
@@ -766,7 +1118,8 @@ function PaymentStep({
                                     placeholder="712345678"
                                     maxLength={9}
                                     inputMode="numeric"
-                                    className="w-full rounded-2xl border border-border bg-card pl-16 pr-5 py-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                    disabled={busy}
+                                    className="w-full rounded-2xl border border-border bg-card pl-16 pr-5 py-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
                                 />
                             </div>
                             {mpesaPhone && mpesaPhone.length !== 9 && (
@@ -784,8 +1137,9 @@ function PaymentStep({
                     {paymentMethod === "card" && (
                         <div className="mt-6 space-y-4">
                             <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground leading-relaxed">
-                                You&apos;ll be redirected to Pesapal&apos;s secure checkout to complete
-                                your commitment fee. Card details are never stored on our servers.
+                                You&apos;ll be redirected to Paystack&apos;s secure checkout to
+                                complete your commitment fee. Card details are never stored on
+                                our servers.
                             </div>
                         </div>
                     )}
@@ -830,7 +1184,7 @@ function PaymentStep({
                                 </div>
                             </div>
                             <Field
-                                label="Bank reference / slip number"
+                                label="Bank reference / slip number *"
                                 value={bankRef}
                                 onChange={setBankRef}
                                 placeholder="e.g. TXN20260620-9381"
@@ -845,7 +1199,19 @@ function PaymentStep({
                                     onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
                                     className="mt-2 block w-full text-sm"
                                 />
+                                {proofFile && (
+                                    <span className="mt-1 block text-xs text-muted-foreground">
+                                        {proofFile.name} selected — please also email it to
+                                        hello@recrogroup.org so we can match it to your booking.
+                                    </span>
+                                )}
                             </label>
+                            <p className="rounded-2xl bg-surface px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+                                Bank transfers are verified manually. Your booking is saved
+                                under reference{" "}
+                                <strong className="text-foreground">{booking.reference}</strong>{" "}
+                                and confirmed once our team matches your payment.
+                            </p>
                         </div>
                     )}
                 </div>
@@ -854,7 +1220,8 @@ function PaymentStep({
                 <div className="flex items-center justify-between pt-4">
                     <button
                         onClick={onBack}
-                        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                        disabled={busy}
+                        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
                     >
                         <ArrowLeft size={16} /> Back
                     </button>
@@ -865,7 +1232,12 @@ function PaymentStep({
                     >
                         {busy ? (
                             <>
-                                <Loader2 size={16} className="animate-spin" /> Processing...
+                                <Loader2 size={16} className="animate-spin" />{" "}
+                                {waiting ? "Waiting for M-Pesa..." : "Processing..."}
+                            </>
+                        ) : paymentMethod === "bank" ? (
+                            <>
+                                <Building2 size={16} /> Submit transfer details
                             </>
                         ) : (
                             <>
@@ -927,7 +1299,7 @@ function PaymentStep({
                         <div className="pt-4 border-t border-border space-y-2">
                             <div className="flex items-center justify-between text-sm text-muted-foreground">
                                 <span>Session fee</span>
-                                <span>Ksh {service.price.toLocaleString()}</span>
+                                <span>Ksh {booking.totalKes.toLocaleString()}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm text-muted-foreground">
                                 <span>Balance at session</span>
@@ -949,14 +1321,19 @@ function ConfirmationStep({
     clientName,
     date,
     time,
+    method,
+    reference,
     commitmentFee,
 }: {
     clientName: string;
     date: Date;
     time: string;
+    method: PaymentMethodKey;
+    reference: string | null;
     commitmentFee: number;
 }) {
     const weekdayLabel = date.toLocaleDateString("en-US", { weekday: "long" });
+    const isManual = method === "bank";
 
     return (
         <div className="text-center py-14 rounded-3xl border border-border bg-card max-w-2xl mx-auto px-6">
@@ -964,16 +1341,35 @@ function ConfirmationStep({
                 <Check size={32} />
             </span>
             <h2 className="mt-6 font-serif text-3xl font-semibold">
-                Booking Confirmed!
+                {isManual ? "Booking Received!" : "Booking Confirmed!"}
             </h2>
             <p className="mt-3 text-muted-foreground max-w-md mx-auto leading-relaxed">
-                Thank you, {clientName}. Your commitment fee of{" "}
-                <strong className="text-foreground">
-                    Ksh {commitmentFee.toLocaleString()}
-                </strong>{" "}
-                is recorded. Please pay the remaining balance when you attend your
-                session.
+                {isManual ? (
+                    <>
+                        Thank you, {clientName}. Your booking is saved and our team will
+                        confirm it once we match your bank transfer of{" "}
+                        <strong className="text-foreground">
+                            Ksh {commitmentFee.toLocaleString()}
+                        </strong>
+                        .
+                    </>
+                ) : (
+                    <>
+                        Thank you, {clientName}. Your commitment fee of{" "}
+                        <strong className="text-foreground">
+                            Ksh {commitmentFee.toLocaleString()}
+                        </strong>{" "}
+                        is recorded. Please pay the remaining balance when you attend your
+                        session.
+                    </>
+                )}
             </p>
+            {reference && (
+                <p className="mt-3 text-sm text-muted-foreground">
+                    Booking reference{" "}
+                    <strong className="font-mono text-foreground">{reference}</strong>
+                </p>
+            )}
             <p className="mt-4 max-w-md mx-auto rounded-2xl bg-surface px-4 py-3 text-sm leading-relaxed text-foreground">
                 Your permanent slot is every{" "}
                 <strong>
@@ -1032,12 +1428,14 @@ function Field({
     onChange,
     type = "text",
     placeholder,
+    error,
 }: {
     label: string;
     value: string;
     onChange: (v: string) => void;
     type?: string;
     placeholder?: string;
+    error?: string;
 }) {
     return (
         <div>
@@ -1049,8 +1447,28 @@ function Field({
                 value={value}
                 placeholder={placeholder}
                 onChange={(e) => onChange(e.target.value)}
-                className="mt-2 w-full rounded-2xl border border-border bg-card px-5 py-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                aria-invalid={error ? true : undefined}
+                className={`mt-2 w-full rounded-2xl border bg-card px-5 py-3.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 ${error ? "border-destructive focus:border-destructive" : "border-border focus:border-primary"
+                    }`}
             />
+            {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
         </div>
     );
+}
+
+function toDateOnly(date: Date) {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function toLocalDigits(phone: string) {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.startsWith("254")) return digits.slice(3, 12);
+    if (digits.startsWith("0")) return digits.slice(1, 10);
+    return digits.slice(0, 9);
+}
+
+function formatCountdown(seconds: number) {
+    const mins = Math.floor(seconds / 60);
+    return `${mins}:${String(seconds % 60).padStart(2, "0")}`;
 }

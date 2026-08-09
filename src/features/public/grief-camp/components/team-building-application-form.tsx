@@ -1,7 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
+
+import { submitInquiry } from "@/server/actions/inquiry";
+import {
+    formatInquiryMessage,
+    truncateSubject,
+} from "@/features/public/shared/inquiry-message";
 
 const STEPS = [
     { id: 1, title: "Personal Information" },
@@ -9,13 +16,46 @@ const STEPS = [
     { id: 3, title: "Health History" },
 ];
 
+type TeamBuildingData = {
+    name: string;
+    dateOfBirth: string;
+    email: string;
+    homeAddress: string;
+    workPhone: string;
+    workAddress: string;
+    employment: string;
+    education: string;
+    references: string;
+    emergencyContacts: string;
+    medicalConsent: string;
+    philosophyOfChildren: string;
+    experienceWithChildren: string;
+    disciplineApproach: string;
+    contribution: string;
+    responsibilities: string;
+    interest: string;
+    previousExperience: string;
+    additionalInfo: string;
+    physicianContact: string;
+    allergies: string;
+    recentSurgery: string;
+    surgeryDetails: string;
+    medications: string;
+};
+
+type StepProps = {
+    data: Partial<TeamBuildingData>;
+    onChange: (field: keyof TeamBuildingData, value: string) => void;
+};
+
 export function TeamBuildingApplicationForm() {
     const [currentStep, setCurrentStep] = useState(1);
-    const [formData, setFormData] = useState<any>({});
+    const [formData, setFormData] = useState<Partial<TeamBuildingData>>({});
     const [submitted, setSubmitted] = useState(false);
+    const [isPending, startTransition] = useTransition();
 
-    const handleInputChange = (field: string, value: any) => {
-        setFormData((prev: any) => ({ ...prev, [field]: value }));
+    const handleInputChange = (field: keyof TeamBuildingData, value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleNext = () => {
@@ -32,18 +72,76 @@ export function TeamBuildingApplicationForm() {
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (isPending) return;
 
-        try {
-            // TODO: Implement API call to submit the form
-            console.log("Team Building application data:", formData);
+        startTransition(async () => {
+            const result = await submitInquiry({
+                type: "CORPORATE",
+                name: formData.name ?? "",
+                email: formData.email ?? "",
+                phone: formData.workPhone || undefined,
+                subject: truncateSubject(
+                    `Team builder application — ${formData.name ?? "Unnamed applicant"}`,
+                ),
+                message: formatInquiryMessage([
+                    {
+                        heading: "Personal information",
+                        fields: [
+                            ["Name", formData.name],
+                            ["Date of birth", formData.dateOfBirth],
+                            ["Email", formData.email],
+                            ["Home address", formData.homeAddress],
+                            ["Work phone", formData.workPhone],
+                            ["Work address", formData.workAddress],
+                            ["Place of employment or university", formData.employment],
+                            ["Educational background", formData.education],
+                            ["References", formData.references],
+                            ["Emergency contacts", formData.emergencyContacts],
+                            ["Consent to emergency medical treatment", formData.medicalConsent],
+                        ],
+                    },
+                    {
+                        heading: "Application questions",
+                        fields: [
+                            ["1. Philosophy of children", formData.philosophyOfChildren],
+                            ["2. Experience working with children", formData.experienceWithChildren],
+                            ["3. Setting limits and discipline", formData.disciplineApproach],
+                            ["4. Contribution to the children", formData.contribution],
+                            ["5. Responsibilities as a team builder", formData.responsibilities],
+                            ["6. Reason for interest", formData.interest],
+                            ["7. Previous camp experience", formData.previousExperience],
+                            ["8. Additional information", formData.additionalInfo],
+                        ],
+                    },
+                    {
+                        heading: "Health history",
+                        fields: [
+                            ["Family physician", formData.physicianContact],
+                            ["Allergies or illnesses", formData.allergies],
+                            ["Recent surgery, injury or illness", formData.recentSurgery],
+                            ["Surgery details", formData.surgeryDetails],
+                            ["Current medication", formData.medications],
+                        ],
+                    },
+                ]),
+            });
+
+            if (!result.ok) {
+                const detail = result.fieldErrors
+                    ? Object.values(result.fieldErrors)
+                        .map((messages) => messages[0])
+                        .filter(Boolean)
+                        .join("; ")
+                    : null;
+                toast.error(result.error, detail ? { description: detail } : undefined);
+                return;
+            }
+
             setSubmitted(true);
             window.scrollTo({ top: 0, behavior: "smooth" });
-        } catch (error) {
-            console.error("Error submitting form:", error);
-            alert("There was an error submitting your application. Please try again.");
-        }
+        });
     };
 
     const progress = (currentStep / STEPS.length) * 100;
@@ -144,7 +242,7 @@ export function TeamBuildingApplicationForm() {
                             <button
                                 type="button"
                                 onClick={handlePrevious}
-                                disabled={currentStep === 1}
+                                disabled={currentStep === 1 || isPending}
                                 className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <ArrowLeft size={16} />
@@ -161,8 +259,12 @@ export function TeamBuildingApplicationForm() {
                                     <ArrowRight size={16} />
                                 </button>
                             ) : (
-                                <button type="submit" className="btn-primary">
-                                    Submit Application
+                                <button
+                                    type="submit"
+                                    disabled={isPending}
+                                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isPending ? "Submitting..." : "Submit Application"}
                                     <ArrowRight size={16} />
                                 </button>
                             )}
@@ -189,7 +291,7 @@ export function TeamBuildingApplicationForm() {
 }
 
 // Step 1: Personal Information
-function PersonalInformationStep({ data, onChange }: any) {
+function PersonalInformationStep({ data, onChange }: StepProps) {
     return (
         <div className="space-y-6">
             <h2 className="font-serif text-2xl text-foreground">Personal Information</h2>
@@ -361,7 +463,7 @@ function PersonalInformationStep({ data, onChange }: any) {
 }
 
 // Step 2: Application Questions
-function ApplicationQuestionsStep({ data, onChange }: any) {
+function ApplicationQuestionsStep({ data, onChange }: StepProps) {
     return (
         <div className="space-y-6">
             <h2 className="font-serif text-2xl text-foreground">Application Questions</h2>
@@ -385,7 +487,7 @@ function ApplicationQuestionsStep({ data, onChange }: any) {
 
                 <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                        2. Describe experience(s) you've had working with children *
+                        2. Describe experience(s) you&apos;ve had working with children *
                     </label>
                     <textarea
                         required
@@ -478,7 +580,7 @@ function ApplicationQuestionsStep({ data, onChange }: any) {
 }
 
 // Step 3: Health History
-function HealthHistoryStep({ data, onChange }: any) {
+function HealthHistoryStep({ data, onChange }: StepProps) {
     return (
         <div className="space-y-6">
             <h2 className="font-serif text-2xl text-foreground">Health History</h2>

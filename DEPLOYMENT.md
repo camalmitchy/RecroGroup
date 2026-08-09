@@ -58,7 +58,12 @@ After deployment:
 3. Run:
    ```bash
    npx prisma migrate deploy
+   npm run db:seed
    ```
+
+The seed loads services and grief camp price tiers. Skip it and booking or camp
+checkout will fail with "no price configured" — amounts are resolved from the
+database, never sent by the browser.
 
 #### 4. Add Custom Domain (Optional)
 1. In your app, go to **Settings** → **Domains**
@@ -314,3 +319,68 @@ tail -f /var/log/nginx/error.log
 | **Total** | **$27/month** | **$12-15/month** |
 
 **Recommendation**: Start with **App Platform** for simplicity. Switch to Droplet later if you need more control or want to save costs.
+
+---
+
+## Payments go-live checklist
+
+Payments are wired for **M-Pesa (Safaricom Daraja)** and **cards (Paystack)**.
+Both need publicly reachable HTTPS callbacks, so they only work once deployed
+(or tunnelled — see the README for local development).
+
+### 1. Environment variables
+
+Set everything under the M-PESA, PAYSTACK, PAYMENTS and MAIL headings in
+`.env.example` on the platform's environment dashboard. `NEXT_PUBLIC_APP_URL`
+must be your real domain — callback and return URLs are built from it.
+
+### 2. Register the Daraja callbacks
+
+| Setting | Value |
+|---------|-------|
+| STK callback | `https://your-domain/api/payments/webhooks/mpesa` |
+| C2B confirmation | `https://your-domain/api/payments/webhooks/mpesa/c2b` |
+| C2B validation | `https://your-domain/api/payments/webhooks/mpesa/validation` |
+
+C2B URLs are registered once via Daraja's register-url endpoint and cover
+customers who pay the till directly, outside the app. The STK callback is sent
+per transaction and needs no registration.
+
+### 3. Register the Paystack webhook
+
+In the Paystack dashboard, set the webhook URL to
+`https://your-domain/api/payments/webhooks/paystack`. Signatures are verified
+with HMAC-SHA512 over the raw body, so a wrong secret key means every webhook
+is rejected with 401.
+
+### 4. Harden the Daraja callbacks
+
+Daraja callbacks carry **no signature** — anyone who learns the URL can POST to
+it. In production set:
+
+```
+MPESA_ENFORCE_IP_ALLOWLIST="true"
+```
+
+This restricts callbacks to Safaricom's published ranges. Replayed callbacks are
+already ignored via the unique `dedupeKey` on `payment_events`, and settlement
+refuses to re-apply an already-final payment, so a leaked URL cannot double-credit
+a booking — but the allowlist should still be on.
+
+### 5. Moving from sandbox to production
+
+1. Switch `MPESA_ENV` to `production`.
+2. Replace the sandbox consumer key/secret/passkey with the production set.
+3. Confirm `MPESA_SHORTCODE` is the **Head Office** shortcode and
+   `MPESA_TILL_NUMBER` is the till customers actually pay. For Buy Goods these
+   differ, and mixing them up makes every STK push fail.
+4. Swap Paystack `sk_test_`/`pk_test_` keys for live keys once the Kenyan
+   account is approved for KES.
+5. Put a real amount through each method and confirm the payment reaches
+   `PAID` in the portal.
+
+### 6. Email
+
+`MAIL_DRIVER` is `console` — receipts are logged, not sent. To send real mail,
+add a driver under `src/lib/mail/drivers/` and register it in
+`src/lib/mail/index.ts`. No call site changes are needed.

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
     Smartphone,
     CreditCard,
@@ -13,7 +14,14 @@ import {
     ArrowLeft,
 } from "lucide-react";
 
+import { createDonation } from "@/server/actions/donation";
+import { recordDonationBankTransfer } from "@/server/actions/payments";
+import { PaymentStatusPanel } from "@/features/public/shared/payment-status-panel";
+import type { PaymentMethod } from "@/features/public/shared/use-payment-checkout";
+import { usePaymentCheckout } from "@/features/public/shared/use-payment-checkout";
+
 const PRESET_AMOUNTS = [2500, 5000, 11000, 15000, 45000];
+const MIN_DONATION_KES = 100;
 
 export function SponsorChildPage() {
     const [step, setStep] = useState<"details" | "pay" | "done">("details");
@@ -24,47 +32,23 @@ export function SponsorChildPage() {
     const [customAmount, setCustomAmount] = useState("");
     const [message, setMessage] = useState("");
     const [anonymous, setAnonymous] = useState(false);
-
-    // Store original values to restore if unchecked
-    const [savedFullName, setSavedFullName] = useState("");
-    const [savedEmail, setSavedEmail] = useState("");
-    const [savedPhone, setSavedPhone] = useState("");
-
-    const handleAnonymousToggle = (checked: boolean) => {
-        if (checked) {
-            // Save current values and clear fields
-            setSavedFullName(fullName);
-            setSavedEmail(email);
-            setSavedPhone(phone);
-            setFullName("");
-            setEmail("");
-            setPhone("");
-        } else {
-            // Restore saved values
-            setFullName(savedFullName);
-            setEmail(savedEmail);
-            setPhone(savedPhone);
-        }
-        setAnonymous(checked);
-    };
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const effectiveAmount = customAmount
         ? Math.max(0, parseInt(customAmount.replace(/\D/g, ""), 10) || 0)
         : amount;
 
     const onContinue = () => {
-        if (!anonymous && !fullName.trim()) {
-            alert("Please enter your full name");
-            return;
-        }
-        if (!anonymous && !email.trim()) {
-            alert("Email is required");
-            return;
-        }
-        if (effectiveAmount < 100) {
-            alert("Minimum sponsorship is Ksh 100");
-            return;
-        }
+        const next: Record<string, string> = {};
+        if (!fullName.trim()) next.fullName = "Please enter your full name";
+        if (!email.trim()) next.email = "Email is required";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+            next.email = "Enter a valid email address";
+        if (effectiveAmount < MIN_DONATION_KES)
+            next.amount = `Minimum sponsorship is Ksh ${MIN_DONATION_KES.toLocaleString()}`;
+
+        setErrors(next);
+        if (Object.keys(next).length > 0) return;
         setStep("pay");
     };
 
@@ -94,8 +78,7 @@ export function SponsorChildPage() {
                             <HandHeart size={22} className="text-primary" /> Your details
                         </h2>
                         <p className="mt-2 text-sm text-muted-foreground">
-                            Every camper's place is Ksh 15,000. Any amount helps — choose a
-                            preset or enter a custom amount.
+                            Any amount helps — choose a preset or enter a custom amount.
                         </p>
 
                         <div className="mt-6 grid sm:grid-cols-2 gap-4">
@@ -104,7 +87,7 @@ export function SponsorChildPage() {
                                 value={fullName}
                                 onChange={setFullName}
                                 placeholder="Jane Doe"
-                                disabled={anonymous}
+                                error={errors.fullName}
                             />
                             <Field
                                 label="Email *"
@@ -112,14 +95,13 @@ export function SponsorChildPage() {
                                 value={email}
                                 onChange={setEmail}
                                 placeholder="jane@example.com"
-                                disabled={anonymous}
+                                error={errors.email}
                             />
                             <Field
                                 label="Phone"
                                 value={phone}
                                 onChange={setPhone}
                                 placeholder="+254 7XX XXX XXX"
-                                disabled={anonymous}
                             />
                         </div>
 
@@ -159,6 +141,9 @@ export function SponsorChildPage() {
                                     placeholder="e.g. 7500"
                                     className="mt-2 w-full rounded-2xl border border-border bg-card px-5 py-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                                 />
+                                {errors.amount && (
+                                    <p className="mt-2 text-xs text-red-500">{errors.amount}</p>
+                                )}
                             </div>
                         </div>
 
@@ -179,14 +164,15 @@ export function SponsorChildPage() {
                             <input
                                 type="checkbox"
                                 checked={anonymous}
-                                onChange={(e) => handleAnonymousToggle(e.target.checked)}
+                                onChange={(e) => setAnonymous(e.target.checked)}
                                 className="accent-primary"
                             />
                             Sponsor anonymously
                         </label>
                         {anonymous && (
                             <p className="mt-2 text-xs text-muted-foreground italic pl-6">
-                                Your personal information will remain completely private and will not be shared.
+                                Your name will not be shown publicly. We still need your contact
+                                details to send your receipt.
                             </p>
                         )}
 
@@ -206,8 +192,7 @@ export function SponsorChildPage() {
 
                 {step === "pay" && (
                     <SponsorPayment
-                        fullName={anonymous ? "Anonymous Sponsor" : fullName}
-                        realName={fullName}
+                        fullName={fullName}
                         email={email}
                         phone={phone}
                         amount={effectiveAmount}
@@ -244,7 +229,6 @@ export function SponsorChildPage() {
 
 function SponsorPayment({
     fullName,
-    realName,
     email,
     phone,
     amount,
@@ -254,7 +238,6 @@ function SponsorPayment({
     onPaid,
 }: {
     fullName: string;
-    realName: string;
     email: string;
     phone: string;
     amount: number;
@@ -267,53 +250,88 @@ function SponsorPayment({
     const [mpesaPhone, setMpesaPhone] = useState(
         phone.startsWith("+254") ? phone.slice(4) : phone.replace(/^0/, "")
     );
-    const [busy, setBusy] = useState(false);
     const [bankRef, setBankRef] = useState("");
-    const [proof, setProof] = useState<File | null>(null);
+    const checkout = usePaymentCheckout();
+    const donationIdRef = useRef<string | null>(null);
 
-    const purpose = `Grief Camp sponsorship${anonymous ? " (anonymous)" : ` — ${realName}`
-        }${message ? ` · Note: ${message.slice(0, 120)}` : ""}`;
+    const busy = checkout.busy;
 
-    const triggerStk = async () => {
-        if (mpesaPhone.length !== 9) {
-            alert("Please enter a valid 9-digit M-Pesa number (without +254)");
+    useEffect(() => {
+        if (checkout.phase === "paid") onPaid();
+    }, [checkout.phase, onPaid]);
+
+    const pay = async (paymentMethod: PaymentMethod) => {
+        if (paymentMethod === "MPESA" && mpesaPhone.length !== 9) {
+            toast.error("Enter a valid 9-digit M-Pesa number (without +254)");
             return;
         }
-        setBusy(true);
-        // TODO: Implement M-Pesa STK push
-        setTimeout(() => {
-            setBusy(false);
-            alert(`STK push would be sent to +254${mpesaPhone}. Integration pending.`);
-            onPaid();
-        }, 1500);
-    };
 
-    const triggerCard = async () => {
-        setBusy(true);
-        // TODO: Implement Pesapal integration
-        setTimeout(() => {
-            setBusy(false);
-            alert("Card payment would redirect here. Integration pending.");
-            onPaid();
-        }, 1500);
+        if (!donationIdRef.current) {
+            const result = await createDonation({
+                donorName: fullName,
+                donorEmail: email,
+                donorPhone: phone || (mpesaPhone ? `+254${mpesaPhone}` : undefined),
+                amountKes: amount,
+                isAnonymous: anonymous,
+                message: message || undefined,
+            });
+
+            if (!result.ok) {
+                toast.error(result.error);
+                return;
+            }
+
+            donationIdRef.current = result.data.donationId;
+        }
+
+        const started = await checkout.start({
+            method: paymentMethod,
+            target: { donationId: donationIdRef.current },
+            phone: paymentMethod === "MPESA" ? `+254${mpesaPhone}` : undefined,
+            email,
+            name: fullName,
+        });
+
+        if (!started.ok && started.error) toast.error(started.error);
     };
 
     const submitBank = async () => {
-        if (!proof) {
-            alert("Please upload your bank slip");
-            return;
-        }
         if (!bankRef.trim()) {
-            alert("Enter the transfer reference");
+            toast.error("Enter the transfer reference");
             return;
         }
-        setBusy(true);
-        // TODO: Implement bank transfer proof upload
-        setTimeout(() => {
-            setBusy(false);
-            alert("Proof would be uploaded here. Integration pending.");
-            onPaid();
-        }, 1500);
+
+        if (!donationIdRef.current) {
+            const result = await createDonation({
+                donorName: fullName,
+                donorEmail: email,
+                donorPhone: phone || undefined,
+                amountKes: amount,
+                isAnonymous: anonymous,
+                message: message || undefined,
+            });
+
+            if (!result.ok) {
+                toast.error(result.error);
+                return;
+            }
+
+            donationIdRef.current = result.data.donationId;
+        }
+
+        const recorded = await recordDonationBankTransfer({
+            donationId: donationIdRef.current,
+            bankReference: bankRef.trim(),
+        });
+
+        if (!recorded.ok) {
+            toast.error(recorded.error);
+            return;
+        }
+
+        toast.success(
+            `Recorded as ${recorded.data.reference}. Email your slip to info@recrogroup.com and we will confirm your sponsorship.`,
+        );
     };
 
     return (
@@ -327,7 +345,23 @@ function SponsorPayment({
                 </span>
             </div>
 
-            <div className="mt-6 grid sm:grid-cols-3 gap-3">
+            {checkout.phase !== "idle" && checkout.phase !== "initiating" && (
+                <div className="mt-6">
+                    <PaymentStatusPanel
+                        phase={checkout.phase}
+                        reference={checkout.reference}
+                        customerMessage={checkout.customerMessage}
+                        failureReason={checkout.failureReason}
+                        secondsLeft={checkout.secondsLeft}
+                        onRetry={checkout.reset}
+                    />
+                </div>
+            )}
+
+            <div
+                className={`mt-6 grid sm:grid-cols-3 gap-3 ${checkout.phase === "awaiting" ? "pointer-events-none opacity-50" : ""
+                    }`}
+            >
                 <MethodCard
                     active={method === "mpesa"}
                     onClick={() => setMethod("mpesa")}
@@ -377,11 +411,9 @@ function SponsorPayment({
                             Phone number must be exactly 9 digits
                         </p>
                     )}
-                    <p className="text-xs rounded-full bg-primary-soft text-primary-deep px-3 py-1.5 inline-block">
-                        Buy Goods · Till 747736 · Recro Group Limited
-                    </p>
                     <button
-                        onClick={triggerStk}
+                        type="button"
+                        onClick={() => void pay("MPESA")}
                         disabled={busy || mpesaPhone.length !== 9}
                         className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -391,7 +423,7 @@ function SponsorPayment({
                             </>
                         ) : (
                             <>
-                                <CreditCard size={15} /> Sponsor now
+                                <Smartphone size={15} /> Sponsor Ksh {amount.toLocaleString()}
                             </>
                         )}
                     </button>
@@ -401,11 +433,12 @@ function SponsorPayment({
             {method === "card" && (
                 <div className="mt-6 space-y-4">
                     <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground leading-relaxed">
-                        You'll be redirected to Pesapal's secure hosted checkout to enter
-                        card details. Card information never touches our servers.
+                        You&apos;ll be redirected to a secure hosted checkout to enter card
+                        details. Card information never touches our servers.
                     </div>
                     <button
-                        onClick={triggerCard}
+                        type="button"
+                        onClick={() => void pay("CARD")}
                         disabled={busy}
                         className="btn-primary disabled:opacity-50"
                     >
@@ -469,17 +502,14 @@ function SponsorPayment({
                         onChange={setBankRef}
                         placeholder="e.g. TXN20260620-9381"
                     />
-                    <label className="block">
-                        <span className="text-[11px] tracking-[0.18em] font-semibold uppercase text-muted-foreground">
-                            Proof of payment (PDF or image)
-                        </span>
-                        <input
-                            type="file"
-                            accept="image/*,application/pdf"
-                            onChange={(e) => setProof(e.target.files?.[0] ?? null)}
-                            className="mt-2 block w-full text-sm"
-                        />
-                    </label>
+                    <p className="rounded-xl border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                        Once you submit, email your bank slip to{" "}
+                        <span className="font-medium text-foreground">
+                            info@recrogroup.com
+                        </span>{" "}
+                        quoting the reference we show you, and we will confirm your
+                        sponsorship.
+                    </p>
                     <button
                         onClick={submitBank}
                         disabled={busy}
@@ -487,7 +517,7 @@ function SponsorPayment({
                     >
                         {busy ? (
                             <>
-                                <Loader2 size={15} className="animate-spin" /> Uploading…
+                                <Loader2 size={15} className="animate-spin" /> Recording…
                             </>
                         ) : (
                             <>
@@ -546,6 +576,7 @@ function Field({
     type = "text",
     placeholder,
     disabled = false,
+    error,
 }: {
     label: string;
     value: string;
@@ -553,6 +584,7 @@ function Field({
     type?: string;
     placeholder?: string;
     disabled?: boolean;
+    error?: string;
 }) {
     return (
         <div>
@@ -565,9 +597,10 @@ function Field({
                 placeholder={placeholder}
                 onChange={(e) => onChange(e.target.value)}
                 disabled={disabled}
-                className={`mt-2 w-full rounded-2xl border border-border bg-card px-5 py-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 ${disabled ? "opacity-50 cursor-not-allowed bg-muted" : ""
-                    }`}
+                className={`mt-2 w-full rounded-2xl border bg-card px-5 py-3.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 ${error ? "border-red-500" : "border-border focus:border-primary"
+                    } ${disabled ? "opacity-50 cursor-not-allowed bg-muted" : ""}`}
             />
+            {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
         </div>
     );
 }

@@ -42,6 +42,7 @@ model User {
   verifiedPayments  Payment[]          @relation("PaymentVerifiedBy")
   griefApplications GriefApplication[]
   savedResources    SavedResource[]
+  donations         Donation[]
 
   @@unique([email])
   @@index([role])
@@ -218,8 +219,10 @@ enum BookingStatus {
 
 enum PaymentStatus {
   PENDING
+  PROCESSING
   PAID
   FAILED
+  CANCELLED
   REFUNDED
 }
 
@@ -227,6 +230,27 @@ enum PaymentMethod {
   MPESA
   BANK
   CARD
+}
+
+enum PaymentProvider {
+  MPESA_DARAJA
+  PAYSTACK
+  MANUAL
+}
+
+enum PaymentPurpose {
+  BOOKING_DEPOSIT
+  BOOKING_BALANCE
+  BOOKING_FULL
+  GRIEF_CAMP_FEE
+  DONATION
+  MERCHANDISE
+  OTHER
+}
+
+enum Currency {
+  KES
+  USD
 }
 
 enum SessionMode {
@@ -254,6 +278,8 @@ model Booking {
   status        BookingStatus @default(REQUESTED)
   paymentStatus PaymentStatus @default(PENDING)
   amountKes     Int?
+  depositKes    Int?
+  amountPaidKes Int           @default(0)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -296,29 +322,104 @@ model Appointment {
 }
 
 model Payment {
-  id              String        @id @default(cuid())
-  bookingId       String?
-  booking         Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  userId          String?
-  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  method          PaymentMethod
-  amountKes       Int
-  reference       String?
-  status          PaymentStatus @default(PENDING)
-  notes           String?       @db.Text
+  id       String @id @default(cuid())
+  reference String @unique
+
+  bookingId String?
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  griefApplicationId String?
+  griefApplication   GriefApplication? @relation(fields: [griefApplicationId], references: [id], onDelete: SetNull)
+  donationId         String?
+  donation           Donation?         @relation(fields: [donationId], references: [id], onDelete: SetNull)
+
+  method   PaymentMethod
+  provider PaymentProvider
+  purpose  PaymentPurpose  @default(OTHER)
+  currency Currency        @default(KES)
+
+  amountKes Int
+  settledAmountKes Int?
+
+  status PaymentStatus @default(PENDING)
+  notes  String?       @db.Text
+
+  providerRef String?
+  providerMeta Json?
+  failureReason String?
+
   mpesaCheckoutId String?
-  mpesaReceipt    String?
+  mpesaReceipt    String? @unique
   phone           String?
   proofUrl        String?
-  verifiedById    String?
-  verifiedBy      User?         @relation("PaymentVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
-  verifiedAt      DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+
+  idempotencyKey String? @unique
+
+  verifiedById String?
+  verifiedBy   User?     @relation("PaymentVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+  verifiedAt   DateTime?
+  paidAt       DateTime?
+  expiresAt    DateTime?
+
+  events PaymentEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
+  @@index([provider, providerRef])
+  @@index([bookingId])
+  @@index([createdAt])
   @@map("payments")
+}
+
+model PaymentEvent {
+  id        String  @id @default(cuid())
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  provider PaymentProvider
+  eventType String
+  dedupeKey String @unique
+
+  payload   Json
+  processed Boolean @default(false)
+  error     String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([provider, eventType])
+  @@index([processed])
+  @@index([createdAt])
+  @@map("payment_events")
+}
+
+model Donation {
+  id          String  @id @default(cuid())
+  reference   String  @unique
+  userId      String?
+  user        User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  donorName   String
+  donorEmail  String
+  donorPhone  String?
+  isAnonymous Boolean @default(false)
+  message     String? @db.Text
+
+  amountKes     Int
+  currency      Currency      @default(KES)
+  paymentStatus PaymentStatus @default(PENDING)
+
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentStatus])
+  @@index([createdAt])
+  @@map("donations")
 }
 
 // ─── Programs (portal › programs) ────────────────────────────────────────────
@@ -331,23 +432,82 @@ enum GriefApplicationStatus {
   WAITLISTED
 }
 
+enum CampAttendeeType {
+  CAMPER
+  PARENT
+}
+
+model CampSession {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  startsOn    DateTime @db.Date
+  endsOn      DateTime @db.Date
+  location    String?
+  description String?  @db.Text
+  isActive    Boolean  @default(false)
+  capacity    Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  priceTiers   CampPriceTier[]
+  applications GriefApplication[]
+
+  @@index([isActive])
+  @@map("camp_sessions")
+}
+
+model CampPriceTier {
+  id            String           @id @default(cuid())
+  campSessionId String
+  campSession   CampSession      @relation(fields: [campSessionId], references: [id], onDelete: Cascade)
+  attendeeType  CampAttendeeType
+  label         String
+  amountKes     Int
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  sortOrder     Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([campSessionId, attendeeType, effectiveFrom])
+  @@map("camp_price_tiers")
+}
+
 model GriefApplication {
-  id          String                 @id @default(cuid())
-  userId      String?
-  user        User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id            String       @id @default(cuid())
+  reference     String       @unique
+  userId        String?
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  campSessionId String?
+  campSession   CampSession? @relation(fields: [campSessionId], references: [id], onDelete: SetNull)
+
   parentName  String
   parentEmail String
   parentPhone String?
   childName   String
   childAge    Int?
-  lossContext String?                @db.Text
+  lossContext String? @db.Text
   tier        String?
-  status      GriefApplicationStatus @default(PENDING)
-  notes       String?                @db.Text
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
+
+  parentAttending Boolean @default(false)
+
+  formData Json?
+
+  amountKes     Int?
+  paymentStatus PaymentStatus @default(PENDING)
+
+  status GriefApplicationStatus @default(PENDING)
+  notes  String?                @db.Text
+
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status])
+  @@index([campSessionId])
+  @@index([createdAt])
   @@map("grief_applications")
 }
 

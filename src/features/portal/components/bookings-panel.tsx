@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   Table,
   TableBody,
@@ -23,20 +25,48 @@ import {
   bookingStatusTone,
   paymentStatusTone,
 } from "@/features/portal/components/status-badge";
-import {
-  INITIAL_BOOKINGS,
-  MOCK_THERAPISTS,
-  type MockBooking,
-} from "@/features/portal/data/mock-portal-data";
+import { requestBookingBalance } from "@/server/actions/payments";
 
-export function BookingsPanel() {
-  const [rows, setRows] = useState<MockBooking[]>(INITIAL_BOOKINGS);
+export type BookingRow = {
+  id: string;
+  reference: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string | null;
+  preferredDateLabel: string;
+  therapistId: string | null;
+  therapistName: string | null;
+  serviceTitle: string | null;
+  status: string;
+  paymentStatus: string;
+  amountKes: number | null;
+  depositKes: number | null;
+  amountPaidKes: number;
+};
 
-  const update = (id: string, patch: Partial<MockBooking>, message: string) => {
-    setRows((current) =>
-      current.map((row) => (row.id === id ? { ...row, ...patch } : row)),
-    );
-    toast.success(message);
+type BookingsPanelProps = {
+  bookings: BookingRow[];
+};
+
+export function BookingsPanel({ bookings }: BookingsPanelProps) {
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const sendRequest = (row: BookingRow, method: "MPESA" | "BANK") => {
+    setPendingId(row.id);
+    startTransition(async () => {
+      const result = await requestBookingBalance(
+        row.id,
+        method,
+        row.clientPhone ?? undefined,
+      );
+      setPendingId(null);
+      if (result.ok) {
+        toast.success(`Payment request sent to ${row.clientName}`);
+      } else {
+        toast.error(result.error);
+      }
+    });
   };
 
   return (
@@ -47,10 +77,15 @@ export function BookingsPanel() {
       />
       <Card>
         <CardContent className="p-0">
-          {rows.length === 0 ? (
-            <p className="p-10 text-center text-sm text-muted-foreground">
-              No bookings yet.
-            </p>
+          {bookings.length === 0 ? (
+            <Empty className="py-12">
+              <EmptyHeader>
+                <EmptyTitle>No bookings yet</EmptyTitle>
+                <EmptyDescription>
+                  Requests submitted from the public booking form land here.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <Table>
               <TableHeader>
@@ -61,110 +96,98 @@ export function BookingsPanel() {
                   <TableHead>Therapist</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Payment</TableHead>
+                  <TableHead>Balance</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell className="font-mono text-xs">
-                      {row.reference}
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{row.clientName}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {row.clientEmail}
-                      </div>
-                    </TableCell>
-                    <TableCell>{row.preferredDate ?? "—"}</TableCell>
-                    <TableCell>
-                      <NativeSelect
-                        value={row.therapistId ?? ""}
-                        onChange={(e) =>
-                          update(
-                            row.id,
-                            { therapistId: e.target.value || null },
-                            "Therapist assigned",
-                          )
-                        }
-                        className="min-w-[160px]"
-                      >
-                        <NativeSelectOption value="">
-                          — assign —
-                        </NativeSelectOption>
-                        {MOCK_THERAPISTS.map((t) => (
-                          <NativeSelectOption key={t.id} value={t.id}>
-                            {t.fullName}
-                          </NativeSelectOption>
-                        ))}
-                      </NativeSelect>
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge tone={bookingStatusTone(row.status)}>
-                        {row.status.toLowerCase()}
-                      </StatusBadge>
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge tone={paymentStatusTone(row.paymentStatus)}>
-                        {row.paymentStatus.toLowerCase()}
-                      </StatusBadge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {row.status === "REQUESTED" && (
-                          <Button
-                            type="button"
-                            variant="link"
-                            className="h-auto p-0"
-                            onClick={() =>
-                              update(row.id, { status: "CONFIRMED" }, "Confirmed")
-                            }
-                          >
-                            Confirm
-                          </Button>
+                {bookings.map((row) => {
+                  const total = row.amountKes ?? 0;
+                  const outstanding = Math.max(0, total - row.amountPaidKes);
+                  const busy = isPending && pendingId === row.id;
+
+                  return (
+                    <TableRow key={row.id}>
+                      <TableCell className="font-mono text-xs">
+                        {row.reference}
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">{row.clientName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {row.clientEmail}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {row.preferredDateLabel}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {row.therapistName ?? (
+                          <span className="text-muted-foreground">
+                            Unassigned
+                          </span>
                         )}
-                        {row.status !== "COMPLETED" &&
-                          row.status !== "CANCELLED" && (
-                            <Button
-                              type="button"
-                              variant="link"
-                              className="h-auto p-0"
-                              onClick={() =>
-                                update(
-                                  row.id,
-                                  { status: "COMPLETED" },
-                                  "Marked completed",
-                                )
-                              }
-                            >
-                              Complete
-                            </Button>
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge tone={bookingStatusTone(row.status)}>
+                          {row.status.toLowerCase()}
+                        </StatusBadge>
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge tone={paymentStatusTone(row.paymentStatus)}>
+                          {row.paymentStatus.toLowerCase()}
+                        </StatusBadge>
+                      </TableCell>
+                      <TableCell>
+                        {outstanding > 0 ? (
+                          <div>
+                            <div className="font-medium">
+                              KES {outstanding.toLocaleString()}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {row.amountPaidKes.toLocaleString()} of{" "}
+                              {total.toLocaleString()} paid
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            Settled
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {outstanding > 0 && (
+                            <>
+                              <Button
+                                type="button"
+                                variant="link"
+                                className="h-auto p-0"
+                                disabled={busy}
+                                onClick={() => sendRequest(row, "MPESA")}
+                              >
+                                Send payment request
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="link"
+                                className="h-auto p-0 text-muted-foreground"
+                                disabled={busy}
+                                onClick={() => sendRequest(row, "BANK")}
+                              >
+                                Bank
+                              </Button>
+                            </>
                           )}
-                        {row.status !== "CANCELLED" && (
-                          <Button
-                            type="button"
-                            variant="link"
-                            className="h-auto p-0 text-destructive"
-                            onClick={() =>
-                              update(row.id, { status: "CANCELLED" }, "Cancelled")
-                            }
-                          >
-                            Cancel
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
         </CardContent>
       </Card>
-      <p className="mt-4 text-xs text-muted-foreground">
-        MVP view uses sample data. Connect Prisma queries when the database is
-        seeded.
-      </p>
     </div>
   );
 }

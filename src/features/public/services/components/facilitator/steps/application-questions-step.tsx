@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { ApplicationQuestionsData } from "../../../types/facilitator-types";
+import type {
+    ApplicationQuestionsData,
+    FacilitatorApplicationData,
+} from "../../../types/facilitator-types";
 
 interface ApplicationQuestionsStepProps {
-    data: any;
+    data: Partial<FacilitatorApplicationData>;
     onNext: (data: { applicationQuestions: ApplicationQuestionsData }) => void;
     onPrevious: () => void;
 }
@@ -156,7 +159,7 @@ export function ApplicationQuestionsStep({
 
                 <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                        2. Describe experience(s) you've had working with children. *
+                        2. Describe experience(s) you&apos;ve had working with children. *
                     </label>
                     <textarea
                         value={formData.experienceWithChildren}
