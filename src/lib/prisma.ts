@@ -8,7 +8,12 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function getConnectionString() {
-  const connectionString = process.env.DATABASE_URL?.trim();
+  const connectionString = (
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_URL_NON_POOLING
+  )?.trim();
 
   if (!connectionString) {
     throw new Error(
@@ -75,12 +80,19 @@ function getPrisma() {
   return globalForPrisma.prisma;
 }
 
-// Lazy client so importing this module during compile does not require env,
-// and a missing DATABASE_URL fails on first query instead of a dummy pool.
+// Lazy client so importing this module during compile does not require env.
+// Use the real Prisma client as `this` so model delegates (user, session, …)
+// resolve — Better Auth's adapter checks `db[model]` on every request.
 export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
-  get(_target, prop, receiver) {
+  get(_target, prop) {
     const client = getPrisma();
-    const value = Reflect.get(client, prop, receiver);
+    const value = Reflect.get(client, prop, client);
     return typeof value === "function" ? value.bind(client) : value;
+  },
+  has(_target, prop) {
+    return prop in getPrisma();
+  },
+  getOwnPropertyDescriptor(_target, prop) {
+    return Object.getOwnPropertyDescriptor(getPrisma(), prop);
   },
 });
