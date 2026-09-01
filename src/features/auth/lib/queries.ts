@@ -52,3 +52,14 @@ export function useForgotPassword() {
     mutationFn: authApi.requestPasswordReset,
   });
 }
+
+export function useResetPassword() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authApi.resetPassword,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: authKeys.session() });
+    },
+  });
+}

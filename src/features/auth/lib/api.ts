@@ -11,18 +11,12 @@ type AuthClientResult<T> = {
   error: { message?: string } | null;
 };
 
-function unwrapAuthResult<T>(result: AuthClientResult<T>): T {
+function assertNoAuthError(result: AuthClientResult<unknown>) {
   if (result.error) {
     throw new AuthApiError(
       result.error.message ?? "Something went wrong. Please try again.",
     );
   }
-
-  if (result.data === null || result.data === undefined) {
-    throw new AuthApiError("Something went wrong. Please try again.");
-  }
-
-  return result.data;
 }
 
 export async function getSession() {
@@ -38,38 +32,55 @@ export async function getSession() {
 }
 
 export async function signIn(input: SignInInput) {
-  return unwrapAuthResult(
-    await authClient.signIn.email({
-      email: input.email,
-      password: input.password,
-      rememberMe: input.rememberMe,
-    }),
-  );
+  const result = await authClient.signIn.email({
+    email: input.email,
+    password: input.password,
+    rememberMe: input.rememberMe,
+  });
+  assertNoAuthError(result);
+  return result.data;
 }
 
 export async function signUp(input: SignUpInput) {
-  return unwrapAuthResult(
-    await authClient.signUp.email({
-      name: input.name,
+  const result = await authClient.signUp.email({
+    name: input.name,
+    email: input.email,
+    password: input.password,
+    phone: input.phone || undefined,
+    commsEmail: input.commsEmail,
+    commsSms: input.commsSms,
+  });
+  assertNoAuthError(result);
+  return result.data;
+}
+
+export async function signInWithGoogle() {
+  const result = await authClient.signIn.social({
+    provider: "google",
+    callbackURL: "/dashboard",
+    errorCallbackURL: "/login",
+  });
+  assertNoAuthError(result);
+}
+
+export async function signOut() {
+  assertNoAuthError(await authClient.signOut());
+}
+
+export async function requestPasswordReset(input: ForgotPasswordInput) {
+  assertNoAuthError(
+    await authClient.requestPasswordReset({
       email: input.email,
-      password: input.password,
-      phone: input.phone || undefined,
-      accountType: "CUSTOMER",
-      commsEmail: input.commsEmail,
-      commsSms: input.commsSms,
+      redirectTo: `${window.location.origin}/reset-password`,
     }),
   );
 }
 
-export async function signOut() {
-  return unwrapAuthResult(await authClient.signOut());
-}
-
-export async function requestPasswordReset(input: ForgotPasswordInput) {
-  return unwrapAuthResult(
-    await authClient.requestPasswordReset({
-      email: input.email,
-      redirectTo: `${window.location.origin}/reset-password`,
+export async function resetPassword(input: { token: string; password: string }) {
+  assertNoAuthError(
+    await authClient.resetPassword({
+      token: input.token,
+      newPassword: input.password,
     }),
   );
 }

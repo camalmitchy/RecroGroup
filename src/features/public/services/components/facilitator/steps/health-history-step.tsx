@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { ChevronLeft, Check } from "lucide-react";
-import type { HealthHistoryData } from "../../../types/facilitator-types";
+import type {
+    FacilitatorApplicationData,
+    HealthHistoryData,
+} from "../../../types/facilitator-types";
 
 interface HealthHistoryStepProps {
-    data: any;
+    data: Partial<FacilitatorApplicationData>;
     onPrevious: () => void;
-    onSubmit: (data: { healthHistory: HealthHistoryData }) => void;
+    onSubmit: (data: { healthHistory: HealthHistoryData }) => void | Promise<void>;
 }
 
 export function HealthHistoryStep({

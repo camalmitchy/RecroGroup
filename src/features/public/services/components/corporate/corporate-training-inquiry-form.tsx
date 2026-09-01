@@ -1,11 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { ArrowRight, CheckCircle, Calendar, Users, MessageSquare } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+
+import { submitInquiry } from "@/server/actions/inquiry";
+import {
+    formatInquiryMessage,
+    truncateSubject,
+} from "@/features/public/shared/inquiry-message";
+
+type CorporateInquiryData = {
+    organizationName: string;
+    contactName: string;
+    email: string;
+    phone: string;
+    topic: string;
+    trainingDate: string;
+    numberOfPeople: string;
+    additionalInfo: string;
+};
+
+const FIELD_FOR_INQUIRY_KEY: Record<string, keyof CorporateInquiryData> = {
+    name: "contactName",
+    email: "email",
+    phone: "phone",
+    message: "topic",
+    subject: "organizationName",
+};
 
 export function CorporateTrainingInquiryForm() {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<CorporateInquiryData>({
         organizationName: "",
         contactName: "",
         email: "",
@@ -16,23 +42,72 @@ export function CorporateTrainingInquiryForm() {
         additionalInfo: "",
     });
     const [submitted, setSubmitted] = useState(false);
+    const [errors, setErrors] = useState<Partial<Record<keyof CorporateInquiryData, string>>>({});
+    const [isPending, startTransition] = useTransition();
 
-    const handleInputChange = (field: string, value: string) => {
+    const handleInputChange = (field: keyof CorporateInquiryData, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+        setErrors((prev) => {
+            if (!prev[field]) return prev;
+            const next = { ...prev };
+            delete next[field];
+            return next;
+        });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (isPending) return;
 
-        try {
-            // TODO: Implement API call to submit the inquiry
-            console.log("Corporate training inquiry data:", formData);
+        setErrors({});
+
+        startTransition(async () => {
+            const result = await submitInquiry({
+                type: "CORPORATE",
+                name: formData.contactName,
+                email: formData.email,
+                phone: formData.phone || undefined,
+                subject: truncateSubject(
+                    `Corporate training — ${formData.organizationName}`,
+                ),
+                message: formatInquiryMessage([
+                    {
+                        heading: "Organization",
+                        fields: [
+                            ["Organization", formData.organizationName],
+                            ["Contact person", formData.contactName],
+                            ["Email", formData.email],
+                            ["Phone", formData.phone],
+                        ],
+                    },
+                    {
+                        heading: "Training details",
+                        fields: [
+                            ["Requested topic", formData.topic],
+                            ["Preferred date", formData.trainingDate],
+                            ["Number of people", formData.numberOfPeople],
+                            ["Additional information", formData.additionalInfo],
+                        ],
+                    },
+                ]),
+            });
+
+            if (!result.ok) {
+                if (result.fieldErrors) {
+                    const mapped: Partial<Record<keyof CorporateInquiryData, string>> = {};
+                    for (const [key, messages] of Object.entries(result.fieldErrors)) {
+                        const field = FIELD_FOR_INQUIRY_KEY[key];
+                        if (field && messages[0]) mapped[field] = messages[0];
+                    }
+                    setErrors(mapped);
+                }
+                toast.error(result.error);
+                return;
+            }
+
             setSubmitted(true);
             window.scrollTo({ top: 0, behavior: "smooth" });
-        } catch (error) {
-            console.error("Error submitting form:", error);
-            alert("There was an error submitting your inquiry. Please try again.");
-        }
+        });
     };
 
     if (submitted) {
@@ -49,7 +124,7 @@ export function CorporateTrainingInquiryForm() {
                             Thank You for Your Inquiry!
                         </h1>
                         <p className="mt-4 text-lg text-muted-foreground">
-                            We've received your corporate training request.
+                            We&apos;ve received your corporate training request.
                         </p>
                         <div className="mt-6 rounded-2xl bg-primary-soft/30 p-6 border border-primary/20">
                             <p className="text-base font-semibold text-foreground">
@@ -82,7 +157,7 @@ export function CorporateTrainingInquiryForm() {
                         Corporate Training Inquiry
                     </h1>
                     <p className="mt-4 text-lg text-muted-foreground">
-                        Tell us about your training needs and we'll create a customized program for your organization
+                        Tell us about your training needs and we&apos;ll create a customized program for your organization
                     </p>
                 </div>
 
@@ -107,7 +182,7 @@ export function CorporateTrainingInquiryForm() {
                             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                 Step 2
                             </p>
-                            <p className="text-sm font-medium text-foreground">We'll contact you</p>
+                            <p className="text-sm font-medium text-foreground">We&apos;ll contact you</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
@@ -144,6 +219,9 @@ export function CorporateTrainingInquiryForm() {
                                             onChange={(e) => handleInputChange("organizationName", e.target.value)}
                                             className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
                                         />
+                                        {errors.organizationName && (
+                                            <p className="mt-1 text-sm text-red-500">{errors.organizationName}</p>
+                                        )}
                                     </div>
 
                                     <div>
@@ -157,6 +235,9 @@ export function CorporateTrainingInquiryForm() {
                                             onChange={(e) => handleInputChange("contactName", e.target.value)}
                                             className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
                                         />
+                                        {errors.contactName && (
+                                            <p className="mt-1 text-sm text-red-500">{errors.contactName}</p>
+                                        )}
                                     </div>
 
                                     <div>
@@ -170,6 +251,9 @@ export function CorporateTrainingInquiryForm() {
                                             onChange={(e) => handleInputChange("email", e.target.value)}
                                             className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
                                         />
+                                        {errors.email && (
+                                            <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                                        )}
                                     </div>
 
                                     <div>
@@ -183,6 +267,9 @@ export function CorporateTrainingInquiryForm() {
                                             onChange={(e) => handleInputChange("phone", e.target.value)}
                                             className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
                                         />
+                                        {errors.phone && (
+                                            <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -205,6 +292,9 @@ export function CorporateTrainingInquiryForm() {
                                             placeholder="E.g., Stress management, Team building, Mental health awareness, Leadership development, Work-life balance..."
                                             className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
                                         />
+                                        {errors.topic && (
+                                            <p className="mt-1 text-sm text-red-500">{errors.topic}</p>
+                                        )}
                                     </div>
 
                                     <div className="grid gap-6 md:grid-cols-2">
@@ -256,8 +346,12 @@ export function CorporateTrainingInquiryForm() {
 
                         {/* Submit Button */}
                         <div className="mt-8 flex justify-end">
-                            <button type="submit" className="btn-primary">
-                                Submit Inquiry
+                            <button
+                                type="submit"
+                                disabled={isPending}
+                                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isPending ? "Submitting..." : "Submit Inquiry"}
                                 <ArrowRight size={16} />
                             </button>
                         </div>

@@ -1,168 +1,183 @@
 "use client";
 
-import { useState } from "react";
-import { AdminShell, Card, PageHeader, DataTable } from "./admin-shell";
-import { Plus, Download, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Download, Search } from "lucide-react";
 
-export function AdminCustomersPage() {
-    const [customers] = useState([
-        {
-            id: "1",
-            name: "Amina K.",
-            email: "amina@example.com",
-            phone: "+254 700 111 222",
-            type: "Individual",
-            last: "Today",
-            bookings: 7,
-        },
-        {
-            id: "2",
-            name: "Wanjiku & James",
-            email: "wj@example.com",
-            phone: "+254 711 333 444",
-            type: "Couple",
-            last: "Yesterday",
-            bookings: 4,
-        },
-        {
-            id: "3",
-            name: "Brian O.",
-            email: "brian@example.com",
-            phone: "+254 722 555 666",
-            type: "Family",
-            last: "2d ago",
-            bookings: 2,
-        },
-    ]);
+import type { AccountType } from "@prisma/client";
+import { downloadCsv, toCsv } from "@/features/admin/lib/csv";
 
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedType, setSelectedType] = useState("all");
+import { AdminShell, Card, DataTable, PageHeader } from "./admin-shell";
 
-    const handleAddCustomer = () => {
-        // TODO: Open add customer form/modal
-        console.log("Add customer clicked");
-        alert("Add Customer - Form coming soon");
-    };
+export type AdminCustomerRow = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  accountType: AccountType;
+  bookingCount: number;
+  paymentCount: number;
+  joinedAtLabel: string;
+};
 
-    const handleExport = () => {
-        console.log("Export clicked");
-        const csv = [
-            ["Name", "Email", "Phone", "Type", "Last Activity", "Bookings"],
-            ...filteredCustomers.map((c) => [
-                c.name,
-                c.email,
-                c.phone,
-                c.type,
-                c.last,
-                c.bookings,
-            ]),
-        ]
-            .map((row) => row.join(","))
-            .join("\n");
+type AdminCustomersPageProps = {
+  customers: AdminCustomerRow[];
+  total: number;
+  isAdmin: boolean;
+};
 
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `customers-${new Date().toISOString().split("T")[0]}.csv`;
-        a.click();
-    };
+const ACCOUNT_TYPES: AccountType[] = ["CUSTOMER", "GUARDIAN", "CORPORATE"];
 
-    const filteredCustomers = customers.filter((customer) => {
-        const matchesSearch =
-            customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            customer.phone.includes(searchQuery);
-        const matchesType = selectedType === "all" || customer.type === selectedType;
-        return matchesSearch && matchesType;
+const CSV_COLUMNS = [
+  "Name",
+  "Email",
+  "Phone",
+  "Account type",
+  "Bookings",
+  "Payments",
+  "Joined",
+];
+
+function humanize(value: string) {
+  return value.toLowerCase().replace(/_/g, " ");
+}
+
+export function AdminCustomersPage({
+  customers,
+  total,
+  isAdmin,
+}: AdminCustomersPageProps) {
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+
+  const rows = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+
+    return customers.filter((customer) => {
+      if (typeFilter !== "all" && customer.accountType !== typeFilter) {
+        return false;
+      }
+      if (!needle) return true;
+      return (
+        customer.name.toLowerCase().includes(needle) ||
+        customer.email.toLowerCase().includes(needle) ||
+        (customer.phone ?? "").toLowerCase().includes(needle)
+      );
     });
+  }, [customers, search, typeFilter]);
 
-    return (
-        <AdminShell isAdmin={true}>
-            <div className="p-6 space-y-5">
-                <PageHeader
-                    title="Customers"
-                    description="Client profiles, history, and engagement — no clinical notes."
-                    actions={
-                        <>
-                            <button
-                                onClick={handleExport}
-                                className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-gray-200 text-sm font-semibold hover:bg-gray-50"
-                            >
-                                <Download size={14} /> Export
-                            </button>
-                            <button
-                                onClick={handleAddCustomer}
-                                className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary-deep text-white text-sm font-semibold hover:bg-primary-deep/90"
-                            >
-                                <Plus size={14} /> Add customer
-                            </button>
-                        </>
-                    }
-                />
-
-                {/* Search and filters */}
-                <Card className="p-3 flex items-center gap-3">
-                    <div className="relative flex-1 max-w-md">
-                        <Search
-                            size={14}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                        />
-                        <input
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search by name, email or phone…"
-                            className="w-full pl-9 pr-3 h-9 rounded-lg bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-deep/30"
-                        />
-                    </div>
-                    <select
-                        value={selectedType}
-                        onChange={(e) => setSelectedType(e.target.value)}
-                        className="h-9 px-3 rounded-lg border border-gray-200 bg-white text-sm"
-                    >
-                        <option value="all">All types</option>
-                        <option value="Individual">Individual</option>
-                        <option value="Couple">Couple</option>
-                        <option value="Family">Family</option>
-                        <option value="Corporate">Corporate</option>
-                    </select>
-                </Card>
-
-                {/* Table */}
-                <Card>
-                    {filteredCustomers.length === 0 ? (
-                        <div className="p-10 text-center text-sm text-gray-600">
-                            No customers found matching your search.
-                        </div>
-                    ) : (
-                        <DataTable
-                            columns={["Name", "Email", "Phone", "Type", "Last activity", "Bookings"]}
-                            rows={filteredCustomers.map((r) => [
-                                <span key="name" className="font-medium">
-                                    {r.name}
-                                </span>,
-                                <span key="email" className="text-gray-600">
-                                    {r.email}
-                                </span>,
-                                <span key="phone" className="text-gray-600">
-                                    {r.phone}
-                                </span>,
-                                r.type,
-                                <span key="last" className="text-gray-600">
-                                    {r.last}
-                                </span>,
-                                <span key="bookings" className="font-semibold">
-                                    {r.bookings}
-                                </span>,
-                            ])}
-                        />
-                    )}
-                </Card>
-
-                <div className="text-sm text-gray-600">
-                    Showing {filteredCustomers.length} of {customers.length} customer(s)
-                </div>
-            </div>
-        </AdminShell>
+  const handleExport = () => {
+    const csv = toCsv(
+      CSV_COLUMNS,
+      rows.map((row) => [
+        row.name,
+        row.email,
+        row.phone,
+        row.accountType,
+        row.bookingCount,
+        row.paymentCount,
+        row.joinedAtLabel,
+      ]),
     );
+
+    downloadCsv(`customers-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+  };
+
+  return (
+    <AdminShell isAdmin={isAdmin}>
+      <div className="space-y-5 p-6 lg:p-8">
+        <PageHeader
+          title="Customers"
+          description="Client profiles, history, and engagement — no clinical notes."
+          actions={
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={rows.length === 0}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-gray-200 px-3 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+            >
+              <Download size={14} /> Export
+            </button>
+          }
+        />
+
+        <Card className="flex items-center gap-3 p-3">
+          <div className="relative max-w-md flex-1">
+            <Search
+              size={14}
+              className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search by name, email or phone…"
+              aria-label="Search customers"
+              className="h-9 w-full rounded-lg border border-gray-200 bg-gray-50 pr-3 pl-9 text-sm focus:ring-2 focus:ring-primary-deep/30 focus:outline-none"
+            />
+          </div>
+          <select
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value)}
+            aria-label="Filter by account type"
+            className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm capitalize"
+          >
+            <option value="all">All types</option>
+            {ACCOUNT_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {humanize(type)}
+              </option>
+            ))}
+          </select>
+        </Card>
+
+        <Card>
+          {rows.length === 0 ? (
+            <div className="p-10 text-center text-sm text-gray-600">
+              {customers.length === 0
+                ? "No customer accounts yet."
+                : "No customers match your search."}
+            </div>
+          ) : (
+            <DataTable
+              columns={[
+                "Name",
+                "Email",
+                "Phone",
+                "Type",
+                "Bookings",
+                "Payments",
+                "Joined",
+              ]}
+              rows={rows.map((row) => [
+                <span key="name" className="font-medium">
+                  {row.name}
+                </span>,
+                <span key="email" className="text-gray-600">
+                  {row.email}
+                </span>,
+                <span key="phone" className="text-gray-600">
+                  {row.phone ?? "—"}
+                </span>,
+                <span key="type" className="capitalize">
+                  {humanize(row.accountType)}
+                </span>,
+                <span key="bookings" className="font-semibold">
+                  {row.bookingCount}
+                </span>,
+                <span key="payments" className="font-semibold">
+                  {row.paymentCount}
+                </span>,
+                <span key="joined" className="text-xs text-gray-600">
+                  {row.joinedAtLabel}
+                </span>,
+              ])}
+            />
+          )}
+        </Card>
+
+        <div className="text-sm text-gray-600">
+          Showing {rows.length} of {total} customer(s)
+        </div>
+      </div>
+    </AdminShell>
+  );
 }
