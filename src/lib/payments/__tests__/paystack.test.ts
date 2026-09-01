@@ -16,6 +16,14 @@ function sign(body: string, secret = SECRET) {
   return createHmac("sha512", secret).update(body, "utf8").digest("hex");
 }
 
+function fetchCall(fetchMock: ReturnType<typeof vi.fn<typeof fetch>>, index = 0) {
+  const call = fetchMock.mock.calls[index];
+  if (!call) {
+    throw new Error(`expected fetch call at index ${index}`);
+  }
+  return { url: String(call[0]), init: call[1] };
+}
+
 function paystackResponse(data: unknown, init: { ok?: boolean; status?: number } = {}) {
   return new Response(JSON.stringify({ status: init.ok === false ? false : true, message: "ok", data }), {
     status: init.status ?? 200,
@@ -165,15 +173,14 @@ describe("parsePaystackEvent", () => {
 
 describe("paystackProvider.charge", () => {
   it("sends a KES 5,000 charge as 500000 subunits", async () => {
-    const fetchMock = vi.fn(async () =>
+    const fetchMock = vi.fn<typeof fetch>(async () =>
       paystackResponse({ authorization_url: "https://checkout.paystack.com/x", reference: "BKG-ABCD2345" }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
     await paystackProvider.charge(chargeRequest);
 
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(JSON.parse(String(init.body))).toMatchObject({
+    expect(JSON.parse(String(fetchCall(fetchMock).init?.body))).toMatchObject({
       amount: 500_000,
       currency: "KES",
       email: "asha@example.com",
@@ -202,15 +209,15 @@ describe("paystackProvider.charge", () => {
   });
 
   it("authenticates with the configured secret key", async () => {
-    const fetchMock = vi.fn(async () =>
+    const fetchMock = vi.fn<typeof fetch>(async () =>
       paystackResponse({ authorization_url: "https://checkout.paystack.com/x" }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
     await paystackProvider.charge(chargeRequest);
 
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect((init.headers as Record<string, string>).Authorization).toBe(`Bearer ${SECRET}`);
+    const headers = fetchCall(fetchMock).init?.headers as Record<string, string>;
+    expect(headers.Authorization).toBe(`Bearer ${SECRET}`);
   });
 
   it("rejects a non-integer amount before any network call", async () => {
@@ -329,47 +336,50 @@ describe("paystackProvider.verify", () => {
   });
 
   it("prefers the provider reference over the local reference when querying", async () => {
-    const fetchMock = vi.fn(async () =>
+    const fetchMock = vi.fn<typeof fetch>(async () =>
       paystackResponse({ status: "success", reference: "PSK-REMOTE", amount: 100, currency: "KES" }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
     await paystackProvider.verify({ reference: "BKG-LOCAL", providerRef: "PSK-REMOTE" });
 
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("/transaction/verify/PSK-REMOTE");
+    expect(fetchCall(fetchMock).url).toContain("/transaction/verify/PSK-REMOTE");
   });
 
   it("url-encodes the reference in the verify path", async () => {
-    const fetchMock = vi.fn(async () =>
+    const fetchMock = vi.fn<typeof fetch>(async () =>
       paystackResponse({ status: "success", reference: "a/b", amount: 100, currency: "KES" }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
     await paystackProvider.verify({ reference: "a/b" });
 
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("/transaction/verify/a%2Fb");
+    expect(fetchCall(fetchMock).url).toContain("/transaction/verify/a%2Fb");
   });
 });
 
 describe("refund", () => {
   it("sends a partial refund in subunits", async () => {
-    const fetchMock = vi.fn(async () => paystackResponse({ id: 1 }));
+    const fetchMock = vi.fn<typeof fetch>(async () => paystackResponse({ id: 1 }));
     vi.stubGlobal("fetch", fetchMock);
 
     await refund("BKG-ABCD2345", 2_500);
 
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(JSON.parse(String(init.body))).toEqual({ transaction: "BKG-ABCD2345", amount: 250_000 });
+    expect(JSON.parse(String(fetchCall(fetchMock).init?.body))).toEqual({
+      transaction: "BKG-ABCD2345",
+      amount: 250_000,
+    });
   });
 
   it("omits the amount for a full refund", async () => {
-    const fetchMock = vi.fn(async () => paystackResponse({ id: 1 }));
+    const fetchMock = vi.fn<typeof fetch>(async () => paystackResponse({ id: 1 }));
     vi.stubGlobal("fetch", fetchMock);
 
     await refund("BKG-ABCD2345");
 
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(JSON.parse(String(init.body))).toEqual({ transaction: "BKG-ABCD2345" });
+    expect(JSON.parse(String(fetchCall(fetchMock).init?.body))).toEqual({
+      transaction: "BKG-ABCD2345",
+    });
   });
 
   it("rejects an empty reference before any network call", async () => {

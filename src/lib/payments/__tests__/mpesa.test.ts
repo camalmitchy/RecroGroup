@@ -37,7 +37,7 @@ async function freshMpesa() {
 }
 
 function darajaFetchMock(stkResponse: unknown = { ResponseCode: "0", CheckoutRequestID: "ws_CO_1" }) {
-  return vi.fn(async (url: string | URL) => {
+  return vi.fn<typeof fetch>(async (url) => {
     if (String(url).includes("/oauth/")) {
       return new Response(JSON.stringify({ access_token: "tok-123", expires_in: "3599" }), { status: 200 });
     }
@@ -46,8 +46,12 @@ function darajaFetchMock(stkResponse: unknown = { ResponseCode: "0", CheckoutReq
 }
 
 function stkBody(fetchMock: ReturnType<typeof darajaFetchMock>) {
-  const call = fetchMock.mock.calls.find(([url]) => String(url).includes("/stkpush/"));
-  return JSON.parse(String((call?.[1] as RequestInit).body)) as Record<string, unknown>;
+  const call = fetchMock.mock.calls.find((args) => String(args[0]).includes("/stkpush/"));
+  const body = call?.[1]?.body;
+  if (body == null) {
+    throw new Error("expected an STK push request with a JSON body");
+  }
+  return JSON.parse(String(body)) as Record<string, unknown>;
 }
 
 beforeEach(() => {
@@ -407,16 +411,22 @@ describe("parseStkCallback", () => {
   });
 
   it.each([
-    [null, "a null payload"],
-    [{}, "an empty object"],
-    [{ Body: {} }, "a payload with no stkCallback"],
-    [{ Body: { stkCallback: { ResultCode: 0 } } }, "a payload with no CheckoutRequestID"],
-    [{ Body: { stkCallback: { CheckoutRequestID: "ws_CO_1" } } }, "a payload with no ResultCode"],
-    [
-      { Body: { stkCallback: { CheckoutRequestID: "ws_CO_1", ResultCode: "abc" } } },
-      "a non-numeric ResultCode",
-    ],
-  ])("throws on %s", (payload) => {
+    { payload: null, label: "a null payload" },
+    { payload: {}, label: "an empty object" },
+    { payload: { Body: {} }, label: "a payload with no stkCallback" },
+    {
+      payload: { Body: { stkCallback: { ResultCode: 0 } } },
+      label: "a payload with no CheckoutRequestID",
+    },
+    {
+      payload: { Body: { stkCallback: { CheckoutRequestID: "ws_CO_1" } } },
+      label: "a payload with no ResultCode",
+    },
+    {
+      payload: { Body: { stkCallback: { CheckoutRequestID: "ws_CO_1", ResultCode: "abc" } } },
+      label: "a non-numeric ResultCode",
+    },
+  ])("throws on $label", ({ payload }) => {
     expect(() => parseStkCallback(payload)).toThrow();
   });
 });
@@ -467,7 +477,7 @@ describe("parseC2bConfirmation", () => {
   });
 
   it("leaves the reference null when no BillRefNumber is present", () => {
-    const { BillRefNumber: _omitted, ...withoutRef } = confirmation;
+    const withoutRef = { ...confirmation, BillRefNumber: undefined };
     expect(parseC2bConfirmation(withoutRef).reference).toBeNull();
   });
 
