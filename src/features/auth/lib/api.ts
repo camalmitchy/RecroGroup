@@ -6,6 +6,7 @@ import type {
   SignInInput,
   SignUpInput,
 } from "@/features/auth/lib/schemas";
+import { signInWithPassword, signUpWithPassword } from "@/server/actions/auth";
 
 type AuthClientResult<T> = {
   data: T | null;
@@ -33,25 +34,28 @@ export async function getSession() {
 }
 
 export async function signIn(input: SignInInput) {
-  const result = await authClient.signIn.email({
-    email: input.email,
-    password: input.password,
-    rememberMe: input.rememberMe,
+  const result = await signInWithPassword({
+    ...input,
+    email: input.email.trim().toLowerCase(),
   });
-  assertNoAuthError(result);
+
+  if (!result.ok) {
+    throw new AuthApiError(result.error, result.fieldErrors);
+  }
+
   return result.data;
 }
 
 export async function signUp(input: SignUpInput) {
-  const result = await authClient.signUp.email({
-    name: input.name,
-    email: input.email,
-    password: input.password,
-    phone: input.phone || undefined,
-    commsEmail: input.commsEmail,
-    commsSms: input.commsSms,
+  const result = await signUpWithPassword({
+    ...input,
+    email: input.email.trim().toLowerCase(),
   });
-  assertNoAuthError(result);
+
+  if (!result.ok) {
+    throw new AuthApiError(result.error, result.fieldErrors);
+  }
+
   return result.data;
 }
 
