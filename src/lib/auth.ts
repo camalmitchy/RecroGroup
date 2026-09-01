@@ -80,6 +80,12 @@ export const auth = betterAuth({
   ]),
   advanced: {
     trustedProxyHeaders: isVercel,
+    useSecureCookies: isVercel,
+    defaultCookieAttributes: {
+      sameSite: "lax",
+      secure: isVercel,
+      path: "/",
+    },
   },
   database: prismaAdapter(prisma, {
     provider: "postgresql",
