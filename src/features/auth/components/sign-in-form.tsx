@@ -23,11 +23,19 @@ import {
   getFormErrorMessage,
 } from "@/features/auth/lib/form-errors";
 import { useSignIn } from "@/features/auth/lib/queries";
+import { safeCallbackUrl, joinUsUrl } from "@/features/auth/lib/redirect";
 import { signInSchema, type SignInInput } from "@/features/auth/lib/schemas";
 
-export function SignInForm() {
+export function SignInForm({
+  googleEnabled,
+  callbackUrl,
+}: {
+  googleEnabled: boolean;
+  callbackUrl?: string | null;
+}) {
   const router = useRouter();
   const signIn = useSignIn();
+  const afterAuth = safeCallbackUrl(callbackUrl);
 
   const form = useForm<SignInInput>({
     resolver: zodResolver(signInSchema),
@@ -49,7 +57,7 @@ export function SignInForm() {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await signIn.mutateAsync(data);
-      router.push("/dashboard");
+      router.push(afterAuth);
       router.refresh();
     } catch (error) {
       if (!applyServerFieldErrors(error, setError)) {
@@ -68,7 +76,7 @@ export function SignInForm() {
       </div>
 
       {/* Google Sign In */}
-      <GoogleAuthButton />
+      <GoogleAuthButton enabled={googleEnabled} callbackUrl={afterAuth} />
 
       <form onSubmit={onSubmit} className="space-y-6" noValidate>
         <FieldGroup>
@@ -137,7 +145,7 @@ export function SignInForm() {
 
       <FieldDescription className="text-center">
         New to Recro?{" "}
-        <Link href="/join-us" className="font-medium text-primary">
+        <Link href={joinUsUrl(afterAuth)} className="font-medium text-primary">
           Create an account
         </Link>
       </FieldDescription>

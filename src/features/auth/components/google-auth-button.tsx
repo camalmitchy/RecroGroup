@@ -7,19 +7,24 @@ import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { signInWithGoogle } from "@/features/auth/lib/api";
 import { getFormErrorMessage } from "@/features/auth/lib/form-errors";
-import { isGoogleAuthEnabled } from "@/features/auth/lib/social";
 
-export function GoogleAuthButton() {
+export function GoogleAuthButton({
+  enabled,
+  callbackUrl = "/",
+}: {
+  enabled: boolean;
+  callbackUrl?: string;
+}) {
   const [pending, setPending] = useState(false);
 
-  if (!isGoogleAuthEnabled) {
+  if (!enabled) {
     return null;
   }
 
   const handleClick = async () => {
     try {
       setPending(true);
-      await signInWithGoogle();
+      await signInWithGoogle(callbackUrl);
     } catch (error) {
       setPending(false);
       toast.error(getFormErrorMessage(error) ?? "Google sign-in failed.");

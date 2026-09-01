@@ -1,19 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -43,10 +32,12 @@ import { PortalPageHeader } from "@/features/portal/components/portal-page-heade
 import { PortalTabBar } from "@/features/portal/components/portal-tab-bar";
 import { StatusBadge } from "@/features/portal/components/status-badge";
 import { formatKes } from "@/features/portal/lib/format";
+import { parseAppRole, ROLE_LABELS } from "@/features/portal/lib/roles";
 import {
   deleteService,
   deleteTherapist,
   setUserRole,
+  setUserRoleByEmail,
   upsertService,
   upsertTherapist,
 } from "@/server/actions/catalog";
@@ -262,6 +253,14 @@ export function SettingsPanel({
   );
 }
 
+const ASSIGNABLE_ROLES = ["customer", "receptionist", "admin"] as const;
+
+function roleTone(role: string) {
+  if (role === "admin") return "success" as const;
+  if (role === "receptionist") return "info" as const;
+  return "muted" as const;
+}
+
 function TeamRolesPanel({
   staff,
   currentUserId,
@@ -269,8 +268,19 @@ function TeamRolesPanel({
   staff: StaffRow[];
   currentUserId: string;
 }) {
+  const [query, setQuery] = useState("");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const rows = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return staff;
+    return staff.filter(
+      (row) =>
+        row.name.toLowerCase().includes(needle) ||
+        row.email.toLowerCase().includes(needle),
+    );
+  }, [staff, query]);
 
   const changeRole = (
     userId: string,
@@ -293,23 +303,40 @@ function TeamRolesPanel({
     <div className="space-y-4">
       <Card>
         <CardContent className="space-y-2 p-5">
-          <h3 className="text-sm font-semibold">Staff access</h3>
+          <h3 className="text-sm font-semibold">Users and roles</h3>
           <p className="text-xs text-muted-foreground">
-            Admin = full control. Receptionist = bookings only. Removing access
-            returns the account to a normal customer profile; the user keeps
-            their login.
+            Everyone who has signed up appears here. Admin has full portal
+            control. Receptionist can manage bookings, payments, programs and
+            messages. Customer stays on the public site.
           </p>
         </CardContent>
       </Card>
 
       <Card>
+        <CardContent className="space-y-3 p-4">
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search by name or email"
+            aria-label="Search users"
+          />
+        </CardContent>
         <CardContent className="p-0">
           {staff.length === 0 ? (
             <Empty className="py-12">
               <EmptyHeader>
-                <EmptyTitle>No staff accounts</EmptyTitle>
+                <EmptyTitle>No accounts yet</EmptyTitle>
                 <EmptyDescription>
-                  Promote an existing customer account to grant portal access.
+                  People appear here after they sign up or sign in.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : rows.length === 0 ? (
+            <Empty className="py-12">
+              <EmptyHeader>
+                <EmptyTitle>No matching users</EmptyTitle>
+                <EmptyDescription>
+                  Try a different name or email.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -321,28 +348,32 @@ function TeamRolesPanel({
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Joined</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">Assign role</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {staff.map((row) => {
+                {rows.map((row) => {
                   const busy = isPending && pendingId === row.id;
                   const isSelf = row.id === currentUserId;
-                  const nextRole =
-                    row.role === "admin" ? "receptionist" : "admin";
+                  const role = parseAppRole(row.role);
 
                   return (
                     <TableRow key={row.id}>
-                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell className="font-medium">
+                        {row.name}
+                        {isSelf ? (
+                          <span className="ml-2 text-xs font-normal text-muted-foreground">
+                            (you)
+                          </span>
+                        ) : null}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {row.email}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <StatusBadge
-                            tone={row.role === "admin" ? "info" : "muted"}
-                          >
-                            {row.role}
+                          <StatusBadge tone={roleTone(role)}>
+                            {ROLE_LABELS[role]}
                           </StatusBadge>
                           {row.banned && (
                             <StatusBadge tone="danger">suspended</StatusBadge>
@@ -352,60 +383,29 @@ function TeamRolesPanel({
                       <TableCell className="text-xs text-muted-foreground">
                         {row.joinedLabel}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-3">
-                          <Button
-                            type="button"
-                            variant="link"
-                            className="h-auto p-0"
+                      <TableCell>
+                        <div className="flex justify-end">
+                          <NativeSelect
+                            size="sm"
+                            aria-label={`Role for ${row.name}`}
+                            value={role}
                             disabled={busy || isSelf}
-                            onClick={() =>
+                            onChange={(event) => {
+                              const next = event.target.value as typeof role;
+                              if (next === role) return;
                               changeRole(
                                 row.id,
-                                nextRole,
-                                `Now a ${nextRole}`,
-                              )
-                            }
+                                next,
+                                `${row.name} is now ${ROLE_LABELS[next]}`,
+                              );
+                            }}
                           >
-                            Make {nextRole}
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="link"
-                                className="h-auto p-0 text-destructive"
-                                disabled={busy || isSelf}
-                              >
-                                Remove
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Remove staff access?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  {row.name} will lose access to the staff
-                                  portal and revert to a customer account.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    changeRole(
-                                      row.id,
-                                      "customer",
-                                      "Access removed",
-                                    )
-                                  }
-                                >
-                                  Remove access
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                            {ASSIGNABLE_ROLES.map((option) => (
+                              <NativeSelectOption key={option} value={option}>
+                                {ROLE_LABELS[option]}
+                              </NativeSelectOption>
+                            ))}
+                          </NativeSelect>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -424,7 +424,22 @@ function TeamRolesPanel({
 
 function GrantAccessCard() {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "receptionist">("receptionist");
+  const [role, setRole] = useState<"admin" | "receptionist" | "customer">(
+    "receptionist",
+  );
+  const [isPending, startTransition] = useTransition();
+
+  const grant = () => {
+    startTransition(async () => {
+      const result = await setUserRoleByEmail(email, role);
+      if (result.ok) {
+        toast.success(`Role set to ${ROLE_LABELS[role]}`);
+        setEmail("");
+      } else {
+        toast.error(result.error);
+      }
+    });
+  };
 
   return (
     <Card>
@@ -436,32 +451,33 @@ function GrantAccessCard() {
             onChange={(event) => setEmail(event.target.value)}
             placeholder="user@example.com"
             aria-label="Email address"
-            className="bg-[var(--admin-bg)] sm:flex-1"
+            className="sm:flex-1"
           />
           <NativeSelect
             value={role}
             onChange={(event) =>
-              setRole(event.target.value as "admin" | "receptionist")
+              setRole(event.target.value as typeof role)
             }
             aria-label="Role"
             className="sm:w-44"
           >
-            <NativeSelectOption value="receptionist">
-              Receptionist
-            </NativeSelectOption>
-            <NativeSelectOption value="admin">Admin (Staff)</NativeSelectOption>
+            {ASSIGNABLE_ROLES.map((option) => (
+              <NativeSelectOption key={option} value={option}>
+                {ROLE_LABELS[option]}
+              </NativeSelectOption>
+            ))}
           </NativeSelect>
           <Button
             type="button"
-            disabled
-            className="bg-[var(--admin-primary)] hover:bg-[var(--admin-primary)]/90"
+            disabled={isPending || email.trim().length === 0}
+            onClick={grant}
           >
             Grant access
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Lookup by email is not wired up yet. Ask the person to sign up, then
-          promote their account from the table above.
+          The person must already have an account. Search the table above, or
+          enter their email here to set a role.
         </p>
       </CardContent>
     </Card>

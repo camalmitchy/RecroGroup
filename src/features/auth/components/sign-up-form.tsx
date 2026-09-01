@@ -23,11 +23,19 @@ import {
   getFormErrorMessage,
 } from "@/features/auth/lib/form-errors";
 import { useSignUp } from "@/features/auth/lib/queries";
+import { loginUrl, safeCallbackUrl } from "@/features/auth/lib/redirect";
 import { signUpSchema, type SignUpInput } from "@/features/auth/lib/schemas";
 
-export function SignUpForm() {
+export function SignUpForm({
+  googleEnabled,
+  callbackUrl,
+}: {
+  googleEnabled: boolean;
+  callbackUrl?: string | null;
+}) {
   const router = useRouter();
   const signUp = useSignUp();
+  const afterAuth = safeCallbackUrl(callbackUrl);
 
   const form = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
@@ -53,7 +61,7 @@ export function SignUpForm() {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await signUp.mutateAsync(data);
-      router.push("/dashboard");
+      router.push(afterAuth);
       router.refresh();
     } catch (error) {
       if (!applyServerFieldErrors(error, setError)) {
@@ -73,7 +81,7 @@ export function SignUpForm() {
       </div>
 
       {/* Google Sign Up */}
-      <GoogleAuthButton />
+      <GoogleAuthButton enabled={googleEnabled} callbackUrl={afterAuth} />
 
       <form onSubmit={onSubmit} className="space-y-6" noValidate>
         <FieldGroup>
@@ -192,7 +200,7 @@ export function SignUpForm() {
 
       <FieldDescription className="text-center">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-primary">
+        <Link href={loginUrl(afterAuth)} className="font-medium text-primary">
           Sign in
         </Link>
       </FieldDescription>

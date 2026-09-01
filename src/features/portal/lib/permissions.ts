@@ -25,7 +25,7 @@ export const PORTAL_NAV: PortalNavItem[] = [
     href: "/dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    roles: ["admin", "receptionist", "customer"],
+    roles: ["admin", "receptionist"],
     group: "Overview",
   },
   {
@@ -85,7 +85,7 @@ export function getNavForRole(role: AppRole) {
 
 export function canAccessRoute(role: AppRole, pathname: string) {
   if (role === "customer") {
-    return pathname === "/dashboard";
+    return false;
   }
 
   if (pathname === "/dashboard") {

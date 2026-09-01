@@ -287,3 +287,39 @@ export async function setUserRole(
     return failure("setUserRole", error);
   }
 }
+
+const grantRoleSchema = z.object({
+  email: z.email("Enter a valid email address"),
+  role: z.enum(["admin", "receptionist", "customer"]),
+});
+
+export async function setUserRoleByEmail(
+  email: string,
+  role: "admin" | "receptionist" | "customer",
+): Promise<ActionResult<{ id: string; role: string }>> {
+  try {
+    await requireAdmin();
+    const parsed = grantRoleSchema.safeParse({ email: email.trim(), role });
+    if (!parsed.success) {
+      return fail(
+        parsed.error.issues[0]?.message ?? "Enter a valid email address",
+      );
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: parsed.data.email, mode: "insensitive" } },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return fail(
+        "No account found with that email. Ask them to sign up first, then try again.",
+      );
+    }
+
+    return setUserRole(user.id, parsed.data.role);
+  } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
+    return failure("setUserRoleByEmail", error);
+  }
+}
