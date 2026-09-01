@@ -178,14 +178,14 @@ export function bookingConfirmation(input: {
 
   details.push(
     { label: "Total", value: formatKes(input.amountKes) },
-    { label: "Deposit paid", value: formatKes(input.depositKes) },
-    { label: "Balance", value: formatKes(input.balanceKes) },
+    { label: "Commitment fee", value: formatKes(input.depositKes) },
+    { label: "Balance at session", value: formatKes(input.balanceKes) },
   );
 
   const paragraphs = [
     input.scheduledFor
-      ? `Your booking for ${input.serviceTitle} is confirmed for ${formatDateTime(input.scheduledFor)}.`
-      : `Your booking for ${input.serviceTitle} is confirmed. We will be in touch shortly to agree on a time that works for you.`,
+      ? `We have received your booking request for ${input.serviceTitle} on ${formatDateTime(input.scheduledFor)}. Pay the commitment fee to secure this slot.`
+      : `We have received your booking request for ${input.serviceTitle}. Pay the commitment fee to secure your slot.`,
   ];
 
   if (input.balanceKes > 0) {
@@ -195,7 +195,7 @@ export function bookingConfirmation(input: {
   }
 
   const { html, text } = layout({
-    heading: "Your booking is confirmed",
+    heading: "We received your booking",
     greeting: `Hello ${firstName(input.recipientName)},`,
     paragraphs,
     details,
@@ -204,7 +204,7 @@ export function bookingConfirmation(input: {
 
   return {
     to: { email: input.recipientEmail, name: input.recipientName },
-    subject: `Booking confirmed ${input.reference}`,
+    subject: `Booking request ${input.reference}`,
     html,
     text,
   };
@@ -294,6 +294,29 @@ export function donationThankYou(input: {
   return {
     to: { email: input.recipientEmail, name: input.recipientName },
     subject: `Thank you for your donation ${input.reference}`,
+    html,
+    text,
+  };
+}
+
+export function passwordReset(input: {
+  recipientEmail: string;
+  recipientName: string;
+  url: string;
+}): EmailMessage {
+  const { html, text } = layout({
+    heading: "Reset your password",
+    greeting: `Hello ${firstName(input.recipientName)},`,
+    paragraphs: [
+      "We received a request to reset the password for your Recro account. Use the button below. This link expires soon and can only be used once.",
+      "If you did not ask for a reset, you can ignore this email.",
+    ],
+    cta: { label: "Reset password", url: input.url },
+  });
+
+  return {
+    to: { email: input.recipientEmail, name: input.recipientName },
+    subject: "Reset your Recro password",
     html,
     text,
   };
