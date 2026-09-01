@@ -1,9 +1,13 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
-import { admin } from "better-auth/plugins";
+import { admin, customSession } from "better-auth/plugins";
 
 import { prisma } from "@/lib/prisma";
+import {
+  bootstrapRoleForEmail,
+  syncBootstrapStaffRole,
+} from "@/lib/staff-bootstrap";
 
 const PRODUCTION_HOST = "recro-group.vercel.app";
 const isVercel = Boolean(process.env.VERCEL);
@@ -90,6 +94,16 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          const role = bootstrapRoleForEmail(user.email) ?? user.role ?? "customer";
+          return { data: { ...user, role } };
+        },
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
@@ -153,6 +167,18 @@ export const auth = betterAuth({
       defaultRole: "customer",
       adminRoles: ["admin"],
       // receptionist uses `user.role` string + app RBAC in permissions.ts
+    }),
+    customSession(async ({ user, session }) => {
+      const role = await syncBootstrapStaffRole({
+        id: user.id,
+        email: user.email,
+        role: "role" in user ? (user.role as string | null) : null,
+      });
+
+      return {
+        user: { ...user, role },
+        session,
+      };
     }),
     nextCookies(),
   ],
