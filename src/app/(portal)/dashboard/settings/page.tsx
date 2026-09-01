@@ -8,17 +8,17 @@ import { formatDate } from "@/features/portal/lib/format";
 import { getRequiredSession } from "@/features/portal/lib/portal-guard";
 import {
   listServices,
-  listStaff,
+  listUsers,
   listTherapists,
 } from "@/server/queries/catalog";
 
 export default async function SettingsPage() {
   const session = await getRequiredSession("/dashboard/settings");
 
-  const [services, therapists, staff] = await Promise.all([
+  const [services, therapists, users] = await Promise.all([
     listServices(),
     listTherapists(),
-    listStaff(),
+    listUsers(),
   ]);
 
   const serviceRows: ServiceRow[] = services.map((service) => ({
@@ -45,7 +45,7 @@ export default async function SettingsPage() {
     bookings: therapist._count.bookings,
   }));
 
-  const staffRows: StaffRow[] = staff.map((member) => ({
+  const staffRows: StaffRow[] = users.map((member) => ({
     id: member.id,
     name: member.name,
     email: member.email,

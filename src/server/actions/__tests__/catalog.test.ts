@@ -4,7 +4,7 @@ const prismaMock = {
   service: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
   therapist: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
   booking: { count: vi.fn() },
-  user: { update: vi.fn() },
+  user: { update: vi.fn(), findFirst: vi.fn() },
 };
 
 const requireAdmin = vi.fn();
@@ -19,7 +19,7 @@ vi.mock("@/server/authz", async () => {
 });
 
 const { AuthorizationError } = await import("@/server/authz");
-const { deleteService, deleteTherapist, setUserRole, upsertService } = await import(
+const { deleteService, deleteTherapist, setUserRole, setUserRoleByEmail, upsertService } = await import(
   "@/server/actions/catalog"
 );
 
@@ -146,5 +146,37 @@ describe("setUserRole", () => {
     const result = await setUserRole(ADMIN.userId, "admin");
 
     expect(result.ok).toBe(true);
+  });
+});
+
+describe("setUserRoleByEmail", () => {
+  it("promotes an existing account", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce({ id: "u2" });
+    prismaMock.user.update.mockResolvedValueOnce({ id: "u2", role: "admin" });
+
+    const result = await setUserRoleByEmail("camalmitchy2@gmail.com", "admin");
+
+    expect(result.ok).toBe(true);
+    expect(prismaMock.user.findFirst).toHaveBeenCalled();
+    expect(prismaMock.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "u2" }, data: { role: "admin" } }),
+    );
+  });
+
+  it("rejects an unknown email", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce(null);
+
+    const result = await setUserRoleByEmail("missing@example.com", "receptionist");
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toMatch(/no account found/i);
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid email", async () => {
+    const result = await setUserRoleByEmail("not-an-email", "admin");
+
+    expect(result.ok).toBe(false);
+    expect(prismaMock.user.findFirst).not.toHaveBeenCalled();
   });
 });

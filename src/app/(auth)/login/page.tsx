@@ -2,12 +2,18 @@ import type { Metadata } from "next";
 
 import { AuthSplitLayout } from "@/features/auth/components/auth-split-layout";
 import { SignInForm } from "@/features/auth/components/sign-in-form";
+import { isGoogleSignInAvailable } from "@/features/auth/lib/social";
 
 export const metadata: Metadata = {
   title: "Sign in",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const { callbackUrl } = await searchParams;
   return (
     <AuthSplitLayout
       imageSrc="/assets/bg.png"
@@ -17,7 +23,10 @@ export default function LoginPage() {
         author: "A Recro client",
       }}
     >
-      <SignInForm />
+      <SignInForm
+        googleEnabled={isGoogleSignInAvailable()}
+        callbackUrl={callbackUrl}
+      />
     </AuthSplitLayout>
   );
 }

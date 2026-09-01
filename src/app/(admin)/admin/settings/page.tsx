@@ -8,7 +8,7 @@ import { requireAdminArea } from "@/features/admin/lib/admin-guard";
 import { formatDate } from "@/features/portal/lib/format";
 import {
     listServices,
-    listStaff,
+    listUsers,
     listTherapists,
 } from "@/server/queries/catalog";
 
@@ -18,7 +18,7 @@ export default async function SettingsPage() {
     const [services, therapists, staff] = await Promise.all([
         listServices(),
         listTherapists(),
-        listStaff(),
+        listUsers(),
     ]);
 
     const serviceRows: AdminServiceRow[] = services.map((service) => ({

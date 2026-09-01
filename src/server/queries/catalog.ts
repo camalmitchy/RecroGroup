@@ -43,25 +43,50 @@ export type StaffMember = {
   createdAt: Date;
 };
 
+function mapUserRow(user: {
+  id: string;
+  name: string;
+  email: string;
+  role: string | null;
+  banned: boolean | null;
+  createdAt: Date;
+}): StaffMember {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role ?? "customer",
+    banned: user.banned ?? false,
+    createdAt: user.createdAt,
+  };
+}
+
+const userSelect = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  banned: true,
+  createdAt: true,
+} as const;
+
+export async function listUsers(): Promise<StaffMember[]> {
+  const users = await prisma.user.findMany({
+    orderBy: [{ createdAt: "desc" }, { name: "asc" }],
+    select: userSelect,
+  });
+
+  return users.map(mapUserRow);
+}
+
 export async function listStaff(): Promise<StaffMember[]> {
   const users = await prisma.user.findMany({
     where: { role: { in: ["admin", "receptionist"] } },
     orderBy: [{ role: "asc" }, { name: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      banned: true,
-      createdAt: true,
-    },
+    select: userSelect,
   });
 
-  return users.map((user) => ({
-    ...user,
-    role: user.role ?? "customer",
-    banned: user.banned ?? false,
-  }));
+  return users.map(mapUserRow);
 }
 
 export type CustomerFilters = {

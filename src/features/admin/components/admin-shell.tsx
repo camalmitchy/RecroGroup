@@ -17,7 +17,6 @@ import {
     ArrowLeft,
     User,
     LogOut,
-    ChevronDown,
 } from "lucide-react";
 
 import { useSignOut } from "@/features/auth/lib/queries";
@@ -108,8 +107,8 @@ export function AdminShell({
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${isActive
-                                        ? "bg-primary-soft text-primary-deep"
-                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                    ? "bg-primary-soft text-primary-deep"
+                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                     }`}
                             >
                                 <Icon size={18} />
@@ -228,21 +227,13 @@ export function AdminShell({
                         </div>
 
                         {/* Profile Menu */}
-                        <div className="relative pl-3 border-l border-gray-200">
+                        <div className="relative">
                             <button
                                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                                className="flex items-center gap-2 hover:opacity-80 transition"
+                                className="group relative h-10 w-10 rounded-full bg-gradient-to-br from-primary-deep to-primary-deep/80 text-white grid place-items-center text-sm font-semibold uppercase shadow-sm ring-2 ring-white hover:shadow-md transition-all duration-200 hover:scale-105"
                             >
-                                <div className="h-8 w-8 rounded-full bg-primary-deep text-white grid place-items-center text-sm font-semibold uppercase">
-                                    {user ? initialsFor(user.name, user.email) : "—"}
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-sm font-medium text-gray-900">
-                                        {user?.name || user?.email || "Signed out"}
-                                    </p>
-                                    <p className="text-xs text-gray-500">{user?.email ?? ""}</p>
-                                </div>
-                                <ChevronDown size={14} className="text-gray-400" />
+                                {user ? initialsFor(user.name, user.email) : "—"}
+                                <div className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/10 transition-colors duration-200" />
                             </button>
 
                             {/* Profile Dropdown */}
@@ -252,22 +243,42 @@ export function AdminShell({
                                         className="fixed inset-0 z-10"
                                         onClick={() => setShowProfileMenu(false)}
                                     />
-                                    <div className="absolute right-0 top-12 z-20 w-56 bg-white border border-gray-200 rounded-lg shadow-lg">
+                                    <div className="absolute right-0 top-14 z-20 w-64 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                        {/* User Info Header */}
+                                        <div className="px-4 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-b border-gray-200">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 rounded-full bg-primary-deep text-white grid place-items-center text-sm font-semibold uppercase shadow-sm">
+                                                    {user ? initialsFor(user.name, user.email) : "—"}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-semibold text-gray-900 truncate">
+                                                        {user?.name || "User"}
+                                                    </p>
+                                                    <p className="text-xs text-gray-600 truncate">{user?.email ?? ""}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Menu Items */}
                                         <div className="p-2">
                                             <Link
                                                 href="/admin/profile"
-                                                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                                             >
-                                                <User size={16} />
-                                                Profile Settings
+                                                <div className="h-8 w-8 rounded-lg bg-gray-100 grid place-items-center text-gray-600">
+                                                    <User size={16} />
+                                                </div>
+                                                <span>Profile Settings</span>
                                             </Link>
                                             <button
                                                 onClick={handleSignOut}
                                                 disabled={signOut.isPending}
-                                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
                                             >
-                                                <LogOut size={16} />
-                                                {signOut.isPending ? "Signing out…" : "Sign Out"}
+                                                <div className="h-8 w-8 rounded-lg bg-red-50 grid place-items-center text-red-600">
+                                                    <LogOut size={16} />
+                                                </div>
+                                                <span>{signOut.isPending ? "Signing out…" : "Sign Out"}</span>
                                             </button>
                                         </div>
                                     </div>

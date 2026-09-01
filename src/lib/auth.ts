@@ -5,22 +5,82 @@ import { admin } from "better-auth/plugins";
 
 import { prisma } from "@/lib/prisma";
 
-const appUrl =
-  process.env.BETTER_AUTH_URL ??
-  process.env.NEXT_PUBLIC_APP_URL ??
-  "http://localhost:3000";
+const PRODUCTION_HOST = "recro-group.vercel.app";
+const isVercel = Boolean(process.env.VERCEL);
+
+function hostFromUrl(value: string | undefined) {
+  if (!value?.trim()) return null;
+
+  try {
+    const url = new URL(value.includes("://") ? value : `https://${value}`);
+    return url.host || null;
+  } catch {
+    return null;
+  }
+}
+
+function isLoopbackUrl(value: string) {
+  const host = hostFromUrl(value)?.split(":")[0];
+  return host === "localhost" || host === "127.0.0.1";
+}
+
+function uniqueHosts(hosts: Array<string | null | undefined>) {
+  return [...new Set(hosts.filter((host): host is string => Boolean(host)))];
+}
+
+function originFromUrl(value: string | undefined) {
+  if (!value?.trim()) return null;
+
+  try {
+    const url = new URL(value.includes("://") ? value : `https://${value}`);
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
+const configuredUrl =
+  process.env.BETTER_AUTH_URL?.trim() ||
+  process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+const fallbackUrl =
+  configuredUrl && !isLoopbackUrl(configuredUrl)
+    ? configuredUrl
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : isVercel || process.env.NODE_ENV === "production"
+        ? `https://${PRODUCTION_HOST}`
+        : "http://localhost:3000";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: appUrl,
-  trustedOrigins: [
-    appUrl,
+  baseURL: {
+    allowedHosts: uniqueHosts([
+      "localhost:3000",
+      "127.0.0.1:3000",
+      "localhost:*",
+      PRODUCTION_HOST,
+      "*.vercel.app",
+      hostFromUrl(configuredUrl),
+      process.env.VERCEL_URL,
+    ]),
+    fallback: fallbackUrl,
+    protocol: isVercel || process.env.NODE_ENV === "production" ? "https" : "auto",
+  },
+  trustedOrigins: uniqueHosts([
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-  ].filter((origin, index, origins) => origins.indexOf(origin) === index),
+    `https://${PRODUCTION_HOST}`,
+    "https://*.vercel.app",
+    originFromUrl(configuredUrl),
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+  ]),
+  advanced: {
+    trustedProxyHeaders: isVercel,
+  },
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),

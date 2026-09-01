@@ -4,10 +4,8 @@ import { redirect } from "next/navigation";
 import { BookingPage } from "@/features/public/booking/components/booking-page";
 import type {
   ClinicianOption,
-  PaymentMethodKey,
   ServiceOption,
 } from "@/features/public/booking/components/booking-page";
-import { availableMethods } from "@/lib/payments";
 import { paymentsConfig } from "@/lib/payments/config";
 import { calculateDeposit } from "@/lib/payments/utils";
 import { prisma } from "@/lib/prisma";
@@ -48,12 +46,6 @@ function formatDuration(minutes: number | null): string {
   const hours = minutes / 60;
   const label = Number.isInteger(hours) ? `${hours}` : hours.toFixed(1);
   return `${label} hr${hours > 1 ? "s" : ""}`;
-}
-
-function toPaymentMethodKey(method: string): PaymentMethodKey {
-  if (method === "MPESA") return "mpesa";
-  if (method === "CARD") return "card";
-  return "bank";
 }
 
 async function loadServices(): Promise<ServiceOption[]> {
@@ -116,10 +108,9 @@ export default async function Page({
   const programPath = service ? PROGRAM_REDIRECTS[service] : undefined;
   if (programPath) redirect(programPath);
 
-  const [services, clinicians, methods, session] = await Promise.all([
+  const [services, clinicians, session] = await Promise.all([
     loadServices(),
     loadClinicians(),
-    Promise.resolve(availableMethods()),
     getOptionalSession(),
   ]);
 
@@ -135,7 +126,6 @@ export default async function Page({
       <BookingPage
         services={services}
         clinicians={clinicians}
-        paymentMethods={methods.map(toPaymentMethodKey)}
         defaultClient={{
           name: profile?.name ?? session?.name ?? "",
           email: profile?.email ?? session?.email ?? "",

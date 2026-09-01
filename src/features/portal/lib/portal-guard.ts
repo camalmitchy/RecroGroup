@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { canAccessRoute } from "@/features/portal/lib/permissions";
+import { isStaff } from "@/features/portal/lib/roles";
 import {
   getDevPortalSession,
   getPortalSession,
@@ -19,7 +20,7 @@ export async function getRequiredSession(pathname?: string) {
   }
 
   if (pathname && !canAccessRoute(session.role, pathname)) {
-    redirect("/dashboard");
+    redirect(isStaff(session.role) ? "/dashboard" : "/");
   }
 
   return session;

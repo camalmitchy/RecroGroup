@@ -3,5 +3,12 @@
   "compilerOptions": {
     "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": ["src/**/__tests__/**/*", "test/**/*", "vitest.config.mts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/__tests__/**/*",
+    "test/**/*",
+    "vitest.config.mts"
+  ],
+  "exclude": ["node_modules", "Beacon UI System", "Beacon UI System (3)"]
 }

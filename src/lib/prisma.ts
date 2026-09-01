@@ -12,15 +12,54 @@ function getConnectionString() {
 
   if (!connectionString) {
     throw new Error(
-      "DATABASE_URL is not set. Add it to .env and restart the Next.js server.",
+      "DATABASE_URL is not set. Add it to .env locally, or to Vercel Project Settings > Environment Variables, then redeploy.",
     );
   }
 
   return connectionString;
 }
 
+function shouldUseSsl(connectionString: string) {
+  if (process.env.DATABASE_SSL === "false") return false;
+  if (process.env.DATABASE_SSL === "true" || process.env.VERCEL) return true;
+
+  try {
+    const parsed = new URL(connectionString);
+    const sslmode = parsed.searchParams.get("sslmode");
+
+    if (sslmode === "disable") return false;
+    if (
+      sslmode === "require" ||
+      sslmode === "verify-ca" ||
+      sslmode === "verify-full"
+    ) {
+      return true;
+    }
+
+    const host = parsed.hostname;
+    return (
+      host.endsWith(".neon.tech") ||
+      host.endsWith(".supabase.co") ||
+      host.endsWith(".postgres.vercel-storage.com") ||
+      host.includes("amazonaws.com") ||
+      host.includes("render.com")
+    );
+  } catch {
+    return Boolean(process.env.VERCEL);
+  }
+}
+
 function createPrismaClient() {
-  const pool = globalForPrisma.pool ?? new Pool({ connectionString: getConnectionString() });
+  const connectionString = getConnectionString();
+  const pool =
+    globalForPrisma.pool ??
+    new Pool({
+      connectionString,
+      max: process.env.VERCEL ? 1 : 10,
+      ssl: shouldUseSsl(connectionString)
+        ? { rejectUnauthorized: false }
+        : undefined,
+    });
   globalForPrisma.pool = pool;
 
   return new PrismaClient({

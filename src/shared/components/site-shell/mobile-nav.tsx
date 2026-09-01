@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Menu } from "lucide-react";
 
@@ -19,8 +19,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useSignOut } from "@/features/auth/lib/queries";
+import { isStaff, parseAppRole } from "@/features/portal/lib/roles";
+import { useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
+import { AccountIdentity } from "./account-identity";
 import { mainNavLinks, serviceNavItems } from "./nav-config";
 
 function MobileNavLink({
@@ -56,6 +60,11 @@ function MobileNavLink({
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+  const router = useRouter();
+  const { data } = useSession();
+  const signOut = useSignOut();
+  const user = data?.user;
+  const staff = user ? isStaff(parseAppRole(user.role)) : false;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -131,11 +140,61 @@ export function MobileNav() {
               Book a session
             </Link>
           </Button>
-          <Button asChild className="w-full rounded-full" size="lg">
-            <Link href="/join-us" onClick={close}>
-              Join Us
-            </Link>
-          </Button>
+          {user ? (
+            <>
+              <div className="mt-4 rounded-xl bg-muted/60 px-3 py-3">
+                <AccountIdentity
+                  name={user.name}
+                  email={user.email}
+                  image={user.image}
+                />
+              </div>
+              <Button asChild className="w-full rounded-full" size="lg">
+                <Link href="/profile" onClick={close}>
+                  Your profile
+                </Link>
+              </Button>
+              {staff ? (
+                <Button asChild variant="outline" className="w-full rounded-full" size="lg">
+                  <Link href="/dashboard" onClick={close}>
+                    Dashboard
+                  </Link>
+                </Button>
+              ) : null}
+              <Button
+                variant="outline"
+                className="w-full rounded-full"
+                size="lg"
+                disabled={signOut.isPending}
+                onClick={async () => {
+                  await signOut.mutateAsync();
+                  close();
+                  router.push("/");
+                  router.refresh();
+                }}
+              >
+                Sign out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild className="w-full rounded-full" size="lg">
+                <Link href="/login" onClick={close}>
+                  Sign in
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="w-full rounded-full"
+                size="lg"
+              >
+                <Link href="/join-us" onClick={close}>
+                  Join Us
+                </Link>
+              </Button>
+            </>
+          )}
         </nav>
       </SheetContent>
     </Sheet>

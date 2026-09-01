@@ -95,22 +95,24 @@ const TIME_SLOTS = Array.from({ length: 9 }, (_, i) => {
 export function BookingPage({
     services,
     clinicians,
-    paymentMethods,
     defaultClient,
 }: {
     services: ServiceOption[];
     clinicians: ClinicianOption[];
-    paymentMethods: PaymentMethodKey[];
     defaultClient?: { name: string; email: string; phone: string };
 }) {
     const searchParams = useSearchParams();
     const serviceParam = searchParams.get("service");
+    const preselectedService =
+        services.find((s) => s.key === serviceParam) ?? null;
 
-    const [step, setStep] = useState<Step>("service");
+    const [step, setStep] = useState<Step>(
+        preselectedService ? "time" : "service",
+    );
 
     // Service step
     const [selectedService, setSelectedService] = useState<ServiceOption | null>(
-        () => services.find((s) => s.key === serviceParam) ?? null,
+        preselectedService,
     );
 
     // Time step
@@ -128,13 +130,7 @@ export function BookingPage({
 
     // Payment step
     const [booking, setBooking] = useState<BookingRecord | null>(null);
-    const [paymentMethod, setPaymentMethod] = useState<PaymentMethodKey>(
-        paymentMethods.includes("mpesa")
-            ? "mpesa"
-            : paymentMethods.includes("card")
-                ? "card"
-                : "bank",
-    );
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethodKey>("mpesa");
     const [mpesaPhone, setMpesaPhone] = useState("");
     const [bankRef, setBankRef] = useState("");
     const [proofFile, setProofFile] = useState<File | null>(null);
@@ -170,8 +166,11 @@ export function BookingPage({
     const [lastServiceParam, setLastServiceParam] = useState(serviceParam);
     if (serviceParam !== lastServiceParam) {
         setLastServiceParam(serviceParam);
-        const preselected = services.find((s) => s.key === serviceParam);
-        if (preselected) setSelectedService(preselected);
+        const nextService = services.find((s) => s.key === serviceParam);
+        if (nextService) {
+            setSelectedService(nextService);
+            setStep((current) => (current === "service" ? "time" : current));
+        }
     }
 
     // Generate available dates (next 14 days, excluding Sundays)
@@ -545,7 +544,6 @@ export function BookingPage({
                             handleRetry();
                             setPaymentMethod(method);
                         }}
-                        availableMethods={paymentMethods}
                         mpesaPhone={mpesaPhone}
                         setMpesaPhone={setMpesaPhone}
                         bankRef={bankRef}
@@ -984,7 +982,6 @@ function PaymentStep({
     clientName,
     paymentMethod,
     setPaymentMethod,
-    availableMethods,
     mpesaPhone,
     setMpesaPhone,
     bankRef,
@@ -1007,7 +1004,6 @@ function PaymentStep({
     clientName: string;
     paymentMethod: PaymentMethodKey;
     setPaymentMethod: (m: PaymentMethodKey) => void;
-    availableMethods: PaymentMethodKey[];
     mpesaPhone: string;
     setMpesaPhone: (v: string) => void;
     bankRef: string;
@@ -1121,8 +1117,7 @@ function PaymentStep({
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block">
                         Payment Method
                     </label>
-                    <div className={`grid gap-3 ${availableMethods.length > 1 ? "sm:grid-cols-3" : ""}`}>
-                        {availableMethods.includes("mpesa") && (
+                    <div className="grid sm:grid-cols-3 gap-3">
                         <MethodCard
                             active={paymentMethod === "mpesa"}
                             onClick={() => setPaymentMethod("mpesa")}
@@ -1130,8 +1125,6 @@ function PaymentStep({
                             title="M-Pesa STK"
                             sub="Instant payment"
                         />
-                        )}
-                        {availableMethods.includes("card") && (
                         <MethodCard
                             active={paymentMethod === "card"}
                             onClick={() => setPaymentMethod("card")}
@@ -1139,8 +1132,6 @@ function PaymentStep({
                             title="Visa / Mastercard"
                             sub="Secure checkout"
                         />
-                        )}
-                        {availableMethods.includes("bank") && (
                         <MethodCard
                             active={paymentMethod === "bank"}
                             onClick={() => setPaymentMethod("bank")}
@@ -1148,15 +1139,7 @@ function PaymentStep({
                             title="Bank Transfer"
                             sub="Upload slip"
                         />
-                        )}
                     </div>
-                    {availableMethods.length === 1 && availableMethods[0] === "bank" && (
-                        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                            Instant M-Pesa and card checkout are not configured on this
-                            environment. Submit a bank transfer and our team will confirm
-                            your slot.
-                        </p>
-                    )}
 
                     {/* M-Pesa Form */}
                     {paymentMethod === "mpesa" && (

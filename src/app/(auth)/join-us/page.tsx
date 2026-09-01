@@ -2,12 +2,18 @@ import type { Metadata } from "next";
 
 import { AuthSplitLayout } from "@/features/auth/components/auth-split-layout";
 import { SignUpForm } from "@/features/auth/components/sign-up-form";
+import { isGoogleSignInAvailable } from "@/features/auth/lib/social";
 
 export const metadata: Metadata = {
   title: "Join us",
 };
 
-export default function JoinUsPage() {
+export default async function JoinUsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const { callbackUrl } = await searchParams;
   return (
     <AuthSplitLayout
       imageSrc="/assets/bg.png"
@@ -17,7 +23,10 @@ export default function JoinUsPage() {
         author: "Recro Group",
       }}
     >
-      <SignUpForm />
+      <SignUpForm
+        googleEnabled={isGoogleSignInAvailable()}
+        callbackUrl={callbackUrl}
+      />
     </AuthSplitLayout>
   );
 }
