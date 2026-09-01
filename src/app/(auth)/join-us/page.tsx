@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   title: "Join us",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function JoinUsPage({
   searchParams,
 }: {

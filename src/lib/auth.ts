@@ -56,7 +56,7 @@ const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
 
 export const auth = betterAuth({
-  secret: process.env.BETTER_AUTH_SECRET,
+  secret: process.env.BETTER_AUTH_SECRET?.trim() || process.env.AUTH_SECRET?.trim(),
   baseURL: {
     allowedHosts: uniqueHosts([
       "localhost:3000",

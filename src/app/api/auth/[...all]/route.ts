@@ -1,5 +1,9 @@
 import { toNextJsHandler } from "better-auth/next-js";
 
+import { publicAuthErrorMessage } from "@/lib/auth-runtime";
+
+export const runtime = "nodejs";
+
 async function handleAuth(request: Request) {
   try {
     const { auth } = await import("@/lib/auth");
@@ -13,7 +17,7 @@ async function handleAuth(request: Request) {
   } catch (error) {
     console.error("[auth] Unhandled auth route error", error);
     return Response.json(
-      { message: "Authentication is unavailable. Check server logs." },
+      { message: publicAuthErrorMessage(error) },
       { status: 500 },
     );
   }
