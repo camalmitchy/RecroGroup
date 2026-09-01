@@ -1,10 +1,18 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 import { BookingPage } from "@/features/public/booking/components/booking-page";
-import type { ServiceOption } from "@/features/public/booking/components/booking-page";
+import type {
+  ClinicianOption,
+  PaymentMethodKey,
+  ServiceOption,
+} from "@/features/public/booking/components/booking-page";
+import { availableMethods } from "@/lib/payments";
 import { paymentsConfig } from "@/lib/payments/config";
-import { prisma } from "@/lib/prisma";
 import { calculateDeposit } from "@/lib/payments/utils";
+import { prisma } from "@/lib/prisma";
+import { getOptionalSession } from "@/server/authz";
+import { BOOKABLE_SERVICE_SLUGS } from "@/server/validation/booking";
 
 export const metadata = {
   title: "Book a Session — Recro Group",
@@ -19,11 +27,16 @@ const SERVICE_ICONS: Record<string, string> = {
   couples: "/assets/icons/couples-therapy.svg",
   family: "/assets/icons/family-therapy.svg",
   group: "/assets/icons/group-therapy.svg",
-  children: "/assets/icons/grief-camp.svg",
-  corporate: "/assets/icons/corporate-speaking.svg",
 };
 
 const FALLBACK_ICON = "/assets/icons/individual-therapy.svg";
+const FALLBACK_PHOTO = "/assets/founder-portrait.jpg";
+
+const PROGRAM_REDIRECTS: Record<string, string> = {
+  children: "/grief-camp/apply",
+  corporate: "/services/corporate/inquiry",
+  consortium: "/services/consortium/apply",
+};
 
 function formatDuration(minutes: number | null): string {
   if (!minutes) return "";
@@ -37,32 +50,98 @@ function formatDuration(minutes: number | null): string {
   return `${label} hr${hours > 1 ? "s" : ""}`;
 }
 
+function toPaymentMethodKey(method: string): PaymentMethodKey {
+  if (method === "MPESA") return "mpesa";
+  if (method === "CARD") return "card";
+  return "bank";
+}
+
 async function loadServices(): Promise<ServiceOption[]> {
+  const slugs = [...BOOKABLE_SERVICE_SLUGS];
   const services = await prisma.service.findMany({
-    where: { isPublished: true, priceKes: { gt: 0 } },
+    where: {
+      isPublished: true,
+      priceKes: { gt: 0 },
+      OR: [{ category: "Therapy" }, { slug: { in: slugs } }],
+    },
     select: { slug: true, title: true, priceKes: true, durationMin: true },
     orderBy: { priceKes: "asc" },
   });
 
-  return services.map((service) => {
-    const price = service.priceKes ?? 0;
-    return {
-      key: service.slug,
-      title: service.title,
-      duration: formatDuration(service.durationMin),
-      icon: SERVICE_ICONS[service.slug] ?? FALLBACK_ICON,
-      price,
-      depositKes: calculateDeposit(price, paymentsConfig.bookingDepositPercent),
-    };
-  });
+  return services
+    .filter((service) =>
+      slugs.includes(service.slug as (typeof BOOKABLE_SERVICE_SLUGS)[number]),
+    )
+    .map((service) => {
+      const price = service.priceKes ?? 0;
+      return {
+        key: service.slug,
+        title: service.title,
+        duration: formatDuration(service.durationMin),
+        icon: SERVICE_ICONS[service.slug] ?? FALLBACK_ICON,
+        price,
+        depositKes: calculateDeposit(price, paymentsConfig.bookingDepositPercent),
+      };
+    });
 }
 
-export default async function Page() {
-  const services = await loadServices();
+async function loadClinicians(): Promise<ClinicianOption[]> {
+  const therapists = await prisma.therapist.findMany({
+    where: { isActive: true },
+    orderBy: { fullName: "asc" },
+    select: {
+      id: true,
+      fullName: true,
+      title: true,
+      photoUrl: true,
+      specialties: true,
+    },
+  });
+
+  return therapists.map((therapist) => ({
+    id: therapist.id,
+    name: therapist.fullName,
+    title: therapist.title ?? "Clinician",
+    photo: therapist.photoUrl || FALLBACK_PHOTO,
+    specialties: therapist.specialties,
+  }));
+}
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ service?: string }>;
+}) {
+  const { service } = await searchParams;
+  const programPath = service ? PROGRAM_REDIRECTS[service] : undefined;
+  if (programPath) redirect(programPath);
+
+  const [services, clinicians, methods, session] = await Promise.all([
+    loadServices(),
+    loadClinicians(),
+    Promise.resolve(availableMethods()),
+    getOptionalSession(),
+  ]);
+
+  const profile = session
+    ? await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { name: true, email: true, phone: true },
+      })
+    : null;
 
   return (
     <Suspense fallback={null}>
-      <BookingPage services={services} />
+      <BookingPage
+        services={services}
+        clinicians={clinicians}
+        paymentMethods={methods.map(toPaymentMethodKey)}
+        defaultClient={{
+          name: profile?.name ?? session?.name ?? "",
+          email: profile?.email ?? session?.email ?? "",
+          phone: profile?.phone ?? "",
+        }}
+      />
     </Suspense>
   );
 }

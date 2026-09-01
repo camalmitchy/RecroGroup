@@ -34,7 +34,15 @@ export type ServiceOption = {
     depositKes: number;
 };
 
-type PaymentMethodKey = "mpesa" | "card" | "bank";
+export type ClinicianOption = {
+    id: string;
+    name: string;
+    title: string;
+    photo: string;
+    specialties: string[];
+};
+
+export type PaymentMethodKey = "mpesa" | "card" | "bank";
 
 type PaymentStatus =
     | "PENDING"
@@ -76,16 +84,6 @@ type BookingRecord = {
 const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 120_000;
 
-const CLINICIANS = [
-    {
-        id: "dr-karume",
-        name: "Dr. Michelle Karume",
-        title: "Founder & Licensed Psychotherapist",
-        photo: "/assets/founder-portrait.jpg",
-        specialties: ["Medical family therapy", "Marriage $ family"],
-    },
-];
-
 // Generate time slots (9 AM to 5 PM, hourly)
 const TIME_SLOTS = Array.from({ length: 9 }, (_, i) => {
     const hour = i + 9;
@@ -94,7 +92,17 @@ const TIME_SLOTS = Array.from({ length: 9 }, (_, i) => {
     return `${displayHour}:00 ${ampm}`;
 });
 
-export function BookingPage({ services }: { services: ServiceOption[] }) {
+export function BookingPage({
+    services,
+    clinicians,
+    paymentMethods,
+    defaultClient,
+}: {
+    services: ServiceOption[];
+    clinicians: ClinicianOption[];
+    paymentMethods: PaymentMethodKey[];
+    defaultClient?: { name: string; email: string; phone: string };
+}) {
     const searchParams = useSearchParams();
     const serviceParam = searchParams.get("service");
 
@@ -106,21 +114,27 @@ export function BookingPage({ services }: { services: ServiceOption[] }) {
     );
 
     // Time step
-    const [clinician, setClinician] = useState<string>("dr-karume");
+    const [clinician, setClinician] = useState<string>(clinicians[0]?.id ?? "");
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string>("");
 
     // Intake step
-    const [clientName, setClientName] = useState("");
-    const [clientEmail, setClientEmail] = useState("");
-    const [clientPhone, setClientPhone] = useState("");
+    const [clientName, setClientName] = useState(defaultClient?.name ?? "");
+    const [clientEmail, setClientEmail] = useState(defaultClient?.email ?? "");
+    const [clientPhone, setClientPhone] = useState(defaultClient?.phone ?? "");
     const [notes, setNotes] = useState("");
     const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
     const [creatingBooking, setCreatingBooking] = useState(false);
 
     // Payment step
     const [booking, setBooking] = useState<BookingRecord | null>(null);
-    const [paymentMethod, setPaymentMethod] = useState<PaymentMethodKey>("mpesa");
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethodKey>(
+        paymentMethods.includes("mpesa")
+            ? "mpesa"
+            : paymentMethods.includes("card")
+                ? "card"
+                : "bank",
+    );
     const [mpesaPhone, setMpesaPhone] = useState("");
     const [bankRef, setBankRef] = useState("");
     const [proofFile, setProofFile] = useState<File | null>(null);
@@ -184,7 +198,8 @@ export function BookingPage({ services }: { services: ServiceOption[] }) {
     const availableDates = generateAvailableDates();
 
     const canProceedFromService = selectedService !== null;
-    const canProceedFromTime = selectedDate && selectedTime && clinician;
+    const canProceedFromTime =
+        selectedDate && selectedTime && (clinicians.length === 0 || Boolean(clinician));
     const canProceedFromIntake =
         clientName.trim() && clientEmail.trim() && clientPhone.trim();
 
@@ -228,7 +243,7 @@ export function BookingPage({ services }: { services: ServiceOption[] }) {
                 preferredTime: selectedTime,
                 sessionMode: "IN_PERSON",
                 notes: notes.trim() || undefined,
-                therapistId: undefined,
+                therapistId: clinician || undefined,
             });
 
             if (!result.ok) {
@@ -473,16 +488,21 @@ export function BookingPage({ services }: { services: ServiceOption[] }) {
 
                 {/* Steps Content */}
                 {step === "service" && (
-                    <ServiceStep
-                        services={services}
-                        selectedService={selectedService}
-                        onSelectService={setSelectedService}
-                        onNext={handleServiceNext}
-                    />
+                    services.length === 0 ? (
+                        <EmptyServicesState />
+                    ) : (
+                        <ServiceStep
+                            services={services}
+                            selectedService={selectedService}
+                            onSelectService={setSelectedService}
+                            onNext={handleServiceNext}
+                        />
+                    )
                 )}
 
                 {step === "time" && (
                     <TimeStep
+                        clinicians={clinicians}
                         clinician={clinician}
                         setClinician={setClinician}
                         selectedDate={selectedDate}
@@ -525,6 +545,7 @@ export function BookingPage({ services }: { services: ServiceOption[] }) {
                             handleRetry();
                             setPaymentMethod(method);
                         }}
+                        availableMethods={paymentMethods}
                         mpesaPhone={mpesaPhone}
                         setMpesaPhone={setMpesaPhone}
                         bankRef={bankRef}
@@ -632,7 +653,30 @@ function ServiceStep({
     );
 }
 
+function EmptyServicesState() {
+    return (
+        <div className="rounded-2xl border-2 border-border bg-background p-8 text-center shadow-sm">
+            <h2 className="font-serif text-2xl text-primary-deep">
+                Booking is being set up
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                Therapy sessions are not listed yet. Email us and we will get you a
+                slot, or check back shortly.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <a href="mailto:hello@recrogroup.org" className="btn-primary">
+                    Email hello@recrogroup.org
+                </a>
+                <Link href="/contact" className="btn-secondary">
+                    Contact us
+                </Link>
+            </div>
+        </div>
+    );
+}
+
 function TimeStep({
+    clinicians,
     clinician,
     setClinician,
     selectedDate,
@@ -644,6 +688,7 @@ function TimeStep({
     onBack,
     onNext,
 }: {
+    clinicians: ClinicianOption[];
     clinician: string;
     setClinician: (c: string) => void;
     selectedDate: Date | null;
@@ -661,13 +706,13 @@ function TimeStep({
 
     return (
         <div className="space-y-6">
-            {/* Clinician Selection */}
+            {clinicians.length > 0 && (
             <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block">
                     Clinician
                 </label>
                 <div className="space-y-3">
-                    {CLINICIANS.map((c) => (
+                    {clinicians.map((c) => (
                         <button
                             key={c.id}
                             onClick={() => setClinician(c.id)}
@@ -694,8 +739,7 @@ function TimeStep({
                     ))}
                 </div>
             </div>
-
-            {/* Date Selection */}
+            )}
             <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block">
                     Select Date (Next 14 Days)
@@ -802,7 +846,7 @@ function TimeStep({
                 </button>
                 <button
                     onClick={onNext}
-                    disabled={!selectedDate || !selectedTime}
+                    disabled={!selectedDate || !selectedTime || (clinicians.length > 0 && !clinician)}
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Continue <ArrowRight size={16} />
@@ -940,6 +984,7 @@ function PaymentStep({
     clientName,
     paymentMethod,
     setPaymentMethod,
+    availableMethods,
     mpesaPhone,
     setMpesaPhone,
     bankRef,
@@ -962,6 +1007,7 @@ function PaymentStep({
     clientName: string;
     paymentMethod: PaymentMethodKey;
     setPaymentMethod: (m: PaymentMethodKey) => void;
+    availableMethods: PaymentMethodKey[];
     mpesaPhone: string;
     setMpesaPhone: (v: string) => void;
     bankRef: string;
@@ -1075,7 +1121,8 @@ function PaymentStep({
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block">
                         Payment Method
                     </label>
-                    <div className="grid sm:grid-cols-3 gap-3">
+                    <div className={`grid gap-3 ${availableMethods.length > 1 ? "sm:grid-cols-3" : ""}`}>
+                        {availableMethods.includes("mpesa") && (
                         <MethodCard
                             active={paymentMethod === "mpesa"}
                             onClick={() => setPaymentMethod("mpesa")}
@@ -1083,6 +1130,8 @@ function PaymentStep({
                             title="M-Pesa STK"
                             sub="Instant payment"
                         />
+                        )}
+                        {availableMethods.includes("card") && (
                         <MethodCard
                             active={paymentMethod === "card"}
                             onClick={() => setPaymentMethod("card")}
@@ -1090,6 +1139,8 @@ function PaymentStep({
                             title="Visa / Mastercard"
                             sub="Secure checkout"
                         />
+                        )}
+                        {availableMethods.includes("bank") && (
                         <MethodCard
                             active={paymentMethod === "bank"}
                             onClick={() => setPaymentMethod("bank")}
@@ -1097,7 +1148,15 @@ function PaymentStep({
                             title="Bank Transfer"
                             sub="Upload slip"
                         />
+                        )}
                     </div>
+                    {availableMethods.length === 1 && availableMethods[0] === "bank" && (
+                        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                            Instant M-Pesa and card checkout are not configured on this
+                            environment. Submit a bank transfer and our team will confirm
+                            your slot.
+                        </p>
+                    )}
 
                     {/* M-Pesa Form */}
                     {paymentMethod === "mpesa" && (

@@ -76,6 +76,33 @@ async function seedServices() {
   console.info(`Seeded ${SERVICES.length} services`);
 }
 
+async function seedTherapists() {
+  const therapist = {
+    fullName: "Dr. Michelle Karume",
+    title: "Founder & Licensed Psychotherapist",
+    bio: "Founder of Recro Group. Medical family therapy, marriage and family work.",
+    specialties: ["Medical family therapy", "Marriage & family"],
+    photoUrl: "/assets/founder-portrait.jpg",
+    email: "hello@recrogroup.org",
+    isActive: true,
+  };
+
+  const existing = await prisma.therapist.findFirst({
+    where: { email: therapist.email },
+  });
+
+  if (existing) {
+    await prisma.therapist.update({
+      where: { id: existing.id },
+      data: therapist,
+    });
+  } else {
+    await prisma.therapist.create({ data: therapist });
+  }
+
+  console.info("Seeded therapist Dr. Michelle Karume");
+}
+
 async function seedCamp() {
   const camp = await prisma.campSession.upsert({
     where: { slug: CAMP_SLUG },
@@ -151,6 +178,7 @@ async function seedCamp() {
 
 async function main() {
   await seedServices();
+  await seedTherapists();
   await seedCamp();
 }
 
