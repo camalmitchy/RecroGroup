@@ -1,11 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, Plus, Search } from "lucide-react";
-import { toast } from "sonner";
+import { Search } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import {
   NativeSelect,
@@ -20,48 +24,50 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PortalPageHeader } from "@/features/portal/components/portal-page-header";
-import { MOCK_CUSTOMERS } from "@/features/portal/data/mock-portal-data";
 
-export function PeoplePanel() {
+export type CustomerRow = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  accountType: string;
+  joinedLabel: string;
+  bookings: number;
+  payments: number;
+};
+
+type PeoplePanelProps = {
+  customers: CustomerRow[];
+  total: number;
+};
+
+export function PeoplePanel({ customers, total }: PeoplePanelProps) {
   const [query, setQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("All types");
+  const [typeFilter, setTypeFilter] = useState("all");
+
+  const types = useMemo(
+    () => [...new Set(customers.map((row) => row.accountType))].sort(),
+    [customers],
+  );
 
   const rows = useMemo(() => {
-    return MOCK_CUSTOMERS.filter((customer) => {
-      const matchesType =
-        typeFilter === "All types" || customer.type === typeFilter;
-      const haystack =
-        `${customer.name} ${customer.email} ${customer.phone}`.toLowerCase();
-      const matchesQuery = haystack.includes(query.toLowerCase());
-      return matchesType && matchesQuery;
+    const needle = query.trim().toLowerCase();
+    return customers.filter((customer) => {
+      if (typeFilter !== "all" && customer.accountType !== typeFilter) {
+        return false;
+      }
+      if (!needle) return true;
+      return `${customer.name} ${customer.email} ${customer.phone ?? ""}`
+        .toLowerCase()
+        .includes(needle);
     });
-  }, [query, typeFilter]);
+  }, [customers, query, typeFilter]);
 
   return (
     <div className="space-y-5">
       <PortalPageHeader
         title="Customers"
         description="Client profiles, history, and engagement — no clinical notes."
-        actions={
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => toast.message("Export coming soon")}
-            >
-              <Download className="size-4" />
-              Export
-            </Button>
-            <Button
-              type="button"
-              className="bg-[var(--admin-primary)] hover:bg-[var(--admin-primary)]/90"
-              onClick={() => toast.message("Add customer coming soon")}
-            >
-              <Plus className="size-4" />
-              Add customer
-            </Button>
-          </>
-        }
       />
 
       <Card>
@@ -72,55 +78,84 @@ export function PeoplePanel() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by name, email or phone…"
+              aria-label="Search customers"
               className="bg-[var(--admin-bg)] pl-9"
             />
           </div>
           <NativeSelect
             value={typeFilter}
             onChange={(event) => setTypeFilter(event.target.value)}
+            aria-label="Filter by account type"
             className="sm:w-44"
           >
-            <NativeSelectOption value="All types">All types</NativeSelectOption>
-            <NativeSelectOption value="Individual">Individual</NativeSelectOption>
-            <NativeSelectOption value="Couple">Couple</NativeSelectOption>
-            <NativeSelectOption value="Family">Family</NativeSelectOption>
-            <NativeSelectOption value="Corporate">Corporate</NativeSelectOption>
+            <NativeSelectOption value="all">All types</NativeSelectOption>
+            {types.map((type) => (
+              <NativeSelectOption key={type} value={type}>
+                {type}
+              </NativeSelectOption>
+            ))}
           </NativeSelect>
+          <p className="text-xs text-muted-foreground sm:ml-auto">
+            Showing {rows.length} of {total}
+          </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Last activity</TableHead>
-                <TableHead>Bookings</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">{row.name}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {row.email}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {row.phone}
-                  </TableCell>
-                  <TableCell>{row.type}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {row.lastActivity}
-                  </TableCell>
-                  <TableCell className="font-semibold">{row.bookings}</TableCell>
+          {rows.length === 0 ? (
+            <Empty className="py-12">
+              <EmptyHeader>
+                <EmptyTitle>
+                  {customers.length === 0
+                    ? "No customers yet"
+                    : "No matching customers"}
+                </EmptyTitle>
+                <EmptyDescription>
+                  {customers.length === 0
+                    ? "Client profiles appear here once someone signs up or books a session."
+                    : "Try a different search term or account type."}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead>Bookings</TableHead>
+                  <TableHead>Payments</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-medium">{row.name}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {row.email}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {row.phone ?? "—"}
+                    </TableCell>
+                    <TableCell>{row.accountType}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {row.joinedLabel}
+                    </TableCell>
+                    <TableCell className="font-semibold">
+                      {row.bookings}
+                    </TableCell>
+                    <TableCell className="font-semibold">
+                      {row.payments}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

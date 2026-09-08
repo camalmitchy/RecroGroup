@@ -275,7 +275,7 @@ export function HomePage() {
             </p>
             <div className="mt-10 flex flex-wrap gap-3 justify-center">
               <Link
-                href="/booking?service=children"
+                href="/grief-camp/apply"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#3F5B43] transition hover:bg-white/90"
               >
                 Apply for Grief Camp

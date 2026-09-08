@@ -1,6 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
+
+import { submitInquiry } from "@/server/actions/inquiry";
+import {
+    formatInquiryMessage,
+    truncateSubject,
+} from "@/features/public/shared/inquiry-message";
 import { PersonalInformationStep } from "./steps/personal-information-step";
 import { ApplicationQuestionsStep } from "./steps/application-questions-step";
 import { HealthHistoryStep } from "./steps/health-history-step";
@@ -12,13 +21,17 @@ const STEPS = [
     { id: 3, title: "Health History", component: HealthHistoryStep },
 ];
 
+const EMAIL_PATTERN = /[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+/;
+const PHONE_PATTERN = /\+?[\d][\d\s()-]{6,}/;
+
 export function FacilitatorApplicationForm() {
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState<Partial<FacilitatorApplicationData>>({});
+    const [submitted, setSubmitted] = useState(false);
 
     const CurrentStepComponent = STEPS[currentStep - 1].component;
 
-    const handleNext = (stepData: any) => {
+    const handleNext = (stepData: Partial<FacilitatorApplicationData>) => {
         setFormData((prev) => ({ ...prev, ...stepData }));
         if (currentStep < STEPS.length) {
             setCurrentStep((prev) => prev + 1);
@@ -33,20 +46,126 @@ export function FacilitatorApplicationForm() {
         }
     };
 
-    const handleSubmit = async (stepData: any) => {
-        const finalData = { ...formData, ...stepData };
+    const handleSubmit = async (stepData: Partial<FacilitatorApplicationData>) => {
+        const personal = formData.personalInformation;
+        const questions = formData.applicationQuestions;
+        const health = stepData.healthHistory ?? formData.healthHistory;
 
-        try {
-            // TODO: Implement API call to submit the form
-            console.log("Final facilitator application data:", finalData);
-
-            // For now, show success message
-            alert("Application submitted successfully! We will contact you soon.");
-        } catch (error) {
-            console.error("Error submitting form:", error);
-            alert("There was an error submitting your application. Please try again.");
+        if (!personal || !questions || !health) {
+            toast.error("Please complete all three steps before submitting");
+            return;
         }
+
+        const contact = personal.emailAndPhone;
+        const email = EMAIL_PATTERN.exec(contact)?.[0];
+        if (!email) {
+            setCurrentStep(1);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            toast.error("We couldn't find an email address", {
+                description:
+                    "Please include a valid email address in the Email and Phone Numbers field.",
+            });
+            return;
+        }
+
+        const phone = PHONE_PATTERN.exec(contact.replace(email, ""))?.[0].trim();
+        const role = questions.applicationType || "Applicant";
+
+        const result = await submitInquiry({
+            type: "CORPORATE",
+            name: personal.name,
+            email,
+            phone: phone && phone.length >= 7 ? phone : undefined,
+            subject: truncateSubject(`${role} application — ${personal.name}`),
+            message: formatInquiryMessage([
+                {
+                    heading: "Personal information",
+                    fields: [
+                        ["Name", personal.name],
+                        ["Date of birth", personal.dateOfBirth],
+                        ["Email and phone", contact],
+                        ["Work address and phone", personal.workAddress],
+                        ["Place of employment or university", personal.placeOfEmployment],
+                        ["Educational background", personal.educationalBackground],
+                        ["References", personal.references],
+                        ["Emergency contacts", personal.emergencyContacts],
+                    ],
+                },
+                {
+                    heading: "Application questions",
+                    fields: [
+                        ["Applying as", questions.applicationType],
+                        ["Consent to emergency medical treatment", questions.consent],
+                        ["Consent date", questions.consentDate],
+                        ["1. Philosophy of children", questions.philosophyOfChildren],
+                        ["2. Experience working with children", questions.experienceWithChildren],
+                        ["3. Setting limits and discipline", questions.disciplineApproach],
+                        ["4. Contribution to the camp", questions.contributionToCamp],
+                        ["5. Responsibilities in the role", questions.responsibilitiesDescription],
+                        ["6. Reason for interest", questions.reasonForInterest],
+                        ["7. Previous experience", questions.previousExperience],
+                        ["8. Additional information", questions.additionalInformation],
+                        ["9. Groups facilitated", questions.groupsFacilitated],
+                        ["10. Capacity worked with children", questions.therapistCapacity],
+                    ],
+                },
+                {
+                    heading: "Health history",
+                    fields: [
+                        ["Name and date", health.nameAndDate],
+                        ["Family physician", health.familyPhysician],
+                        ["Allergies or illnesses", health.allergiesOrIllnesses],
+                        ["Recent surgery, injury or illness", health.recentSurgeryInjuryIllness],
+                        ["Surgery details", health.surgeryDetails],
+                        ["Current medication", health.currentMedication],
+                    ],
+                },
+            ]),
+        });
+
+        if (!result.ok) {
+            const detail = result.fieldErrors
+                ? Object.values(result.fieldErrors)
+                    .map((messages) => messages[0])
+                    .filter(Boolean)
+                    .join("; ")
+                : null;
+            toast.error(result.error, detail ? { description: detail } : undefined);
+            return;
+        }
+
+        setFormData((prev) => ({ ...prev, ...stepData }));
+        setSubmitted(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
     };
+
+    if (submitted) {
+        return (
+            <div className="min-h-screen bg-muted/30 py-12 px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-2xl">
+                    <div className="rounded-3xl border border-border bg-card p-12 shadow-lg text-center">
+                        <div className="mb-6 flex justify-center">
+                            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-soft">
+                                <CheckCircle className="h-10 w-10 text-primary-deep" />
+                            </div>
+                        </div>
+                        <h1 className="font-serif text-3xl text-foreground md:text-4xl">
+                            Application Submitted!
+                        </h1>
+                        <p className="mt-4 text-lg text-muted-foreground">
+                            Thank you for applying. Our team will review your application and
+                            contact you regarding the next steps.
+                        </p>
+                        <div className="mt-8">
+                            <Link href="/services" className="btn-primary">
+                                Explore All Services
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const progress = (currentStep / STEPS.length) * 100;
 

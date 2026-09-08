@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 import { DesktopNav } from "./desktop-nav";
 import { MobileNav } from "./mobile-nav";
 import { SiteLogo } from "./site-logo";
+import { UserMenu } from "./user-menu";
 
 export function SiteHeader() {
   return (
@@ -23,17 +23,7 @@ export function SiteHeader() {
           >
             <Link href="/booking">Book a Session</Link>
           </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="hidden rounded-full border-2 lg:inline-flex"
-            size="lg"
-          >
-            <Link href="/login">
-              <ArrowRight className="mr-2 size-4" />
-              Sign in
-            </Link>
-          </Button>
+          <UserMenu />
           <MobileNav />
         </div>
       </div>

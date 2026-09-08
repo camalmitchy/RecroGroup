@@ -37,6 +37,9 @@ yarn-error.log*
 
 # vercel
 .vercel
+COPY_TO_VERCEL.txt
+VERCEL_SETUP_GUIDE.md
+setup-vercel-env.sh
 
 # typescript
 *.tsbuildinfo

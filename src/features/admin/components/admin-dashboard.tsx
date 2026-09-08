@@ -1,76 +1,50 @@
-"use client";
-
 import Link from "next/link";
 import {
+    ArrowRight,
     CalendarDays,
+    Clock,
     CreditCard,
-    Users,
     HeartHandshake,
     MessageSquare,
-    Clock,
-    ArrowRight,
+    TrendingUp,
 } from "lucide-react";
+
+import type { DashboardStats } from "@/server/queries/dashboard";
+
 import { AdminShell, Card, PageHeader, StatusBadge } from "./admin-shell";
 
-export function AdminDashboard() {
-    // TODO: Fetch real data from your database
-    const stats = {
-        todayBookings: 1,
-        pendingBookings: 0,
-        pendingPayments: 0,
-        bankToVerify: 0,
-        griefApps: 0,
-        newMessages: 0,
-        totalCustomers: 3,
-    };
+export type AdminDashboardBooking = {
+    id: string;
+    reference: string;
+    clientName: string;
+    preferredDateLabel: string;
+    status: string;
+};
 
-    const pendingList: any[] = [
-        // Example data
-    ];
+type AdminDashboardProps = {
+    stats: DashboardStats;
+    pending: AdminDashboardBooking[];
+    recent: AdminDashboardBooking[];
+    isAdmin: boolean;
+};
 
-    const recentBookings = [
-        {
-            id: "1",
-            client_name: "Carnal Mitchy",
-            reference: "RQ-XGPRP",
-            status: "pending",
-        },
-        {
-            id: "2",
-            client_name: "Carnal Mitchy",
-            reference: "RQ-TQ1VZ",
-            status: "pending",
-        },
-        {
-            id: "3",
-            client_name: "Carnal Mitchy",
-            reference: "RQ-8HUN15",
-            status: "pending",
-        },
-        {
-            id: "4",
-            client_name: "Carnal Mitchy",
-            reference: "RQ-OYIRFV4",
-            status: "pending",
-        },
-        {
-            id: "5",
-            client_name: "Carnal Mitchy",
-            reference: "RQ-N8R4N9",
-            status: "pending",
-        },
-        {
-            id: "6",
-            client_name: "Carnal Mitchy",
-            reference: "RQ-ANMXTP",
-            status: "pending",
-        },
-    ];
+function statusTone(status: string) {
+    if (status === "CONFIRMED") return "info" as const;
+    if (status === "COMPLETED") return "success" as const;
+    if (status === "CANCELLED") return "danger" as const;
+    return "warning" as const;
+}
 
+export function AdminDashboard({
+    stats,
+    pending,
+    recent,
+    isAdmin,
+}: AdminDashboardProps) {
     const kpis = [
         {
-            label: "Today's bookings",
-            value: stats.todayBookings,
+            label: "Total bookings",
+            value: stats.bookings.total,
             to: "/admin/bookings",
             icon: CalendarDays,
             bgColor: "bg-blue-50",
@@ -78,7 +52,7 @@ export function AdminDashboard() {
         },
         {
             label: "Awaiting confirmation",
-            value: stats.pendingBookings,
+            value: stats.bookings.requested,
             to: "/admin/bookings",
             icon: Clock,
             bgColor: "bg-green-50",
@@ -86,64 +60,54 @@ export function AdminDashboard() {
         },
         {
             label: "Pending payments",
-            value: stats.pendingPayments,
+            value: stats.payments.pending,
             to: "/admin/payments",
             icon: CreditCard,
             bgColor: "bg-yellow-50",
             iconColor: "text-yellow-600",
         },
         {
-            label: "Bank transfers to verify",
-            value: stats.bankToVerify,
+            label: "Revenue collected",
+            value: `KES ${stats.revenueKes.toLocaleString()}`,
             to: "/admin/payments",
-            icon: CreditCard,
+            icon: TrendingUp,
             bgColor: "bg-purple-50",
             iconColor: "text-purple-600",
         },
         {
             label: "Grief camp applications",
-            value: stats.griefApps,
+            value: stats.applications.pending,
             to: "/admin/grief-camp",
             icon: HeartHandshake,
             bgColor: "bg-pink-50",
             iconColor: "text-pink-600",
         },
         {
-            label: "New messages",
-            value: stats.newMessages,
+            label: "Open messages",
+            value: stats.inquiries.unresolved,
             to: "/admin/messages",
             icon: MessageSquare,
             bgColor: "bg-orange-50",
             iconColor: "text-orange-600",
         },
         {
-            label: "Total customers",
-            value: stats.totalCustomers,
-            to: "/admin/customers",
-            icon: Users,
+            label: "Donations raised",
+            value: `KES ${stats.donations.raisedKes.toLocaleString()}`,
+            to: "/admin/payments",
+            icon: HeartHandshake,
             bgColor: "bg-indigo-50",
             iconColor: "text-indigo-600",
         },
     ];
 
-    const statusTone = (s: string) =>
-        s === "confirmed"
-            ? "info"
-            : s === "completed"
-                ? "success"
-                : s === "cancelled"
-                    ? "danger"
-                    : "warning";
-
     return (
-        <AdminShell isAdmin={true}>
+        <AdminShell isAdmin={isAdmin}>
             <div className="p-6 space-y-6">
                 <PageHeader
                     title="Dashboard"
                     description="What needs your attention today."
                 />
 
-                {/* KPI Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                     {kpis.map((kpi) => {
                         const Icon = kpi.icon;
@@ -167,9 +131,7 @@ export function AdminDashboard() {
                     })}
                 </div>
 
-                {/* Two-column layout */}
                 <div className="grid lg:grid-cols-2 gap-4">
-                    {/* Awaiting confirmation */}
                     <Card className="p-5">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-sm font-semibold">Awaiting confirmation</h3>
@@ -180,23 +142,23 @@ export function AdminDashboard() {
                                 View all <ArrowRight size={11} />
                             </Link>
                         </div>
-                        {pendingList.length === 0 ? (
+                        {pending.length === 0 ? (
                             <p className="text-sm text-gray-600">
                                 Nothing pending. Great work.
                             </p>
                         ) : (
                             <ul className="divide-y divide-gray-100">
-                                {pendingList.map((r: any) => (
+                                {pending.map((row) => (
                                     <li
-                                        key={r.id}
+                                        key={row.id}
                                         className="py-2.5 flex items-center justify-between gap-3"
                                     >
                                         <div className="min-w-0">
                                             <p className="text-sm font-medium truncate">
-                                                {r.client_name}
+                                                {row.clientName}
                                             </p>
                                             <p className="text-xs text-gray-600">
-                                                {r.reference} · {r.preferred_date ?? "no date"}
+                                                {row.reference} · {row.preferredDateLabel}
                                             </p>
                                         </div>
                                         <StatusBadge tone="warning">Confirm</StatusBadge>
@@ -206,7 +168,6 @@ export function AdminDashboard() {
                         )}
                     </Card>
 
-                    {/* Recent bookings */}
                     <Card className="p-5">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-sm font-semibold">Recent bookings</h3>
@@ -217,23 +178,23 @@ export function AdminDashboard() {
                                 View all <ArrowRight size={11} />
                             </Link>
                         </div>
-                        {recentBookings.length === 0 ? (
+                        {recent.length === 0 ? (
                             <p className="text-sm text-gray-600">No bookings yet.</p>
                         ) : (
                             <ul className="divide-y divide-gray-100">
-                                {recentBookings.map((r) => (
+                                {recent.map((row) => (
                                     <li
-                                        key={r.id}
+                                        key={row.id}
                                         className="py-2.5 flex items-center justify-between gap-3"
                                     >
                                         <div className="min-w-0">
                                             <p className="text-sm font-medium truncate">
-                                                {r.client_name}
+                                                {row.clientName}
                                             </p>
-                                            <p className="text-xs text-gray-600">{r.reference}</p>
+                                            <p className="text-xs text-gray-600">{row.reference}</p>
                                         </div>
-                                        <StatusBadge tone={statusTone(r.status) as any}>
-                                            {r.status}
+                                        <StatusBadge tone={statusTone(row.status)}>
+                                            {row.status.toLowerCase()}
                                         </StatusBadge>
                                     </li>
                                 ))}

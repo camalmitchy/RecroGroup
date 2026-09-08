@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,6 +25,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -41,6 +47,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { PortalPageHeader } from "@/features/portal/components/portal-page-header";
+import type { ActionResult } from "@/server/result";
 
 export type CrudFieldDef = {
   name: string;
@@ -51,86 +58,120 @@ export type CrudFieldDef = {
   defaultValue?: string | number | boolean;
 };
 
-type CrudColumn<T extends { id: string }> = {
+export type CrudColumn<T extends { id: string }> = {
   key: keyof T | string;
   label: string;
   render?: (row: T) => ReactNode;
 };
 
+export type CrudValues = Record<string, string | number | boolean | null>;
+
 type PortalCrudProps<T extends { id: string }> = {
   title: string;
   description?: string;
   columns: CrudColumn<T>[];
-  fields: CrudFieldDef[];
-  initialRows: T[];
-  emptyLabel?: string;
+  rows: T[];
+  emptyTitle?: string;
+  emptyDescription?: string;
+  fields?: CrudFieldDef[];
+  onSave?: (
+    values: CrudValues,
+    id?: string,
+  ) => Promise<ActionResult<{ id: string }>>;
+  onDelete?: (id: string) => Promise<ActionResult<{ id: string }>>;
+  deleteDescription?: string;
 };
 
-function getFieldValue<T extends Record<string, unknown>>(
+function fieldValue<T extends { id: string }>(
   row: T,
   name: string,
 ): string | number | boolean {
-  const value = row[name];
+  const value = (row as Record<string, unknown>)[name];
   if (typeof value === "boolean" || typeof value === "number") return value;
   return value == null ? "" : String(value);
 }
 
-export function PortalCrud<T extends { id: string } & Record<string, unknown>>({
+function readForm(form: HTMLFormElement, fields: CrudFieldDef[]): CrudValues {
+  const data = new FormData(form);
+  const values: CrudValues = {};
+
+  for (const field of fields) {
+    if (field.type === "checkbox") {
+      values[field.name] = data.get(field.name) === "on";
+      continue;
+    }
+
+    const raw = data.get(field.name);
+    const text = typeof raw === "string" ? raw.trim() : "";
+
+    if (field.type === "number") {
+      values[field.name] = text === "" ? null : Number(text);
+    } else {
+      values[field.name] = text;
+    }
+  }
+
+  return values;
+}
+
+export function PortalCrud<T extends { id: string }>({
   title,
   description,
   columns,
+  rows,
+  emptyTitle,
+  emptyDescription,
   fields,
-  initialRows,
-  emptyLabel = "No records yet.",
+  onSave,
+  onDelete,
+  deleteDescription = "This action cannot be undone.",
 }: PortalCrudProps<T>) {
-  const [rows, setRows] = useState<T[]>(initialRows);
   const [editing, setEditing] = useState<T | null>(null);
   const [open, setOpen] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const singular = title.replace(/s$/, "");
+  const editable = Boolean(fields && onSave);
 
   const closeDialog = () => {
     setOpen(false);
     setEditing(null);
+    setErrors({});
   };
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const payload: Record<string, unknown> = {};
+    if (!fields || !onSave) return;
 
-    for (const field of fields) {
-      if (field.type === "checkbox") {
-        payload[field.name] = formData.get(field.name) === "on";
-      } else if (field.type === "number") {
-        const raw = formData.get(field.name);
-        payload[field.name] =
-          raw === "" || raw == null ? null : Number(raw);
+    const values = readForm(event.currentTarget, fields);
+    setErrors({});
+
+    startTransition(async () => {
+      const result = await onSave(values, editing?.id);
+      if (result.ok) {
+        toast.success(editing ? `${singular} updated` : `${singular} created`);
+        closeDialog();
       } else {
-        const raw = formData.get(field.name);
-        payload[field.name] = raw === "" ? null : raw;
+        setErrors(result.fieldErrors ?? {});
+        toast.error(result.error);
       }
-    }
-
-    if (editing) {
-      setRows((current) =>
-        current.map((row) =>
-          row.id === editing.id ? { ...row, ...payload } : row,
-        ),
-      );
-      toast.success("Updated");
-    } else {
-      setRows((current) => [
-        { id: crypto.randomUUID(), ...payload } as T,
-        ...current,
-      ]);
-      toast.success("Created");
-    }
-
-    closeDialog();
+    });
   };
 
   const remove = (id: string) => {
-    setRows((current) => current.filter((row) => row.id !== id));
-    toast.success("Deleted");
+    if (!onDelete) return;
+    setPendingId(id);
+    startTransition(async () => {
+      const result = await onDelete(id);
+      setPendingId(null);
+      if (result.ok) {
+        toast.success(`${singular} deleted`);
+      } else {
+        toast.error(result.error);
+      }
+    });
   };
 
   return (
@@ -139,114 +180,135 @@ export function PortalCrud<T extends { id: string } & Record<string, unknown>>({
         title={title}
         description={description}
         actions={
-          <Dialog
-            open={open}
-            onOpenChange={(next) => {
-              setOpen(next);
-              if (!next) setEditing(null);
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button
-                type="button"
-                onClick={() => setEditing(null)}
-                className="bg-[var(--admin-primary)] hover:bg-[var(--admin-primary)]/90"
-              >
-                <Plus className="size-4" />
-                Add
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>
-                  {editing
-                    ? `Edit ${title.replace(/s$/, "")}`
-                    : `New ${title.replace(/s$/, "")}`}
-                </DialogTitle>
-              </DialogHeader>
-              <form
-                onSubmit={submit}
-                className="max-h-[60vh] space-y-3 overflow-y-auto pr-1"
-              >
-                {fields.map((field) => (
-                  <div key={field.name} className="space-y-1.5">
-                    <Label htmlFor={field.name}>{field.label}</Label>
-                    {field.type === "textarea" ? (
-                      <Textarea
-                        id={field.name}
-                        name={field.name}
-                        required={field.required}
-                        defaultValue={String(
-                          editing
-                            ? getFieldValue(editing, field.name)
-                            : (field.defaultValue ?? ""),
-                        )}
-                        rows={4}
-                      />
-                    ) : field.type === "select" ? (
-                      <NativeSelect
-                        id={field.name}
-                        name={field.name}
-                        required={field.required}
-                        defaultValue={String(
-                          editing
-                            ? getFieldValue(editing, field.name)
-                            : (field.options?.[0]?.value ??
-                                field.defaultValue ??
-                                ""),
-                        )}
-                      >
-                        {field.options?.map((option) => (
-                          <NativeSelectOption
-                            key={option.value}
-                            value={option.value}
+          editable ? (
+            <Dialog
+              open={open}
+              onOpenChange={(next) => {
+                if (next) {
+                  setOpen(true);
+                } else {
+                  closeDialog();
+                }
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setEditing(null);
+                    setErrors({});
+                  }}
+                  className="bg-[var(--admin-primary)] hover:bg-[var(--admin-primary)]/90"
+                >
+                  <Plus className="size-4" />
+                  Add
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editing ? `Edit ${singular}` : `New ${singular}`}
+                  </DialogTitle>
+                </DialogHeader>
+                <form
+                  onSubmit={submit}
+                  className="max-h-[60vh] space-y-3 overflow-y-auto pr-1"
+                >
+                  {errors._form && (
+                    <p className="text-sm text-destructive">
+                      {errors._form.join(", ")}
+                    </p>
+                  )}
+                  {fields?.map((field) => {
+                    const fieldError = errors[field.name]?.[0];
+                    const initial = editing
+                      ? fieldValue(editing, field.name)
+                      : (field.defaultValue ?? "");
+
+                    return (
+                      <div key={field.name} className="space-y-1.5">
+                        <Label htmlFor={field.name}>{field.label}</Label>
+                        {field.type === "textarea" ? (
+                          <Textarea
+                            id={field.name}
+                            name={field.name}
+                            required={field.required}
+                            defaultValue={String(initial)}
+                            aria-invalid={Boolean(fieldError)}
+                            rows={4}
+                          />
+                        ) : field.type === "select" ? (
+                          <NativeSelect
+                            id={field.name}
+                            name={field.name}
+                            required={field.required}
+                            defaultValue={String(
+                              editing
+                                ? initial
+                                : (field.options?.[0]?.value ??
+                                  field.defaultValue ??
+                                  ""),
+                            )}
+                            aria-invalid={Boolean(fieldError)}
                           >
-                            {option.label}
-                          </NativeSelectOption>
-                        ))}
-                      </NativeSelect>
-                    ) : field.type === "checkbox" ? (
-                      <input
-                        id={field.name}
-                        type="checkbox"
-                        name={field.name}
-                        defaultChecked={Boolean(
-                          editing
-                            ? getFieldValue(editing, field.name)
-                            : field.defaultValue,
+                            {field.options?.map((option) => (
+                              <NativeSelectOption
+                                key={option.value}
+                                value={option.value}
+                              >
+                                {option.label}
+                              </NativeSelectOption>
+                            ))}
+                          </NativeSelect>
+                        ) : field.type === "checkbox" ? (
+                          <input
+                            id={field.name}
+                            type="checkbox"
+                            name={field.name}
+                            defaultChecked={Boolean(initial)}
+                            className="size-4 rounded border-border"
+                          />
+                        ) : (
+                          <Input
+                            id={field.name}
+                            type={field.type ?? "text"}
+                            name={field.name}
+                            required={field.required}
+                            defaultValue={String(initial)}
+                            aria-invalid={Boolean(fieldError)}
+                          />
                         )}
-                        className="size-4 rounded border-border"
-                      />
-                    ) : (
-                      <Input
-                        id={field.name}
-                        type={field.type ?? "text"}
-                        name={field.name}
-                        required={field.required}
-                        defaultValue={String(
-                          editing
-                            ? getFieldValue(editing, field.name)
-                            : (field.defaultValue ?? ""),
+                        {fieldError && (
+                          <p className="text-xs text-destructive">
+                            {fieldError}
+                          </p>
                         )}
-                      />
-                    )}
-                  </div>
-                ))}
-                <DialogFooter>
-                  <Button type="submit">Save</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                      </div>
+                    );
+                  })}
+                  <DialogFooter>
+                    <Button type="submit" disabled={isPending}>
+                      {isPending ? "Saving…" : "Save"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          ) : undefined
         }
       />
 
       <Card>
         <CardContent className="p-0">
           {rows.length === 0 ? (
-            <p className="p-10 text-center text-sm text-muted-foreground">
-              {emptyLabel}
-            </p>
+            <Empty className="py-12">
+              <EmptyHeader>
+                <EmptyTitle>{emptyTitle ?? `No ${title.toLowerCase()} yet`}</EmptyTitle>
+                {emptyDescription && (
+                  <EmptyDescription>{emptyDescription}</EmptyDescription>
+                )}
+              </EmptyHeader>
+            </Empty>
           ) : (
             <Table>
               <TableHeader>
@@ -254,75 +316,94 @@ export function PortalCrud<T extends { id: string } & Record<string, unknown>>({
                   {columns.map((column) => (
                     <TableHead key={column.label}>{column.label}</TableHead>
                   ))}
-                  <TableHead className="text-right">Actions</TableHead>
+                  {(editable || onDelete) && (
+                    <TableHead className="text-right">Actions</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {columns.map((column) => (
-                      <TableCell key={column.label}>
-                        {column.render
-                          ? column.render(row)
-                          : String(row[column.key as keyof T] ?? "—")}
-                      </TableCell>
-                    ))}
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label="Edit"
-                          onClick={() => {
-                            setEditing(row);
-                            setOpen(true);
-                          }}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label="Delete"
-                              className="text-destructive"
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Delete this record?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => remove(row.id)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {rows.map((row) => {
+                  const busy = isPending && pendingId === row.id;
+
+                  return (
+                    <TableRow key={row.id}>
+                      {columns.map((column) => (
+                        <TableCell key={column.label}>
+                          {column.render
+                            ? column.render(row)
+                            : String(
+                                (row as Record<string, unknown>)[
+                                  column.key as string
+                                ] ?? "—",
+                              )}
+                        </TableCell>
+                      ))}
+                      {(editable || onDelete) && (
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            {editable && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                aria-label={`Edit ${singular}`}
+                                disabled={busy}
+                                onClick={() => {
+                                  setEditing(row);
+                                  setErrors({});
+                                  setOpen(true);
+                                }}
+                              >
+                                <Pencil className="size-4" />
+                              </Button>
+                            )}
+                            {onDelete && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    aria-label={`Delete ${singular}`}
+                                    className="text-destructive"
+                                    disabled={busy}
+                                  >
+                                    <Trash2 className="size-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Delete this {singular.toLowerCase()}?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      {deleteDescription}
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => remove(row.id)}
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
         </CardContent>
       </Card>
-      <p className="mt-4 text-xs text-muted-foreground">
-        MVP view uses local sample data. Connect Prisma when the database is
-        ready.
-      </p>
     </div>
   );
 }

@@ -109,7 +109,73 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:push` | Push schema to database |
 | `npm run db:migrate` | Run Prisma migrations |
+| `npm run db:seed` | Seed services and grief camp price tiers |
 | `npm run db:studio` | Open Prisma Studio |
+| `npm test` | Run the test suite once |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:coverage` | Run tests with coverage |
+
+## Tests
+
+[Vitest](https://vitest.dev) with two projects — `node` for server and library
+code, `jsdom` for components. Tests live in `src/**/__tests__/`.
+
+Coverage is concentrated where a mistake costs money: phone normalisation,
+deposit and balance resolution, Paystack's subunit conversion, webhook signature
+verification, Daraja's Buy Goods shortcode/till distinction, the callback IP
+allowlist, and settlement idempotency.
+
+`server-only` throws outside a Next server context, so `vitest.config.mts`
+aliases it to a stub. Tests are excluded from `tsconfig.json` and typechecked
+separately via `tsconfig.test.json`.
+
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, tests, and the production
+build, plus a separate job that applies migrations against a real Postgres,
+seeds it, and fails if the schema has drifted from the migration history.
+
+## Payments
+
+Two providers sit behind one interface (`PaymentProviderAdapter` in `src/lib/payments/types.ts`):
+
+| Method | Provider | Notes |
+| --- | --- | --- |
+| M-Pesa | Safaricom Daraja | STK Push. Buy Goods (Till) by default |
+| Card | Paystack | KES, card channel only |
+| Bank transfer | — | Manual, staff-verified from the portal |
+
+### Money is resolved server-side
+
+Booking and grief camp amounts are **never** taken from the client. `src/lib/payments/pricing.ts` reads `Service.priceKes` and the `CampSession` / `CampPriceTier` tables, so a tampered request cannot change what is charged. Donations are the one exception — the donor chooses the amount, which is then validated and bounded.
+
+Run `npm run db:seed` after migrating, or bookings and camp applications will have no prices to resolve.
+
+### Endpoints
+
+| Route | Purpose |
+| --- | --- |
+| `POST /api/payments/initiate` | Start a charge; returns a reference and, for cards, a redirect URL |
+| `GET /api/payments/status/[reference]` | Poll status; re-queries the provider when still pending |
+| `GET /api/payments/return` | Where Paystack sends the customer back |
+| `POST /api/payments/webhooks/mpesa` | Daraja STK callback |
+| `POST /api/payments/webhooks/mpesa/c2b` | Daraja C2B confirmation (till paid directly) |
+| `POST /api/payments/webhooks/mpesa/validation` | Daraja C2B validation |
+| `POST /api/payments/webhooks/paystack` | Paystack webhook (HMAC-SHA512 verified) |
+
+### Idempotency
+
+Every inbound notification is written to `payment_events` with a unique `dedupeKey`, so a replayed callback hits the unique constraint and is ignored rather than double-crediting. Settlement itself runs in a transaction that refuses to re-apply an already-terminal payment. Clients pass an `idempotencyKey` on initiate so a double-click cannot create two charges.
+
+Daraja callbacks carry **no signature**, so production should set `MPESA_ENFORCE_IP_ALLOWLIST="true"` to restrict them to Safaricom's ranges. Paystack webhooks are verified by HMAC over the raw body.
+
+### Local development
+
+Daraja needs a publicly reachable HTTPS callback. Expose your dev server with a tunnel and point `MPESA_CALLBACK_URL` at it:
+
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+
+See `.env.example` for the full list of payment variables.
 
 ## Authentication
 
@@ -139,7 +205,28 @@ Forms use **react-hook-form** + **Zod** for client-side validation (inline field
 | `receptionist` | Bookings, payments, programs, inquiries |
 | `admin` | Full portal (content, people, settings) |
 
-New users default to `customer`. Unauthenticated access to `/dashboard` redirects to `/login`.
+New users default to `customer`. Unauthenticated access to `/dashboard` redirects to `/login`, and `/admin` is gated on staff in its layout.
+
+## Server layer
+
+```
+src/server/
+├── actions/      # "use server" mutations, all returning ActionResult<T>
+├── queries/      # read helpers for server components (server-only)
+├── validation/   # Zod schemas
+└── authz.ts      # requireSession / requireStaff / requireAdmin
+```
+
+Actions never throw at the client. They return
+`{ok: true, data} | {ok: false, error, fieldErrors?}`, and internal errors are
+logged server-side rather than returned, so Prisma internals never reach the
+browser.
+
+Mutations are guarded: staff operations use `requireStaff`, catalog and role
+changes require `requireAdmin`. A few guards exist because the alternative
+corrupts data — a settled payment cannot be relinked to a different booking, a
+service or therapist with bookings cannot be deleted, and an admin cannot remove
+their own administrator access.
 
 ## Key routes
 

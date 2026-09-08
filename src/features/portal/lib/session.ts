@@ -1,9 +1,10 @@
 import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
+import { syncBootstrapStaffRole } from "@/lib/staff-bootstrap";
 
 import type { AppRole } from "./roles";
-import { APP_ROLES, parseAppRole } from "./roles";
+import { APP_ROLES } from "./roles";
 
 export type PortalSession = {
   userId: string;
@@ -21,11 +22,17 @@ export async function getPortalSession(): Promise<PortalSession | null> {
     return null;
   }
 
+  const role = await syncBootstrapStaffRole({
+    id: session.user.id,
+    email: session.user.email,
+    role: session.user.role,
+  });
+
   return {
     userId: session.user.id,
     email: session.user.email,
     name: session.user.name,
-    role: parseAppRole(session.user.role),
+    role,
   };
 }
 
