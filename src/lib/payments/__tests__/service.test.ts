@@ -148,6 +148,39 @@ describe("settlePayment", () => {
     expect(booking.update).not.toHaveBeenCalled();
   });
 
+  it("lets a late PAID callback correct a payment a status poll wrongly failed", async () => {
+    payment.findUnique.mockResolvedValueOnce({ ...PENDING_PAYMENT, status: "FAILED" });
+    payment.update.mockResolvedValueOnce({ ...PENDING_PAYMENT, status: "PAID" });
+    payment.findUnique.mockResolvedValueOnce({
+      ...PENDING_PAYMENT,
+      status: "PAID",
+      settledAmountKes: 2500,
+    });
+    booking.findUnique.mockResolvedValueOnce({
+      id: "bk_1",
+      amountKes: 5000,
+      status: "REQUESTED",
+    });
+    payment.findMany.mockResolvedValueOnce([{ settledAmountKes: 2500, amountKes: 2500 }]);
+
+    const result = await settlePayment("pay_1", EVENT.result);
+
+    expect(result.applied).toBe(true);
+    expect(booking.update).toHaveBeenCalled();
+  });
+
+  it("does not let a late failure overturn a settled payment", async () => {
+    payment.findUnique.mockResolvedValueOnce({ ...PENDING_PAYMENT, status: "PAID" });
+
+    const result = await settlePayment("pay_1", {
+      status: "FAILED",
+      failureReason: "The transaction is still under processing",
+    });
+
+    expect(result).toMatchObject({ applied: false, reason: "already_final" });
+    expect(payment.update).not.toHaveBeenCalled();
+  });
+
   it("refuses to settle a refunded payment", async () => {
     payment.findUnique.mockResolvedValueOnce({
       ...PENDING_PAYMENT,

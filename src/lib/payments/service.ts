@@ -143,7 +143,13 @@ export async function settlePayment(paymentId: string, result: VerifyResult) {
     const payment = await tx.payment.findUnique({ where: { id: paymentId } });
     if (!payment) return { applied: false as const, reason: "not_found" as const };
 
-    if (isTerminal(payment.status)) {
+    // A provider confirming money never loses to an earlier non-money status.
+    // A status poll can race ahead of the callback and fail a payment the
+    // customer went on to authorise, so PAID is allowed to correct it.
+    const settledAlready = payment.status === "PAID" || payment.status === "REFUNDED";
+    const correctingToPaid = result.status === "PAID" && !settledAlready;
+
+    if (isTerminal(payment.status) && !correctingToPaid) {
       return { applied: false as const, reason: "already_final" as const, payment };
     }
 

@@ -25,6 +25,7 @@ const TOKEN_REFRESH_SKEW_MS = 60_000;
 const CANCELLED_RESULT_CODES = new Set([1032]);
 const TIMEOUT_RESULT_CODES = new Set([1037, 1019]);
 const PENDING_ERROR_CODE = "500.001.1001";
+const PENDING_RESULT_DESC = /still under processing|being processed|request is pending/i;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -271,6 +272,13 @@ async function verify(input: {
   const resultDesc = str(pick(body, "ResultDesc"));
 
   if (resultCode === null) {
+    return { status: "PROCESSING", providerRef: checkoutRequestId, raw: body };
+  }
+
+  // Daraja reuses 1032 for an unresolved prompt as well as a real cancellation,
+  // and only the description separates them. Treating pending as terminal would
+  // fail a payment the customer is still authorising.
+  if (resultDesc && PENDING_RESULT_DESC.test(resultDesc)) {
     return { status: "PROCESSING", providerRef: checkoutRequestId, raw: body };
   }
 
