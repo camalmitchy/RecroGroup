@@ -292,3 +292,10 @@ export async function expireStalePayments(now = new Date()) {
   });
   return count;
 }
+
+export async function failPayment(paymentId: string, reason: string) {
+  return prisma.payment.updateMany({
+    where: { id: paymentId, status: { in: ["PENDING", "PROCESSING"] } },
+    data: { status: "FAILED", failureReason: reason },
+  });
+}

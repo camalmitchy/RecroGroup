@@ -115,7 +115,7 @@ export async function markPaymentPaid(
       const booking = await tx.booking.update({
         where: { id: payment.bookingId },
         data: { amountPaidKes: { increment: payment.amountKes } },
-        select: { id: true, amountKes: true, amountPaidKes: true },
+        select: { id: true, amountKes: true, amountPaidKes: true, status: true },
       });
 
       await tx.booking.update({
@@ -125,6 +125,7 @@ export async function markPaymentPaid(
             booking.amountPaidKes >= (booking.amountKes ?? 0)
               ? "PAID"
               : "PROCESSING",
+          status: booking.status === "REQUESTED" ? "CONFIRMED" : booking.status,
         },
       });
     });

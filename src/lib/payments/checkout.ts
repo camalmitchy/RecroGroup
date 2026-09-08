@@ -7,8 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { absoluteUrl, darajaConfig, paymentsConfig } from "./config";
 import { getProvider, providerForMethod } from "./index";
 import { resolveBookingChargeAmount, resolveCampPrice } from "./pricing";
-import { createPendingPayment, markPaymentProcessing } from "./service";
-import type { PaymentTarget } from "./types";
+import { createPendingPayment, failPayment, markPaymentProcessing } from "./service";
+import type { ChargeResult, PaymentTarget } from "./types";
 import { PaymentError } from "./types";
 import { assertPositiveAmount, normalizePhone } from "./utils";
 
@@ -137,6 +137,8 @@ export async function startCheckout(
     throw new PaymentError("missing_email", "An email is required for card payments");
   }
 
+  const adapter = getProvider(providerId);
+
   const payment = await createPendingPayment({
     target: input.target,
     userId: input.userId ?? null,
@@ -157,28 +159,35 @@ export async function startCheckout(
     };
   }
 
-  const adapter = getProvider(providerId);
-
-  const result = await adapter.charge({
-    reference: payment.reference,
-    amountKes: payment.amountKes,
-    currency: payment.currency,
-    purpose: payment.purpose,
-    description: charge.description,
-    customer: charge.customer,
-    callbackUrl:
-      input.method === "MPESA"
-        ? (darajaConfig.callbackUrl ??
-          absoluteUrl("/api/payments/webhooks/mpesa"))
-        : absoluteUrl(
-            `/api/payments/return?reference=${encodeURIComponent(payment.reference)}`,
-          ),
-    metadata: {
-      paymentId: payment.id,
+  let result: ChargeResult;
+  try {
+    result = await adapter.charge({
+      reference: payment.reference,
+      amountKes: payment.amountKes,
+      currency: payment.currency,
       purpose: payment.purpose,
-      target: input.target.kind,
-    },
-  });
+      description: charge.description,
+      customer: charge.customer,
+      callbackUrl:
+        input.method === "MPESA"
+          ? (darajaConfig.callbackUrl ??
+            absoluteUrl("/api/payments/webhooks/mpesa"))
+          : absoluteUrl(
+              `/api/payments/return?reference=${encodeURIComponent(payment.reference)}`,
+            ),
+      metadata: {
+        paymentId: payment.id,
+        purpose: payment.purpose,
+        target: input.target.kind,
+      },
+    });
+  } catch (error) {
+    await failPayment(
+      payment.id,
+      error instanceof Error ? error.message : "Could not reach the payment provider",
+    );
+    throw error;
+  }
 
   const expiresAt = new Date(
     Date.now() + paymentsConfig.stkTimeoutSeconds * 1000,
