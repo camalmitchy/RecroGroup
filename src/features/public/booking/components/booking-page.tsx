@@ -602,6 +602,7 @@ function ServiceStep({
                     return (
                         <button
                             key={service.key}
+                            type="button"
                             onClick={() => onSelectService(service)}
                             className={`text-left rounded-2xl border-2 p-6 transition bg-background shadow-sm ${isSelected
                                 ? "border-primary"
@@ -640,6 +641,7 @@ function ServiceStep({
                     <ArrowLeft size={16} /> Back to Services
                 </Link>
                 <button
+                    type="button"
                     onClick={onNext}
                     disabled={!selectedService}
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
