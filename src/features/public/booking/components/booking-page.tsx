@@ -413,6 +413,7 @@ export function BookingPage({
         const result = await recordBankTransfer({
             bookingId: booking.bookingId,
             bankReference: bankRef.trim(),
+            proof: proofFile,
         });
         setBusy(false);
 

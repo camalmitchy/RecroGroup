@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveBookingChargeAmount } from "@/lib/payments/pricing";
 import { createPendingPayment } from "@/lib/payments/service";
 import { normalizePhone } from "@/lib/payments/utils";
+import { uploadProof } from "@/lib/uploads/proof";
 import { AuthorizationError, requireStaff } from "@/server/authz";
 import type { ActionResult } from "@/server/result";
 import { fail, failure, ok } from "@/server/result";
@@ -184,9 +185,25 @@ export type BankTransferResult = {
   amountKes: number;
 };
 
+async function findDuplicateSlip(bankReference: string, excludePaymentId?: string) {
+  if (!bankReference.trim()) return null;
+
+  const existing = await prisma.payment.findFirst({
+    where: {
+      method: "BANK",
+      bankReference: { equals: bankReference.trim(), mode: "insensitive" },
+      ...(excludePaymentId ? { id: { not: excludePaymentId } } : {}),
+    },
+    select: { reference: true },
+  });
+
+  return existing?.reference ?? null;
+}
+
 export async function recordBankTransfer(input: {
   bookingId: string;
   bankReference?: string;
+  proof?: File | null;
 }): Promise<ActionResult<BankTransferResult>> {
   try {
     const booking = await prisma.booking.findUnique({
@@ -198,6 +215,16 @@ export async function recordBankTransfer(input: {
     const charge = resolveBookingChargeAmount(booking);
     if (charge.amountKes <= 0) return fail("This booking is already paid");
 
+    const bankReference = input.bankReference?.trim() ?? "";
+    const duplicateOf = await findDuplicateSlip(bankReference);
+
+    let proofUrl: string | null = null;
+    if (input.proof && input.proof.size > 0) {
+      const uploaded = await uploadProof(input.proof, booking.reference);
+      if (!uploaded.ok) return fail(uploaded.error, { proof: [uploaded.error] });
+      proofUrl = uploaded.url;
+    }
+
     const payment = await createPendingPayment({
       target: { kind: "booking", bookingId: booking.id },
       userId: booking.userId,
@@ -205,8 +232,10 @@ export async function recordBankTransfer(input: {
       provider: "MANUAL",
       purpose: charge.purpose,
       amountKes: charge.amountKes,
-      notes: input.bankReference
-        ? `Bank reference supplied by client: ${input.bankReference}`
+      bankReference: bankReference || null,
+      proofUrl,
+      notes: duplicateOf
+        ? `Slip reference also submitted on payment ${duplicateOf}`
         : null,
     });
 

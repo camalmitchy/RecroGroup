@@ -354,6 +354,7 @@ model Payment {
   mpesaReceipt    String? @unique
   phone           String?
   proofUrl        String?
+  bankReference   String?
 
   idempotencyKey String? @unique
 
@@ -371,6 +372,7 @@ model Payment {
   @@index([userId])
   @@index([status])
   @@index([provider, providerRef])
+  @@index([bankReference])
   @@index([bookingId])
   @@index([createdAt])
   @@map("payments")

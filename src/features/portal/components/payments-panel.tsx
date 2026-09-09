@@ -30,6 +30,7 @@ import {
 } from "@/features/portal/components/status-badge";
 import type { PaymentActionResult } from "@/server/actions/payments";
 import { markPaymentFailed, markPaymentPaid } from "@/server/actions/payments";
+import type { MatchReport } from "@/lib/payments/reconciliation-types";
 import type { PaymentPanelStats } from "@/server/queries/payments";
 import type { ActionResult } from "@/server/result";
 
@@ -48,6 +49,9 @@ export type PaymentRow = {
   failureReason: string | null;
   phone: string | null;
   bookingReference: string | null;
+  bankReference: string | null;
+  proofUrl: string | null;
+  match: MatchReport | null;
   createdAtLabel: string;
   paidAtLabel: string | null;
 };
@@ -245,7 +249,35 @@ export function PaymentsPanel({ payments, stats }: PaymentsPanelProps) {
                         )}
                       </TableCell>
                       <TableCell className="font-mono text-xs">
-                        {row.mpesaReceipt ?? row.providerRef ?? "—"}
+                        {row.mpesaReceipt ?? row.providerRef ?? row.bankReference ?? "—"}
+                        {row.proofUrl && (
+                          <a
+                            href={row.proofUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 block font-sans text-primary underline"
+                          >
+                            View slip
+                          </a>
+                        )}
+                        {row.match && row.match.severity !== "ok" && (
+                          <ul className="mt-1 space-y-0.5 font-sans">
+                            {row.match.checks
+                              .filter((c) => c.severity !== "ok")
+                              .map((c) => (
+                                <li
+                                  key={c.label}
+                                  className={
+                                    c.severity === "mismatch"
+                                      ? "text-destructive"
+                                      : "text-amber-600"
+                                  }
+                                >
+                                  {c.label}: {c.detail}
+                                </li>
+                              ))}
+                          </ul>
+                        )}
                       </TableCell>
                       <TableCell className="font-mono text-xs">
                         {row.bookingReference ?? "—"}
