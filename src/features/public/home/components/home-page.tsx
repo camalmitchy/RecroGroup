@@ -39,6 +39,15 @@ import { HomeVideoCard } from "./home-video-card";
 
 const trustIcons = [ShieldCheck, HeartHandshake, Flame] as const;
 
+function tomorrowISODate() {
+  const date = new Date();
+  date.setDate(date.getDate() + 1);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function HomeBookingForm() {
   const router = useRouter();
 
@@ -48,7 +57,10 @@ function HomeBookingForm() {
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
         const service = String(fd.get("service") || "individual");
-        router.push(`/join-us?service=${encodeURIComponent(service)}`);
+        const date = String(fd.get("date") || "");
+        const params = new URLSearchParams({ service });
+        if (date) params.set("date", date);
+        router.push(`/booking?${params.toString()}`);
       }}
       className="flex flex-col gap-5"
     >
@@ -62,8 +74,10 @@ function HomeBookingForm() {
           className="w-full cursor-pointer appearance-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
         >
           <option value="individual">Individual Therapy</option>
-          <option value="couples">Couples &amp; Families</option>
-          <option value="children">Children &amp; Grief</option>
+          <option value="couples">Couples Therapy</option>
+          <option value="family">Family Therapy</option>
+          <option value="group">Group Therapy</option>
+          <option value="children">Grief Camp</option>
           <option value="corporate">Corporate speaking</option>
         </select>
       </label>
@@ -75,6 +89,7 @@ function HomeBookingForm() {
           <input
             type="date"
             name="date"
+            min={tomorrowISODate()}
             className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
           />
         </label>

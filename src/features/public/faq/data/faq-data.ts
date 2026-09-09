@@ -18,7 +18,7 @@ export const faqs: FAQCategory[] = [
             },
             {
                 q: "How frequent are the sessions?",
-                a: "Individual therapy sessions run for 50 minutes and are typically held once a week for the best results. Group sessions meet weekly as well but are longer, usually between 1 hour 30 minutes and 2 hours.",
+                a: "Individual, couples, and family therapy sessions run for 50 minutes and are typically held once a week for the best results. Group sessions run for 2 hours. The number of group sessions varies by topic, with a group size of 8 to 10.",
             },
             {
                 q: "How long will therapy take?",
@@ -75,6 +75,10 @@ export const faqs: FAQCategory[] = [
     {
         category: "Fees & Payment",
         questions: [
+            {
+                q: "How much do sessions cost?",
+                a: "Individual, couples, and family therapy are KES 7,000 per session, with a KES 3,500 commitment fee. Group sessions are KES 12,000 for two hours (group size 8–10; number of sessions varies by topic). Individual supervision is KES 5,000 per person; group supervision is KES 4,000 per person (group size 2–6). Consortium membership is KES 2,000 per month per person.",
+            },
             {
                 q: "Can I use my insurance?",
                 a: "Yes, by having your sessions reimbursed. You would need to pay for the session then bring us your Insurance Claim form for us to complete. It is encouraged to speak to your Insurer to make sure that they reimburse for mental health services.",

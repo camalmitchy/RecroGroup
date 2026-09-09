@@ -29,8 +29,8 @@ export function ServicesPage() {
                 <em className="italic text-white/90">journey</em>.
               </h1>
               <p className="mt-6 max-w-2xl mx-auto text-base leading-relaxed text-white/95 md:text-lg">
-                Six core services — each one staffed by clinicians trained for
-                that specific kind of work.
+                Therapy, programmes, and professional support — each one staffed
+                by clinicians trained for that specific kind of work.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link

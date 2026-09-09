@@ -1,4 +1,4 @@
-"use server";
+import "server-only";
 
 import { consoleMailDriver } from "./drivers/console";
 import { resendMailDriver } from "./drivers/resend";

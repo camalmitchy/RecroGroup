@@ -105,7 +105,7 @@ export const consortiumService: ServiceDetail = {
       },
       {
         q: "What are the membership fees?",
-        a: "2000/- per month ($20). Payments can be made in advance or on the day of the meeting via Cash, Cheque, or M-Pesa (Buy Goods and Services – Till Number: 747736). Subject to change but members are notified in due course.",
+        a: "KES 2,000 per month per person. Payments can be made in advance or on the day of the meeting via Cash, Cheque, or M-Pesa (Buy Goods and Services – Till Number: 747736). Subject to change but members are notified in due course.",
       },
       {
         q: "How do I apply?",
@@ -119,7 +119,7 @@ export const consortiumService: ServiceDetail = {
       role: "Licensed therapist, Nairobi",
     },
     duration: "Ongoing monthly meetings",
-    pricing: "KES 2,000/month ($20)",
+    pricing: "KES 2,000 per month per person",
     pricingNote: "Payments can be made in advance or on meeting day. Subject to change with notification.",
     mode: "In-person monthly meetings",
     availability: "Applications accepted year-round",

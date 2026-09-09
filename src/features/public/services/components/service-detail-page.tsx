@@ -23,6 +23,20 @@ type ServiceDetailPageProps = {
   service: ServiceDetail;
 };
 
+function servicePrimaryHref(key: string) {
+  if (key === "consortium") return "/services/consortium/apply";
+  if (key === "corporate") return "/services/corporate/inquiry";
+  if (key === "children") return "/grief-camp/apply";
+  if (key === "supervision") return "/contact";
+  return `/booking?service=${key}`;
+}
+
+function serviceSidebarCtaLabel(key: string) {
+  if (key === "consortium" || key === "corporate") return "Apply Now";
+  if (key === "supervision") return "Contact us";
+  return "Book now";
+}
+
 export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
 
   return (
@@ -50,15 +64,7 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 <Link
-                  href={
-                    service.key === "consortium"
-                      ? `/services/consortium/apply`
-                      : service.key === "corporate"
-                        ? `/services/corporate/inquiry`
-                        : service.key === "children"
-                          ? `/grief-camp/apply`
-                          : `/booking?service=${service.key}`
-                  }
+                  href={servicePrimaryHref(service.key)}
                   className="btn-primary rounded-full px-7"
                 >
                   {service.key === "children" ? "Register for camp" : service.ctaLabel}
@@ -333,16 +339,10 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
               </div>
 
               <Link
-                href={
-                  service.key === "consortium"
-                    ? `/services/consortium/apply`
-                    : service.key === "corporate"
-                      ? `/services/corporate/inquiry`
-                      : `/booking?service=${service.key}`
-                }
+                href={servicePrimaryHref(service.key)}
                 className="btn-primary mt-8 w-full rounded-full"
               >
-                {service.key === "consortium" || service.key === "corporate" ? "Apply Now" : "Book now"}{" "}
+                {serviceSidebarCtaLabel(service.key)}{" "}
                 <ArrowRight className="ml-2 size-4" />
               </Link>
             </div>
@@ -377,6 +377,8 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
                 group: UsersIcon,
                 children: Flame,
                 corporate: Settings,
+                consortium: UsersIcon,
+                supervision: UsersIcon,
               };
 
               const IconComponent = iconMap[relatedService.slug] || Flame;

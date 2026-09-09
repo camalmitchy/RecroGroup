@@ -1,5 +1,3 @@
-"use server";
-
 import { randomUUID } from "node:crypto";
 
 import { formatRecipient, formatRecipientList } from "../outbound";

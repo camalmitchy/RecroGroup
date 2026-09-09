@@ -211,7 +211,7 @@ export function AboutPage() {
             </Link>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {serviceList.slice(0, 6).map((service) => (
+            {serviceList.map((service) => (
               <Link
                 key={service.slug}
                 href={`/services/${service.slug}`}
