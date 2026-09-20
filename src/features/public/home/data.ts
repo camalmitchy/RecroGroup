@@ -41,6 +41,12 @@ export const homeServices = [
     body: "A collaborative network of mental health professionals advancing behavioral health services across Kenya.",
     serviceKey: "consortium",
   },
+  {
+    icon: "/assets/icons/supervision.svg",
+    title: "Supervision",
+    body: "We provide supervision on both levels: Individual and Group. Whether you are a novice therapist or a seasoned one and need supervision, kindly contact us to schedule your sessions.",
+    serviceKey: "supervision",
+  },
 ] as const;
 
 export const homeStats = [

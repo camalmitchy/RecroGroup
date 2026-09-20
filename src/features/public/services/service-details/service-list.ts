@@ -71,5 +71,15 @@ export const serviceList: ServiceListItem[] = [
     duration: "Ongoing",
     price: "",
   },
+  {
+    id: "08",
+    slug: "supervision",
+    icon: "/assets/icons/supervision.svg",
+    title: "Supervision",
+    description:
+      "We provide supervision on both levels: Individual and Group. Whether you are a novice therapist or a seasoned one and need supervision, kindly contact us to schedule your sessions.",
+    duration: "By arrangement",
+    price: "",
+  },
 ];
 

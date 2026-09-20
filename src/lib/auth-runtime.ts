@@ -1,4 +1,4 @@
-function hasDatabaseUrl() {
+export function hasDatabaseUrl() {
   return Boolean(
     process.env.DATABASE_URL?.trim() ||
       process.env.POSTGRES_PRISMA_URL?.trim() ||

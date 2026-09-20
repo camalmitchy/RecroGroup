@@ -1,11 +1,13 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
+import { CLINICIANS, SERVICES } from "@/features/public/booking/components/booking-data";
 import { BookingPage } from "@/features/public/booking/components/booking-page";
 import type {
   ClinicianOption,
   ServiceOption,
 } from "@/features/public/booking/components/booking-page";
+import { hasDatabaseUrl } from "@/lib/auth-runtime";
 import { paymentsConfig } from "@/lib/payments/config";
 import { calculateDeposit } from "@/lib/payments/utils";
 import { prisma } from "@/lib/prisma";
@@ -34,6 +36,7 @@ const PROGRAM_REDIRECTS: Record<string, string> = {
   children: "/grief-camp/apply",
   corporate: "/services/corporate/inquiry",
   consortium: "/services/consortium/apply",
+  supervision: "/contact",
 };
 
 function formatDuration(minutes: number | null): string {
@@ -48,55 +51,101 @@ function formatDuration(minutes: number | null): string {
   return `${label} hr${hours > 1 ? "s" : ""}`;
 }
 
-async function loadServices(): Promise<ServiceOption[]> {
-  const slugs = [...BOOKABLE_SERVICE_SLUGS];
-  const services = await prisma.service.findMany({
-    where: {
-      isPublished: true,
-      priceKes: { gt: 0 },
-      OR: [{ category: "Therapy" }, { slug: { in: slugs } }],
-    },
-    select: { slug: true, title: true, priceKes: true, durationMin: true },
-    orderBy: { priceKes: "asc" },
-  });
+function fallbackServices(): ServiceOption[] {
+  const slugs = new Set<string>(BOOKABLE_SERVICE_SLUGS);
+  return SERVICES.filter((service) => slugs.has(service.key)).map((service) => ({
+    key: service.key,
+    title: service.title,
+    duration: service.duration,
+    icon: service.icon,
+    price: service.price,
+    depositKes: calculateDeposit(
+      service.price,
+      paymentsConfig.bookingDepositPercent,
+    ),
+  }));
+}
 
-  return services
-    .filter((service) =>
-      slugs.includes(service.slug as (typeof BOOKABLE_SERVICE_SLUGS)[number]),
-    )
-    .map((service) => {
-      const price = service.priceKes ?? 0;
-      return {
-        key: service.slug,
-        title: service.title,
-        duration: formatDuration(service.durationMin),
-        icon: SERVICE_ICONS[service.slug] ?? FALLBACK_ICON,
-        price,
-        depositKes: calculateDeposit(price, paymentsConfig.bookingDepositPercent),
-      };
+function fallbackClinicians(): ClinicianOption[] {
+  return CLINICIANS.map((clinician) => ({
+    id: clinician.id,
+    name: clinician.name,
+    title: clinician.title,
+    photo: clinician.photo,
+    specialties: clinician.specialties,
+  }));
+}
+
+async function loadServices(): Promise<ServiceOption[]> {
+  if (!hasDatabaseUrl()) return fallbackServices();
+
+  try {
+    const slugs = [...BOOKABLE_SERVICE_SLUGS];
+    const services = await prisma.service.findMany({
+      where: {
+        isPublished: true,
+        priceKes: { gt: 0 },
+        OR: [{ category: "Therapy" }, { slug: { in: slugs } }],
+      },
+      select: { slug: true, title: true, priceKes: true, durationMin: true },
+      orderBy: { priceKes: "asc" },
     });
+
+    const loaded = services
+      .filter((service) =>
+        slugs.includes(service.slug as (typeof BOOKABLE_SERVICE_SLUGS)[number]),
+      )
+      .map((service) => {
+        const price = service.priceKes ?? 0;
+        return {
+          key: service.slug,
+          title: service.title,
+          duration: formatDuration(service.durationMin),
+          icon: SERVICE_ICONS[service.slug] ?? FALLBACK_ICON,
+          price,
+          depositKes: calculateDeposit(
+            price,
+            paymentsConfig.bookingDepositPercent,
+          ),
+        };
+      });
+
+    return loaded.length > 0 ? loaded : fallbackServices();
+  } catch (error) {
+    console.error("Failed to load booking services from the database", error);
+    return fallbackServices();
+  }
 }
 
 async function loadClinicians(): Promise<ClinicianOption[]> {
-  const therapists = await prisma.therapist.findMany({
-    where: { isActive: true },
-    orderBy: { fullName: "asc" },
-    select: {
-      id: true,
-      fullName: true,
-      title: true,
-      photoUrl: true,
-      specialties: true,
-    },
-  });
+  if (!hasDatabaseUrl()) return fallbackClinicians();
 
-  return therapists.map((therapist) => ({
-    id: therapist.id,
-    name: therapist.fullName,
-    title: therapist.title ?? "Clinician",
-    photo: therapist.photoUrl || FALLBACK_PHOTO,
-    specialties: therapist.specialties,
-  }));
+  try {
+    const therapists = await prisma.therapist.findMany({
+      where: { isActive: true },
+      orderBy: { fullName: "asc" },
+      select: {
+        id: true,
+        fullName: true,
+        title: true,
+        photoUrl: true,
+        specialties: true,
+      },
+    });
+
+    const loaded = therapists.map((therapist) => ({
+      id: therapist.id,
+      name: therapist.fullName,
+      title: therapist.title ?? "Clinician",
+      photo: therapist.photoUrl || FALLBACK_PHOTO,
+      specialties: therapist.specialties,
+    }));
+
+    return loaded.length > 0 ? loaded : fallbackClinicians();
+  } catch (error) {
+    console.error("Failed to load clinicians from the database", error);
+    return fallbackClinicians();
+  }
 }
 
 export default async function Page({
@@ -111,15 +160,16 @@ export default async function Page({
   const [services, clinicians, session] = await Promise.all([
     loadServices(),
     loadClinicians(),
-    getOptionalSession(),
+    hasDatabaseUrl() ? getOptionalSession() : Promise.resolve(null),
   ]);
 
-  const profile = session
-    ? await prisma.user.findUnique({
-        where: { id: session.userId },
-        select: { name: true, email: true, phone: true },
-      })
-    : null;
+  const profile =
+    session && hasDatabaseUrl()
+      ? await prisma.user.findUnique({
+          where: { id: session.userId },
+          select: { name: true, email: true, phone: true },
+        }).catch(() => null)
+      : null;
 
   return (
     <Suspense fallback={null}>

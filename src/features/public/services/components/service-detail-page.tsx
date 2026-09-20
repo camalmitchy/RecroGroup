@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BookOpen,
   Check,
+  ClipboardCheck,
   Clock,
   Heart,
   Home,
@@ -22,6 +23,21 @@ import { serviceList } from "../data";
 type ServiceDetailPageProps = {
   service: ServiceDetail;
 };
+
+function getServiceHref(key: string) {
+  if (key === "consortium") return "/services/consortium/apply";
+  if (key === "corporate") return "/services/corporate/inquiry";
+  if (key === "children") return "/grief-camp/apply";
+  if (key === "supervision") return "/contact";
+  return `/booking?service=${key}`;
+}
+
+function getSidebarCtaLabel(key: string) {
+  if (key === "consortium" || key === "corporate") return "Apply Now";
+  if (key === "supervision") return "Contact us";
+  if (key === "children") return "Register for camp";
+  return "Book now";
+}
 
 export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
 
@@ -50,15 +66,7 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 <Link
-                  href={
-                    service.key === "consortium"
-                      ? `/services/consortium/apply`
-                      : service.key === "corporate"
-                        ? `/services/corporate/inquiry`
-                        : service.key === "children"
-                          ? `/grief-camp/apply`
-                          : `/booking?service=${service.key}`
-                  }
+                  href={getServiceHref(service.key)}
                   className="btn-primary rounded-full px-7"
                 >
                   {service.key === "children" ? "Register for camp" : service.ctaLabel}
@@ -300,6 +308,11 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
                     <p className="mt-1 text-base font-medium text-foreground">
                       {service.pricing}
                     </p>
+                    {service.pricingNote ? (
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                        {service.pricingNote}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
@@ -333,16 +346,10 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
               </div>
 
               <Link
-                href={
-                  service.key === "consortium"
-                    ? `/services/consortium/apply`
-                    : service.key === "corporate"
-                      ? `/services/corporate/inquiry`
-                      : `/booking?service=${service.key}`
-                }
+                href={getServiceHref(service.key)}
                 className="btn-primary mt-8 w-full rounded-full"
               >
-                {service.key === "consortium" || service.key === "corporate" ? "Apply Now" : "Book now"}{" "}
+                {getSidebarCtaLabel(service.key)}{" "}
                 <ArrowRight className="ml-2 size-4" />
               </Link>
             </div>
@@ -377,6 +384,8 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
                 group: UsersIcon,
                 children: Flame,
                 corporate: Settings,
+                consortium: UsersIcon,
+                supervision: ClipboardCheck,
               };
 
               const IconComponent = iconMap[relatedService.slug] || Flame;
