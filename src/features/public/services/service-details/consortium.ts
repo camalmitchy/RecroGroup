@@ -119,7 +119,7 @@ export const consortiumService: ServiceDetail = {
       role: "Licensed therapist, Nairobi",
     },
     duration: "Ongoing monthly meetings",
-    pricing: "KES 2,000 per month per person",
+    pricing: "KES 2,000 / month per person",
     pricingNote: "Payments can be made in advance or on meeting day. Subject to change with notification.",
     mode: "In-person monthly meetings",
     availability: "Applications accepted year-round",

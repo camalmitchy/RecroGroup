@@ -22,7 +22,7 @@ export const groupService: ServiceDetail = {
       "Group therapy reminds us we are not alone. Held in a small, carefully facilitated space, groups offer connection, perspective, and skills practice that complements individual work beautifully.",
     overview: [
       "There is a particular kind of healing that only happens in community. Group therapy at Recro brings together 8–10 people around a shared theme — grief, parenting, anxiety, divorce recovery — in a closed, confidential cohort.",
-      "Each session runs for two hours. The number of sessions varies by topic. The closed format means the same people show up each week, building trust and depth that open groups cannot replicate.",
+      "Each session runs for 2 hours. The number of sessions varies based on the topic. The closed format means the same people show up each week, building trust and depth that open groups cannot replicate.",
       "A trained group facilitator holds the container, ensures equitable participation, and introduces skills and exercises each session.",
     ],
     whoFor:
@@ -45,7 +45,7 @@ export const groupService: ServiceDetail = {
     expect: [
       "Join waitlist. Contact us to join the waitlist for your theme of interest.",
       "Screening call. Brief call to ensure group fit and readiness for the cohort.",
-      "Weekly sessions. Two-hour sessions with the same trusted group. The number of sessions varies by topic.",
+      "Weekly sessions. 2-hour sessions with the same trusted group. Number of sessions varies by topic.",
       "Close together. Final session with integration, reflection, and next-step planning.",
     ],
     benefits: [
@@ -76,7 +76,7 @@ export const groupService: ServiceDetail = {
       {
         icon: Users,
         title: "Small cohorts",
-        body: "Minimum 8 and maximum 10 members for meaningful participation.",
+        body: "Groups of 8–10 members for meaningful participation.",
       },
       {
         icon: Lock,
@@ -116,7 +116,8 @@ export const groupService: ServiceDetail = {
     },
     duration: "2 hrs",
     pricing: "KES 12,000 / session",
-    pricingNote: "Each session is two hours. Group size is 8–10. Number of sessions varies by topic.",
+    pricingNote:
+      "Each session runs for 2 hours. Groups of 8–10. Number of sessions varies by topic.",
     mode: "In-person · Online",
     availability: "Cohorts quarterly",
     booking: "Join waitlist anytime",

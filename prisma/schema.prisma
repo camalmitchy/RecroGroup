@@ -309,26 +309,15 @@ model Appointment {
   therapist   Therapist?        @relation(fields: [therapistId], references: [id], onDelete: SetNull)
   serviceId   String?
   service     Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  
-  // Appointment details
-  appointmentDate DateTime
-  appointmentTime String?
   scheduledAt DateTime
   durationMin Int               @default(60)
   status      AppointmentStatus @default(CONFIRMED)
-  location    String?
-  therapistName String?
   notes       String?           @db.Text
-  
-  // Reminder tracking
-  reminderSentAt DateTime?
-  
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
   @@index([userId])
   @@index([scheduledAt])
-  @@index([appointmentDate])
   @@map("appointments")
 }
 
@@ -365,6 +354,7 @@ model Payment {
   mpesaReceipt    String? @unique
   phone           String?
   proofUrl        String?
+  bankReference   String?
 
   idempotencyKey String? @unique
 
@@ -382,6 +372,7 @@ model Payment {
   @@index([userId])
   @@index([status])
   @@index([provider, providerRef])
+  @@index([bankReference])
   @@index([bookingId])
   @@index([createdAt])
   @@map("payments")

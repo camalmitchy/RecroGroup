@@ -1,15 +1,15 @@
 import {
   ClipboardCheck,
+  HeartHandshake,
   ShieldCheck,
   Users,
-  UserRound,
 } from "lucide-react";
 
 import type { ServiceDetail } from "../data";
 
 export const supervisionService: ServiceDetail = {
   key: "supervision",
-  eyebrow: "Professional Support",
+  eyebrow: "Professional Development",
   title: "Supervision",
   titleItalic: "Supervision",
   titleRest: "",
@@ -19,99 +19,108 @@ export const supervisionService: ServiceDetail = {
   glanceImage: "/assets/services.jpg",
   ctaImage: "/assets/services.jpg",
   intro:
-    "We provide supervision at both levels: individual and group. Whether you are a novice therapist or a seasoned one and need supervision, kindly contact us to schedule your sessions.",
+    "We provide supervision on both levels: Individual and Group. Whether you are a novice therapist or a seasoned one and need supervision, kindly contact us to schedule your sessions.",
   overview: [
-    "Clinical supervision at Recro is a confidential space for therapists to reflect on their work, strengthen clinical judgement, and stay ethically grounded.",
-    "We offer two formats. Individual supervision is one-to-one with a supervisor. Group supervision brings a small cohort together so practitioners can learn from one another as well as from the supervisor.",
-    "Whether you are newly qualified or well established in practice, contact us and we will help you choose the format that fits and schedule your sessions.",
+    "Clinical supervision at Recro supports therapists at every stage of practice — from newly qualified clinicians building confidence to seasoned practitioners seeking a reflective space.",
+    "Individual supervision offers focused, one-to-one guidance on cases, ethics, and professional growth. Group supervision brings 2–6 clinicians together to learn from one another under a trained supervisor.",
+    "Sessions are scheduled by arrangement. Contact us to discuss which format fits your needs and to book your place.",
   ],
   whoFor:
-    "Novice and seasoned therapists who want individual or group clinical supervision.",
+    "Novice and seasoned therapists who want individual or group supervision to strengthen clinical practice, ethics, and professional development.",
   goodFitFor: [
-    "Newly qualified therapists building clinical confidence",
-    "Seasoned practitioners seeking a fresh supervisory relationship",
-    "Clinicians who prefer one-to-one reflection",
-    "Practitioners who learn well in a small peer group",
+    "Newly qualified therapists seeking structured clinical guidance",
+    "Seasoned clinicians who want a reflective, accountable space",
+    "Practitioners working through complex or ethically sensitive cases",
+    "Small peer groups looking for facilitated group supervision",
+    "Clinicians who want to grow in skill while staying grounded in best practice",
   ],
   concerns: [
-    "Clinical case consultation",
+    "Case consultation",
     "Ethical decision-making",
-    "Professional development",
-    "Therapist self-care",
-    "Group process and peer learning",
+    "Clinical skill development",
+    "Professional identity",
+    "Burnout & self-care",
+    "Group learning",
   ],
   expect: [
-    "Contact us. Tell us whether you need individual or group supervision.",
-    "Match. We confirm format, fees, and a session time that works for you.",
-    "Sessions. Individual or group meetings focused on your clinical work.",
-    "Ongoing support. Continue as needed — there is no fixed programme length.",
+    "Contact us. Reach out to share whether you need individual or group supervision.",
+    "Match & schedule. We confirm format, group size where relevant, and a session time.",
+    "Supervisory work. Reflective case discussion, ethics, and skill development.",
+    "Ongoing sessions. Continue at a cadence that supports your practice.",
   ],
   benefits: [
-    "Support at both individual and group levels",
-    "A fit for novice and seasoned therapists",
-    "Confidential, professionally held space",
-    "Clear fees before you begin",
+    "A confidential space to think through clinical work",
+    "Support whether you are new to practice or highly experienced",
+    "Choice of individual or small-group format",
+    "Guidance grounded in ethical, systemic practice",
+    "A clearer, more confident clinical stance",
   ],
   approaches: [
     {
       name: "Individual supervision",
       description:
-        "One-to-one sessions focused on your caseload, clinical judgement, and professional growth. KES 5,000 per person.",
+        "One-to-one sessions focused on your caseload, professional development, and clinical questions. KES 5,000 per person.",
     },
     {
       name: "Group supervision",
       description:
-        "A facilitated group of 2 to 6 practitioners. KES 4,000 per person.",
+        "Facilitated supervision for 2–6 clinicians, combining case discussion with peer learning. KES 4,000 per person.",
+    },
+    {
+      name: "Reflective practice",
+      description:
+        "A structured space to examine patterns, ethics, and the therapist’s own use of self in the work.",
     },
   ],
   features: [
     {
-      icon: UserRound,
-      title: "Individual",
-      body: "KES 5,000 per person for one-to-one supervision.",
+      icon: ClipboardCheck,
+      title: "Individual or group",
+      body: "Supervision is offered one-to-one or in groups of 2–6.",
     },
     {
       icon: Users,
-      title: "Group",
-      body: "KES 4,000 per person. Group size is 2 to 6.",
+      title: "All experience levels",
+      body: "Welcome whether you are a novice therapist or a seasoned clinician.",
     },
     {
       icon: ShieldCheck,
-      title: "For every stage",
-      body: "Open to novice therapists and seasoned practitioners.",
+      title: "Ethically grounded",
+      body: "Case discussion held within professional and ethical guidelines.",
     },
     {
-      icon: ClipboardCheck,
-      title: "By arrangement",
-      body: "Contact us to schedule the format and times that work for you.",
+      icon: HeartHandshake,
+      title: "Scheduled with you",
+      body: "Contact us to arrange a time that fits your practice.",
     },
   ],
   faqs: [
     {
-      q: "What kinds of supervision do you offer?",
-      a: "We provide supervision at both levels: individual and group.",
-    },
-    {
-      q: "How much does supervision cost?",
-      a: "Individual supervision is KES 5,000 per person. Group supervision is KES 4,000 per person, with a group size of 2 to 6.",
-    },
-    {
       q: "Who is supervision for?",
-      a: "Whether you are a novice therapist or a seasoned one and need supervision, kindly contact us to schedule your sessions.",
+      a: "Both novice and seasoned therapists. If you need supervision, contact us to schedule sessions.",
+    },
+    {
+      q: "What is the difference between individual and group supervision?",
+      a: "Individual supervision is one-to-one (KES 5,000 per person). Group supervision is KES 4,000 per person for groups of 2 to 6.",
+    },
+    {
+      q: "How do I book?",
+      a: "Supervision is scheduled by contacting us. Use the contact form or call 0717-78-78-07 / 0717-78-78-08.",
     },
   ],
   testimonial: {
     quote:
-      "Supervision gave me a steady place to think about my work and stay ethically grounded.",
+      "Supervision gave me a place to think clearly about my cases and to keep growing as a clinician.",
     author: "Supervisee",
-    role: "Practising therapist",
+    role: "Practising therapist, Nairobi",
   },
   duration: "By arrangement",
-  pricing: "Individual KES 5,000 · Group KES 4,000 per person",
-  pricingNote: "Group supervision is for 2 to 6 people. Contact us to schedule.",
+  pricing: "Individual KES 5,000 · Group KES 4,000 (2–6 people)",
+  pricingNote:
+    "Individual supervision is KES 5,000 per person. Group supervision is KES 4,000 per person (group size 2 to 6).",
   mode: "In-person · Online",
-  availability: "By appointment",
-  booking: "Contact us to schedule",
+  availability: "Scheduled on request",
+  booking: "Contact us to schedule your sessions",
   relatedArticleSlugs: [],
   reading: [],
 };

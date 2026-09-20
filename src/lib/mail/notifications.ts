@@ -69,14 +69,7 @@ export async function notifyBookingCreated(input: {
   depositKes: number;
   balanceKes: number;
 }): Promise<void> {
-  await dispatch("bookingCreated", async () => {
-    const message = bookingConfirmation(input);
-    const staffAddress = mailConfig.staffAddress;
-
-    await sendEmail(
-      staffAddress ? { ...message, bcc: staffAddress } : message,
-    );
-  });
+  await dispatch("bookingCreated", () => sendEmail(bookingConfirmation(input)));
 }
 
 export async function notifyBookingBalanceDue(input: {

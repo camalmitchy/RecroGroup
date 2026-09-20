@@ -1,11 +1,9 @@
 import "server-only";
 
 import { consoleMailDriver } from "./drivers/console";
-import { resendMailDriver } from "./drivers/resend";
-import { applyMailDefaults } from "./outbound";
 import type { EmailMessage, MailDriver, SendResult } from "./types";
 
-const SUPPORTED_DRIVERS = ["console", "resend"] as const;
+const SUPPORTED_DRIVERS = ["console"] as const;
 
 type SupportedDriver = (typeof SUPPORTED_DRIVERS)[number];
 
@@ -42,8 +40,6 @@ export const mailConfig = {
 
 export function getMailer(): MailDriver {
   switch (mailConfig.driver) {
-    case "resend":
-      return resendMailDriver;
     case "console":
     default:
       return consoleMailDriver;
@@ -51,25 +47,11 @@ export function getMailer(): MailDriver {
 }
 
 export async function sendEmail(message: EmailMessage): Promise<SendResult | null> {
-  const outbound = applyMailDefaults(message, {
-    from: mailConfig.from,
-    replyTo: mailConfig.replyTo,
-  });
-
   try {
-    const result = await getMailer().send(outbound);
-
-    if (!result.accepted) {
-      console.error("[mail] Send rejected", {
-        subject: outbound.subject,
-        error: result.error,
-      });
-    }
-
-    return result;
+    return await getMailer().send(message);
   } catch (error) {
     console.error("[mail] Failed to send email", {
-      subject: outbound.subject,
+      subject: message.subject,
       error: error instanceof Error ? error.message : error,
     });
     return null;

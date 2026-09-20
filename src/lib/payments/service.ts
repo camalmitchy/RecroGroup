@@ -42,6 +42,8 @@ export type CreatePaymentInput = {
   phone?: string | null;
   idempotencyKey?: string | null;
   notes?: string | null;
+  bankReference?: string | null;
+  proofUrl?: string | null;
 };
 
 export async function createPendingPayment(input: CreatePaymentInput) {
@@ -64,6 +66,8 @@ export async function createPendingPayment(input: CreatePaymentInput) {
     userId: input.userId ?? null,
     idempotencyKey: input.idempotencyKey ?? null,
     notes: input.notes ?? null,
+    bankReference: input.bankReference ?? null,
+    proofUrl: input.proofUrl ?? null,
     ...targetLink(input.target),
   };
 

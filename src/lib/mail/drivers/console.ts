@@ -1,7 +1,20 @@
+import "server-only";
+
 import { randomUUID } from "node:crypto";
 
-import { formatRecipient, formatRecipientList } from "../outbound";
-import type { EmailMessage, MailDriver, SendResult } from "../types";
+import type { EmailMessage, EmailRecipient, MailDriver, SendResult } from "../types";
+
+function formatRecipient(recipient: EmailRecipient) {
+  if (typeof recipient === "string") return recipient;
+  return recipient.name ? `${recipient.name} <${recipient.email}>` : recipient.email;
+}
+
+function formatRecipients(recipients: EmailRecipient | EmailRecipient[] | undefined) {
+  if (!recipients) return undefined;
+  const list = Array.isArray(recipients) ? recipients : [recipients];
+  const formatted = list.map(formatRecipient).filter((value) => value !== "");
+  return formatted.length > 0 ? formatted.join(", ") : undefined;
+}
 
 export const consoleMailDriver: MailDriver = {
   name: "console",
@@ -13,31 +26,23 @@ export const consoleMailDriver: MailDriver = {
         "",
         "──────── mail:console ────────",
         `id:      ${id}`,
-        `from:    ${message.from ?? "(unset)"}`,
-        `to:      ${formatRecipientList(message.to).join(", ") || "(none)"}`,
+        `to:      ${formatRecipients(message.to) ?? "(none)"}`,
       ];
 
-      const cc = formatRecipientList(message.cc);
-      if (cc.length > 0) lines.push(`cc:      ${cc.join(", ")}`);
+      const cc = formatRecipients(message.cc);
+      if (cc) lines.push(`cc:      ${cc}`);
 
-      const bcc = formatRecipientList(message.bcc);
-      if (bcc.length > 0) lines.push(`bcc:     ${bcc.join(", ")}`);
+      const bcc = formatRecipients(message.bcc);
+      if (bcc) lines.push(`bcc:     ${bcc}`);
 
-      if (message.replyTo) {
-        lines.push(`replyTo: ${formatRecipient(message.replyTo)}`);
-      }
+      const replyTo = formatRecipients(message.replyTo);
+      if (replyTo) lines.push(`replyTo: ${replyTo}`);
 
-      lines.push(
-        `subject: ${message.subject}`,
-        "",
-        message.text,
-        "──────────────────────────────",
-        "",
-      );
+      lines.push(`subject: ${message.subject}`, "", message.text, "──────────────────────────────", "");
 
       console.info(lines.join("\n"));
     } catch {
-      return { id, accepted: false, error: "Failed to write console mail" };
+      return { id, accepted: false };
     }
 
     return { id, accepted: true };

@@ -42,9 +42,9 @@ export const homeServices = [
     serviceKey: "consortium",
   },
   {
-    icon: "/assets/icons/individual-therapy.svg",
+    icon: "/assets/icons/supervision.svg",
     title: "Supervision",
-    body: "We provide supervision at both levels: individual and group. Whether you are a novice therapist or a seasoned one and need supervision, kindly contact us to schedule your sessions.",
+    body: "We provide supervision on both levels: Individual and Group. Whether you are a novice therapist or a seasoned one and need supervision, kindly contact us to schedule your sessions.",
     serviceKey: "supervision",
   },
 ] as const;

@@ -6,7 +6,6 @@ export type EmailAddress = {
 export type EmailRecipient = string | EmailAddress;
 
 export type EmailMessage = {
-  from?: string;
   to: EmailRecipient | EmailRecipient[];
   cc?: EmailRecipient | EmailRecipient[];
   bcc?: EmailRecipient | EmailRecipient[];
@@ -19,7 +18,6 @@ export type EmailMessage = {
 export type SendResult = {
   id: string;
   accepted: boolean;
-  error?: string;
 };
 
 export interface MailDriver {

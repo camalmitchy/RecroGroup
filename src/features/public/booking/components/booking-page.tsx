@@ -103,10 +103,8 @@ export function BookingPage({
 }) {
     const searchParams = useSearchParams();
     const serviceParam = searchParams.get("service");
-    const dateParam = searchParams.get("date");
     const preselectedService =
         services.find((s) => s.key === serviceParam) ?? null;
-    const prefillDate = parsePrefillDate(dateParam);
 
     const [step, setStep] = useState<Step>(
         preselectedService ? "time" : "service",
@@ -119,7 +117,7 @@ export function BookingPage({
 
     // Time step
     const [clinician, setClinician] = useState<string>(clinicians[0]?.id ?? "");
-    const [selectedDate, setSelectedDate] = useState<Date | null>(prefillDate);
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string>("");
 
     // Intake step
@@ -175,14 +173,28 @@ export function BookingPage({
         }
     }
 
-    const [lastDateParam, setLastDateParam] = useState(dateParam);
-    if (dateParam !== lastDateParam) {
-        setLastDateParam(dateParam);
-        const nextDate = parsePrefillDate(dateParam);
-        if (nextDate) setSelectedDate(nextDate);
-    }
+    // Generate available dates (next 14 days, excluding Sundays)
+    const generateAvailableDates = () => {
+        const dates: Date[] = [];
+        const today = new Date();
+        let daysAdded = 0;
+        let offset = 1;
 
-    const availableDates = nextAvailableDates(prefillDate);
+        while (daysAdded < 14) {
+            const date = new Date(today);
+            date.setDate(today.getDate() + offset);
+
+            // Skip Sundays (0 = Sunday)
+            if (date.getDay() !== 0) {
+                dates.push(date);
+                daysAdded++;
+            }
+            offset++;
+        }
+        return dates;
+    };
+
+    const availableDates = generateAvailableDates();
 
     const canProceedFromService = selectedService !== null;
     const canProceedFromTime =
@@ -401,6 +413,7 @@ export function BookingPage({
         const result = await recordBankTransfer({
             bookingId: booking.bookingId,
             bankReference: bankRef.trim(),
+            proof: proofFile,
         });
         setBusy(false);
 
@@ -1486,55 +1499,6 @@ function Field({
             {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
         </div>
     );
-}
-
-function parsePrefillDate(value: string | null): Date | null {
-    if (!value) return null;
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
-    if (!match) return null;
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    const day = Number(match[3]);
-    const date = new Date(year, month - 1, day);
-    if (
-        date.getFullYear() !== year ||
-        date.getMonth() !== month - 1 ||
-        date.getDate() !== day
-    ) {
-        return null;
-    }
-    if (date.getDay() === 0) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (date <= today) return null;
-    return date;
-}
-
-function nextAvailableDates(prefill: Date | null = null) {
-    const dates: Date[] = [];
-    const today = new Date();
-    let daysAdded = 0;
-    let offset = 1;
-
-    while (daysAdded < 14) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + offset);
-        if (date.getDay() !== 0) {
-            dates.push(date);
-            daysAdded++;
-        }
-        offset++;
-    }
-
-    if (
-        prefill &&
-        !dates.some((date) => date.toDateString() === prefill.toDateString())
-    ) {
-        dates.push(prefill);
-        dates.sort((a, b) => a.getTime() - b.getTime());
-    }
-
-    return dates;
 }
 
 function toDateOnly(date: Date) {
