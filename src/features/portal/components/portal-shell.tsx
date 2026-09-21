@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
   SidebarInset,
@@ -85,9 +86,16 @@ export function PortalShell({
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => setShowProfileMenu(!showProfileMenu)}
-                      className="group relative size-9 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground grid place-items-center text-xs font-semibold uppercase shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 ring-2 ring-background"
+                      className="group relative size-9 overflow-hidden rounded-full shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md ring-2 ring-background"
                     >
-                      {initialsFor(session.name, session.email)}
+                      <Avatar className="size-9">
+                        {session.image ? (
+                          <AvatarImage src={session.image} alt="" />
+                        ) : null}
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-xs font-semibold text-primary-foreground uppercase">
+                          {initialsFor(session.name, session.email)}
+                        </AvatarFallback>
+                      </Avatar>
                       <div className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/10 transition-colors duration-200" />
                     </button>
                   </TooltipTrigger>
@@ -107,9 +115,14 @@ export function PortalShell({
                       {/* User Info Header */}
                       <div className="px-4 py-3 bg-gradient-to-br from-muted/50 to-muted border-b border-[var(--admin-border)]">
                         <div className="flex items-center gap-3">
-                          <div className="size-10 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground grid place-items-center text-sm font-semibold uppercase shadow-sm">
-                            {initialsFor(session.name, session.email)}
-                          </div>
+                          <Avatar className="size-10">
+                            {session.image ? (
+                              <AvatarImage src={session.image} alt="" />
+                            ) : null}
+                            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-sm font-semibold text-primary-foreground uppercase">
+                              {initialsFor(session.name, session.email)}
+                            </AvatarFallback>
+                          </Avatar>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold truncate">
                               {session.name ?? "User"}
@@ -139,7 +152,7 @@ export function PortalShell({
                           <span>Back to home (Customer)</span>
                         </Link>
                         <Link
-                          href="/dashboard/settings"
+                          href="/dashboard/profile"
                           onClick={() => setShowProfileMenu(false)}
                           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50 transition-colors"
                         >

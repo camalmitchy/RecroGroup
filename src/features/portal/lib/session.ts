@@ -10,6 +10,7 @@ export type PortalSession = {
   userId: string;
   email: string;
   name: string | null;
+  image: string | null;
   role: AppRole;
 };
 
@@ -32,6 +33,7 @@ export async function getPortalSession(): Promise<PortalSession | null> {
     userId: session.user.id,
     email: session.user.email,
     name: session.user.name,
+    image: session.user.image ?? null,
     role,
   };
 }
@@ -47,6 +49,7 @@ export function getDevPortalSession(role?: AppRole): PortalSession {
     userId: "dev-user",
     email: "dev@recrogroup.org",
     name: "Dev User",
+    image: null,
     role: APP_ROLES.includes(devRole) ? devRole : "admin",
   };
 }

@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,19 +13,12 @@ import {
   bookingStatusTone,
   paymentStatusTone,
 } from "@/features/portal/components/status-badge";
+import { ProfileEditor } from "@/features/profile/components/profile-editor";
 import { formatDate } from "@/features/portal/lib/format";
-import { parseAppRole, ROLE_LABELS } from "@/features/portal/lib/roles";
-import { toDisplayPhone } from "@/lib/payments/utils";
+import { isStaff, parseAppRole, ROLE_LABELS } from "@/features/portal/lib/roles";
 import { getCustomerProfile } from "@/server/queries/profile";
-import { userHandle, userInitials } from "@/shared/lib/user-initials";
 
 type Profile = NonNullable<Awaited<ReturnType<typeof getCustomerProfile>>>;
-
-const ACCOUNT_TYPE_LABELS: Record<Profile["user"]["accountType"], string> = {
-  CUSTOMER: "Customer",
-  GUARDIAN: "Guardian",
-  CORPORATE: "Corporate",
-};
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
@@ -38,8 +30,6 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 export function ProfilePage({ user, bookings }: Profile) {
-  const handle = userHandle(user.email);
-  const initials = userInitials(user.name, user.email);
   const role = parseAppRole(user.role);
   const notifications = [
     user.commsEmail ? "Email" : null,
@@ -57,35 +47,30 @@ export function ProfilePage({ user, bookings }: Profile) {
         Your profile
       </h1>
       <p className="mt-3 max-w-xl text-muted-foreground">
-        Your Recro account details and recent bookings.
+        Update your name, contact number, and photo. These details stay on your
+        Recro account.
       </p>
 
       <Card className="mt-10">
         <CardHeader className="border-b">
-          <div className="flex items-center gap-4">
-            <Avatar className="size-16 ring-1 ring-border">
-              {user.image ? (
-                <AvatarImage src={user.image} alt={user.name} />
-              ) : null}
-              <AvatarFallback className="bg-primary text-base font-semibold text-primary-foreground">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <CardTitle className="truncate text-xl">{user.name}</CardTitle>
-              <CardDescription className="truncate">{handle}</CardDescription>
-            </div>
-          </div>
+          <CardTitle>Your details</CardTitle>
+          <CardDescription>
+            Phone numbers are used for booking updates and M-Pesa prompts.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <dl>
-            <Detail label="Email" value={user.email} />
-            <Detail
-              label="Phone"
-              value={user.phone ? toDisplayPhone(user.phone) : "Not added"}
-            />
-            <Detail label="Account" value={ACCOUNT_TYPE_LABELS[user.accountType]} />
-            <Detail label="Role" value={ROLE_LABELS[role]} />
+        <CardContent className="pt-6">
+          <ProfileEditor
+            user={{
+              name: user.name,
+              email: user.email,
+              image: user.image,
+              phone: user.phone,
+            }}
+          />
+          <dl className="mt-8 border-t border-border/70">
+            {isStaff(role) ? (
+              <Detail label="Workspace role" value={ROLE_LABELS[role]} />
+            ) : null}
             <Detail label="Member since" value={formatDate(user.createdAt)} />
             <Detail
               label="Notifications"
