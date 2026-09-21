@@ -29,8 +29,9 @@ export function ServicesPage() {
                 <em className="italic text-white/90">journey</em>.
               </h1>
               <p className="mt-6 max-w-2xl mx-auto text-base leading-relaxed text-white/95 md:text-lg">
-                Six core services — each one staffed by clinicians trained for
-                that specific kind of work.
+                Therapy, supervision, consortium membership, grief camp, and
+                corporate programmes — each one staffed by clinicians trained
+                for that specific kind of work.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link
@@ -87,6 +88,16 @@ export function ServicesPage() {
                   <p className="text-[13px] font-normal text-foreground">
                     {service.duration}
                   </p>
+                  {service.price ? (
+                    <>
+                      <p className="mt-4 mb-1.5 text-[10px] tracking-[0.15em] text-muted-foreground/70 uppercase">
+                        Pricing
+                      </p>
+                      <p className="text-[13px] font-normal text-foreground">
+                        {service.price}
+                      </p>
+                    </>
+                  ) : null}
                 </div>
 
                 <Link

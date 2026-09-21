@@ -22,7 +22,7 @@ export const couplesService: ServiceDetail = {
       "We work with couples to slow down reactive cycles, rebuild trust, and reconnect. Sessions are emotionally focused, non-blaming, and culturally attuned to relationships in Kenya today.",
     overview: [
       "Couples therapy at Recro is not about picking sides. It is about understanding the dance you have been doing together — the patterns that escalate conflict, the moments of disconnection, and the hopes you still share beneath the frustration.",
-      "We work with dating couples, engaged partners, married couples, and those considering separation. Sessions are 75 minutes to allow both voices adequate space.",
+      "We work with dating couples, engaged partners, married couples, and those considering separation. Sessions are 50 minutes, with a session fee of KES 7,000 and a commitment fee of KES 3,500.",
       "Using systemic therapies, we help partners move from blame to understanding, and from gridlock to repair.",
     ],
     whoFor:
@@ -46,7 +46,7 @@ export const couplesService: ServiceDetail = {
       "Reach out. Book a couples session online or call us to discuss your relationship needs.",
       "Joint intake. We meet together to map strengths and pain points as a couple.",
       "Build tools. Structured exercises for difficult conversations you can practice at home.",
-      "Ongoing sessions. Weekly 75-minute sessions with repair tools to use between meetings.",
+      "Ongoing sessions. Weekly 50-minute sessions with repair tools to use between meetings.",
     ],
     benefits: [
       "Healthier conflict — arguments that lead somewhere",
@@ -107,6 +107,10 @@ export const couplesService: ServiceDetail = {
         q: "What if we're not sure we want to stay together?",
         a: "Discernment therapy helps you clarify whether to repair or separate with dignity — we support both paths.",
       },
+      {
+        q: "How much does a session cost?",
+        a: "Couples therapy is KES 7,000 per session. A commitment fee of KES 3,500 is payable to secure your slot.",
+      },
     ],
     testimonial: {
       quote:
@@ -115,8 +119,8 @@ export const couplesService: ServiceDetail = {
       role: "Couples therapy clients",
     },
     duration: "50 min",
-    pricing: "From KES 7,500",
-    pricingNote: "Joint sessions; individual add-on sessions available.",
+    pricing: "KES 7,000",
+    pricingNote: "Commitment fee KES 3,500.",
     mode: "In-person · Online",
     availability: "Within 1 week",
     booking: "Intake call within 2 working days",

@@ -109,6 +109,10 @@ export const individualService: ServiceDetail = {
         q: "Are sessions available online?",
         a: "Yes. We offer secure video sessions for clients across Kenya and the diaspora.",
       },
+      {
+        q: "How much does a session cost?",
+        a: "Individual therapy is KES 7,000 per session. A commitment fee of KES 3,500 is payable to secure your slot.",
+      },
     ],
     testimonial: {
       quote:
@@ -117,8 +121,8 @@ export const individualService: ServiceDetail = {
       role: "Individual therapy client",
     },
     duration: "50 min",
-    pricing: "From KES 5,000",
-    pricingNote: "Sliding-scale spots available on request.",
+    pricing: "KES 7,000",
+    pricingNote: "Commitment fee KES 3,500.",
     mode: "In-person · Online · Phone",
     availability: "Same-week appointments",
     booking: "Confirmed within 1 working day",

@@ -65,4 +65,10 @@ export const serviceNavItems: ServiceNavItem[] = [
     description: "Professional network & collaboration",
     icon: "/assets/icons/group-therapy.svg",
   },
+  {
+    slug: "supervision",
+    label: "Supervision",
+    description: "Individual and group clinical supervision",
+    icon: "/assets/icons/individual-therapy.svg",
+  },
 ];

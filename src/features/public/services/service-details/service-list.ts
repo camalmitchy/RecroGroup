@@ -9,7 +9,7 @@ export const serviceList: ServiceListItem[] = [
     description:
       "Individual therapy is a confidential, judgement-free space to slow down and make sense of what you're carrying. Our therapists use evidence-based approaches — adapted to your therapy goals.",
     duration: "50 min",
-    price: "",
+    price: "KES 7,000",
   },
   {
     id: "02",
@@ -19,7 +19,7 @@ export const serviceList: ServiceListItem[] = [
     description:
       "Family therapy looks at the whole system. We help each person feel heard while creating language and structure for the family to function with more warmth, clarity, and safety — especially during difficult seasons.",
     duration: "50 min",
-    price: "",
+    price: "KES 7,000",
   },
   {
     id: "03",
@@ -29,7 +29,7 @@ export const serviceList: ServiceListItem[] = [
     description:
       "We work with couples to slow down reactive cycles, rebuild trust, and reconnect. Sessions are emotionally focused, non-blaming, and culturally attuned to relationships in Kenya today.",
     duration: "50 min",
-    price: "",
+    price: "KES 7,000",
   },
   {
     id: "04",
@@ -37,9 +37,9 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/group-therapy.svg",
     title: "Group Therapy",
     description:
-      "Group therapy reminds us we are not alone. Held in a small, carefully facilitated space, groups offer connection, perspective, and skills practice that complements individual work beautifully.",
+      "Group therapy reminds us we are not alone. Each session runs for 2 hours at KES 12,000, with 8–10 people. The number of sessions varies based on the topic.",
     duration: "2 hrs",
-    price: "",
+    price: "KES 12,000",
   },
   {
     id: "05",
@@ -67,9 +67,19 @@ export const serviceList: ServiceListItem[] = [
     icon: "/assets/icons/group-therapy.svg",
     title: "Consortium",
     description:
-      "A collaborative network of mental health professionals and organizations advancing behavioral health services across Kenya. Join our community of practitioners committed to excellence in care.",
+      "A collaborative network of mental health professionals and organizations advancing behavioral health services across Kenya. Membership is KES 2,000 per month per person.",
     duration: "Ongoing",
-    price: "",
+    price: "KES 2,000 / month",
+  },
+  {
+    id: "08",
+    slug: "supervision",
+    icon: "/assets/icons/individual-therapy.svg",
+    title: "Supervision",
+    description:
+      "We provide supervision on both levels: Individual and Group. Whether you are a novice therapist or a seasoned one and need Supervision, kindly contact us to schedule your sessions.",
+    duration: "By arrangement",
+    price: "Individual KES 5,000 · Group KES 4,000",
   },
 ];
 
