@@ -2,7 +2,9 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 
+import { youtubeThumbnailUrl, youtubeWatchUrl } from "@/lib/content";
 import { prisma } from "@/lib/prisma";
+import { seedMedia, seedResources } from "../../../prisma/seed-content";
 
 export type BlogPostRecord = {
   id: string;
@@ -59,24 +61,86 @@ export type MediaItemWrite = {
 };
 
 let columnsReady = false;
+let defaultContentReady = false;
 
 export async function ensureContentColumns() {
   if (columnsReady) return;
 
-  await prisma.$executeRawUnsafe(
+  const statements = [
     `ALTER TABLE "blog_posts" ADD COLUMN IF NOT EXISTS "category" TEXT`,
-  );
-  await prisma.$executeRawUnsafe(
     `ALTER TABLE "media_items" ADD COLUMN IF NOT EXISTS "category" TEXT`,
-  );
-  await prisma.$executeRawUnsafe(
     `ALTER TABLE "media_items" ADD COLUMN IF NOT EXISTS "duration" TEXT`,
-  );
-  await prisma.$executeRawUnsafe(
     `ALTER TABLE "media_items" ADD COLUMN IF NOT EXISTS "therapist" TEXT`,
-  );
+  ];
+
+  for (const statement of statements) {
+    try {
+      await prisma.$executeRawUnsafe(statement);
+    } catch (error) {
+      console.error("[ensureContentColumns]", error);
+    }
+  }
 
   columnsReady = true;
+}
+
+function asCount(value: unknown): number {
+  if (typeof value === "number") return value;
+  if (typeof value === "bigint") return Number(value);
+  if (typeof value === "string") return Number(value);
+  return 0;
+}
+
+export async function ensureDefaultPublishedContent() {
+  await ensureContentColumns();
+  if (defaultContentReady) return;
+
+  try {
+  const [posts, media] = await Promise.all([
+    prisma.$queryRaw<Array<{ count: unknown }>>`
+      SELECT COUNT(*)::int AS count FROM "blog_posts"
+    `,
+    prisma.$queryRaw<Array<{ count: unknown }>>`
+      SELECT COUNT(*)::int AS count FROM "media_items"
+    `,
+  ]);
+
+  if (asCount(posts[0]?.count) === 0) {
+    for (const resource of seedResources) {
+      await insertBlogPost({
+        title: resource.title,
+        slug: resource.slug,
+        excerpt: resource.excerpt,
+        body: resource.body,
+        coverUrl: null,
+        author: resource.author,
+        category: resource.category,
+        isPublished: true,
+        publishedAt: resource.publishedAt,
+      });
+    }
+  }
+
+  if (asCount(media[0]?.count) === 0) {
+    for (const item of seedMedia) {
+      await insertMediaItem({
+        title: item.title,
+        description: item.description,
+        mediaType: "VIDEO",
+        url: youtubeWatchUrl(item.videoId),
+        thumbnailUrl: youtubeThumbnailUrl(item.videoId),
+        category: item.category,
+        duration: item.duration,
+        therapist: item.therapist,
+        isPublished: true,
+      });
+    }
+  }
+
+  defaultContentReady = true;
+  } catch (error) {
+    console.error("[ensureDefaultPublishedContent]", error);
+  }
 }
 
 function asDate(value: unknown): Date | null {
@@ -142,22 +206,18 @@ function mapMediaItem(row: Record<string, unknown>): MediaItemRecord {
 }
 
 export async function listBlogPosts(): Promise<BlogPostRecord[]> {
-  await ensureContentColumns();
+  await ensureDefaultPublishedContent();
   const rows = await prisma.$queryRaw<Array<Record<string, unknown>>>`
-    SELECT id, title, slug, excerpt, body, "coverUrl", author, category,
-           "isPublished", "publishedAt", "createdAt", "updatedAt"
-    FROM "blog_posts"
+    SELECT * FROM "blog_posts"
     ORDER BY "publishedAt" DESC NULLS LAST, "createdAt" DESC
   `;
   return rows.map(mapBlogPost);
 }
 
 export async function listPublishedBlogPosts(): Promise<BlogPostRecord[]> {
-  await ensureContentColumns();
+  await ensureDefaultPublishedContent();
   const rows = await prisma.$queryRaw<Array<Record<string, unknown>>>`
-    SELECT id, title, slug, excerpt, body, "coverUrl", author, category,
-           "isPublished", "publishedAt", "createdAt", "updatedAt"
-    FROM "blog_posts"
+    SELECT * FROM "blog_posts"
     WHERE "isPublished" = true
     ORDER BY "publishedAt" DESC NULLS LAST, "createdAt" DESC
   `;
@@ -181,7 +241,7 @@ export async function getBlogPostBySlug(
 export async function getPublishedBlogPostBySlug(
   slug: string,
 ): Promise<BlogPostRecord | null> {
-  await ensureContentColumns();
+  await ensureDefaultPublishedContent();
   const rows = await prisma.$queryRaw<Array<Record<string, unknown>>>`
     SELECT id, title, slug, excerpt, body, "coverUrl", author, category,
            "isPublished", "publishedAt", "createdAt", "updatedAt"
@@ -301,22 +361,18 @@ export async function deleteBlogPost(
 }
 
 export async function listMediaItems(): Promise<MediaItemRecord[]> {
-  await ensureContentColumns();
+  await ensureDefaultPublishedContent();
   const rows = await prisma.$queryRaw<Array<Record<string, unknown>>>`
-    SELECT id, title, description, "mediaType", url, "thumbnailUrl", category,
-           duration, therapist, "isPublished", "createdAt", "updatedAt"
-    FROM "media_items"
+    SELECT * FROM "media_items"
     ORDER BY "createdAt" DESC
   `;
   return rows.map(mapMediaItem);
 }
 
 export async function listPublishedMediaItems(): Promise<MediaItemRecord[]> {
-  await ensureContentColumns();
+  await ensureDefaultPublishedContent();
   const rows = await prisma.$queryRaw<Array<Record<string, unknown>>>`
-    SELECT id, title, description, "mediaType", url, "thumbnailUrl", category,
-           duration, therapist, "isPublished", "createdAt", "updatedAt"
-    FROM "media_items"
+    SELECT * FROM "media_items"
     WHERE "isPublished" = true
     ORDER BY "createdAt" DESC
   `;
