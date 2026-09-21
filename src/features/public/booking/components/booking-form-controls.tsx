@@ -8,19 +8,25 @@ export function MethodCard({
     icon,
     title,
     sub,
+    disabled = false,
 }: {
     active: boolean;
     onClick: () => void;
     icon: ReactNode;
     title: string;
     sub: string;
+    disabled?: boolean;
 }) {
     return (
         <button
-            onClick={onClick}
-            className={`text-left rounded-2xl border p-5 transition ${active
-                ? "border-primary ring-1 ring-primary bg-background"
-                : "border-border bg-card hover:border-primary"
+            type="button"
+            onClick={disabled ? undefined : onClick}
+            disabled={disabled}
+            className={`text-left rounded-2xl border p-5 transition ${disabled
+                ? "cursor-not-allowed border-border bg-muted/40 opacity-70"
+                : active
+                    ? "border-primary ring-1 ring-primary bg-background"
+                    : "border-border bg-card hover:border-primary"
                 }`}
         >
             <div className="flex items-center gap-2.5 font-semibold">

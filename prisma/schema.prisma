@@ -588,3 +588,19 @@ model SiteSetting {
 
   @@map("site_settings")
 }
+
+model StaffInboxCursor {
+  userId   String   @id
+  viewedAt DateTime @default(now())
+
+  @@map("staff_inbox_cursors")
+}
+
+model StaffNotificationRead {
+  userId         String
+  notificationId String
+  readAt         DateTime @default(now())
+
+  @@id([userId, notificationId])
+  @@map("staff_notification_reads")
+}

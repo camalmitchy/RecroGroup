@@ -117,6 +117,25 @@ describe("startCheckout", () => {
     expect(failPayment).not.toHaveBeenCalled();
   });
 
+  it("rejects card and bank while they are coming soon", async () => {
+    await expect(
+      startCheckout({
+        target: { kind: "booking", bookingId: "bk_1" },
+        method: "CARD",
+      }),
+    ).rejects.toThrow("coming soon");
+
+    await expect(
+      startCheckout({
+        target: { kind: "booking", bookingId: "bk_1" },
+        method: "BANK",
+      }),
+    ).rejects.toThrow("coming soon");
+
+    expect(createPendingPayment).not.toHaveBeenCalled();
+    expect(getProvider).not.toHaveBeenCalled();
+  });
+
   it("refuses to charge a fully paid booking", async () => {
     prismaMock.booking.findUnique.mockResolvedValue({
       ...BOOKING,

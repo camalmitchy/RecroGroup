@@ -51,25 +51,3 @@ export async function listInquiries(filters: InquiryFilters = {}) {
 export async function getInquiryById(id: string) {
   return prisma.inquiry.findUnique({ where: { id } });
 }
-
-export async function listNewsletterSubscribers(filters: {
-  status?: "SUBSCRIBED" | "UNSUBSCRIBED";
-  take?: number;
-  skip?: number;
-} = {}) {
-  const { status, take = 200, skip = 0 } = filters;
-  const where = status ? { status } : {};
-
-  const [items, total, subscribedCount] = await Promise.all([
-    prisma.newsletterSubscriber.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take,
-      skip,
-    }),
-    prisma.newsletterSubscriber.count({ where }),
-    prisma.newsletterSubscriber.count({ where: { status: "SUBSCRIBED" } }),
-  ]);
-
-  return { items, total, subscribedCount };
-}

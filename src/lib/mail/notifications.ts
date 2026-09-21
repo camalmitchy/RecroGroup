@@ -8,6 +8,7 @@ import {
   griefCampApplicationReceived,
   paymentFailed,
   paymentReceipt,
+  staffInquiryAlert,
   staffPaymentAlert,
 } from "./templates";
 
@@ -92,6 +93,21 @@ export async function notifyGriefApplicationReceived(input: {
   amountKes: number;
 }): Promise<void> {
   await dispatch("griefApplicationReceived", () => sendEmail(griefCampApplicationReceived(input)));
+}
+
+export async function notifyInquiryReceived(input: {
+  name: string;
+  email: string;
+  phone?: string | null;
+  subject?: string | null;
+  type: string;
+  message: string;
+}): Promise<void> {
+  await dispatch("inquiryReceived", async () => {
+    const staffAddress = mailConfig.staffAddress;
+    if (!staffAddress) return;
+    await sendEmail(staffInquiryAlert({ recipientEmail: staffAddress, ...input }));
+  });
 }
 
 export async function notifyDonationReceived(input: {

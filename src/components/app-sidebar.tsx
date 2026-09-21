@@ -2,13 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -18,28 +16,19 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { useSignOut } from "@/features/auth/lib/queries";
 import { getNavForRole } from "@/features/portal/lib/permissions";
 import { ROLE_LABELS, type AppRole } from "@/features/portal/lib/roles";
 import type { PortalSession } from "@/features/portal/lib/session";
 
 type AppSidebarProps = {
   role: AppRole;
-  session: PortalSession;
+  session?: PortalSession;
 };
 
-export function AppSidebar({ role, session }: AppSidebarProps) {
+export function AppSidebar({ role }: AppSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const signOut = useSignOut();
   const items = getNavForRole(role);
   const groups = [...new Set(items.map((item) => item.group))];
-
-  async function handleSignOut() {
-    await signOut.mutateAsync();
-    router.push("/login");
-    router.refresh();
-  }
 
   return (
     <Sidebar collapsible="icon">
@@ -102,29 +91,6 @@ export function AppSidebar({ role, session }: AppSidebarProps) {
           </SidebarGroup>
         ))}
       </SidebarContent>
-
-      <SidebarFooter className="border-t border-sidebar-border">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Back to site">
-              <Link href="/">Back to site</Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Sign out"
-              onClick={handleSignOut}
-              disabled={signOut.isPending}
-            >
-              <LogOut />
-              <span>Sign out</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        <p className="truncate px-2 py-1 text-xs text-muted-foreground">
-          {session.name ?? session.email}
-        </p>
-      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

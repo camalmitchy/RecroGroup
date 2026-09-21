@@ -48,8 +48,6 @@ export function providerForMethod(method: PaymentMethod): PaymentProvider {
 export function availableMethods(): PaymentMethod[] {
   const methods: PaymentMethod[] = [];
   if (mpesaProvider.isConfigured()) methods.push("MPESA");
-  if (paystackProvider.isConfigured()) methods.push("CARD");
-  methods.push("BANK");
   return methods;
 }
 

@@ -120,6 +120,13 @@ async function resolveCharge(input: CheckoutInput): Promise<ResolvedCharge> {
 export async function startCheckout(
   input: CheckoutInput,
 ): Promise<CheckoutResult> {
+  if (input.method === "CARD" || input.method === "BANK") {
+    throw new PaymentError(
+      "method_unavailable",
+      "Card and bank payments are coming soon. Please pay with M-Pesa.",
+    );
+  }
+
   const charge = await resolveCharge(input);
   assertPositiveAmount(charge.amountKes, "Payment amount");
 
@@ -131,10 +138,6 @@ export async function startCheckout(
       throw new PaymentError("missing_phone", "A phone number is required for M-Pesa");
     }
     charge.customer.phone = normalizePhone(phone);
-  }
-
-  if (input.method === "CARD" && !charge.customer.email) {
-    throw new PaymentError("missing_email", "An email is required for card payments");
   }
 
   const adapter = getProvider(providerId);
@@ -173,8 +176,8 @@ export async function startCheckout(
           ? (darajaConfig.callbackUrl ??
             absoluteUrl("/api/payments/webhooks/mpesa"))
           : absoluteUrl(
-              `/api/payments/return?reference=${encodeURIComponent(payment.reference)}`,
-            ),
+            `/api/payments/return?reference=${encodeURIComponent(payment.reference)}`,
+          ),
       metadata: {
         paymentId: payment.id,
         purpose: payment.purpose,

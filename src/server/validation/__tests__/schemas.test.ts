@@ -7,6 +7,7 @@ import {
   donationSchema,
 } from "@/server/validation/donation";
 import { inquirySchema } from "@/server/validation/inquiry";
+import { newsletterSchema } from "@/server/validation/newsletter";
 
 const NOW = new Date("2026-08-09T09:00:00.000Z");
 
@@ -184,5 +185,19 @@ describe("inquirySchema", () => {
       type: "CONTACT",
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("newsletterSchema", () => {
+  it("accepts a valid email", () => {
+    expect(newsletterSchema.safeParse({ email: "asha@example.com" }).success).toBe(
+      true,
+    );
+  });
+
+  it("rejects a malformed email", () => {
+    expect(newsletterSchema.safeParse({ email: "not-an-email" }).success).toBe(
+      false,
+    );
   });
 });

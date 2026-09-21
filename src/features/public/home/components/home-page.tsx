@@ -24,7 +24,6 @@ import {
   MoveRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 import {
   homeBookingPerks,
@@ -35,6 +34,7 @@ import {
   homeVideos,
 } from "../data";
 import { resources } from "@/features/public/resources/data/resources-data";
+import { NewsletterSignup } from "@/features/public/shared/newsletter-signup";
 import { HomeVideoCard } from "./home-video-card";
 
 const trustIcons = [ShieldCheck, HeartHandshake, Flame] as const;
@@ -48,7 +48,10 @@ function HomeBookingForm() {
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
         const service = String(fd.get("service") || "individual");
-        router.push(`/join-us?service=${encodeURIComponent(service)}`);
+        const date = String(fd.get("date") || "").trim();
+        const params = new URLSearchParams({ service });
+        if (date) params.set("date", date);
+        router.push(`/booking?${params.toString()}`);
       }}
       className="flex flex-col gap-5"
     >
@@ -105,8 +108,6 @@ function HomeBookingForm() {
 }
 
 export function HomePage() {
-  const [email, setEmail] = useState("");
-
   return (
     <>
       {/* HERO */}
@@ -463,7 +464,9 @@ export function HomePage() {
                         {tip.frequency}
                       </h3>
                       {tipIndex < 2 && (
-                        <MoveRight className="hidden md:block text-primary/40" size={16} />
+                        <span className="hidden md:block text-primary/40">
+                          <MoveRight size={16} />
+                        </span>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mb-4 text-center">
@@ -530,24 +533,7 @@ export function HomePage() {
                 </p>
               </div>
             </div>
-            <form
-              className="flex flex-col gap-3 sm:flex-row md:min-w-[380px]"
-              onSubmit={(e) => {
-                e.preventDefault();
-              }}
-            >
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your email address"
-                required
-                className="flex-1 rounded-full border border-border bg-background px-5 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
-              />
-              <button type="submit" className="btn-primary shrink-0">
-                Subscribe
-              </button>
-            </form>
+            <NewsletterSignup />
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground md:text-left">
             We respect your privacy. Unsubscribe anytime.

@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 
 const schema = z
   .object({
-    method: z.enum(["MPESA", "CARD"]),
+    method: z.enum(["MPESA"]),
     phone: z.string().min(9).optional(),
     email: z.email().optional(),
     name: z.string().min(1).optional(),

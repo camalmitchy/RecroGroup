@@ -81,6 +81,7 @@ export async function createBooking(
     });
 
     revalidatePath("/dashboard/bookings");
+    revalidatePath("/dashboard/notifications");
     revalidatePath("/dashboard");
 
     return ok({

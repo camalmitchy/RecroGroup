@@ -14,9 +14,9 @@ import {
     Settings,
     Search,
     Bell,
-    ArrowLeft,
     User,
     LogOut,
+    Home,
 } from "lucide-react";
 
 import { useSignOut } from "@/features/auth/lib/queries";
@@ -117,25 +117,14 @@ export function AdminShell({
                         );
                     })}
                 </nav>
-
-                {/* Back to site */}
-                <div className="p-3 border-t border-gray-200">
-                    <Link
-                        href="/"
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
-                    >
-                        <ArrowLeft size={16} />
-                        Back to site
-                    </Link>
-                </div>
             </aside>
 
             {/* Main content */}
             <div className="flex-1 flex flex-col">
                 {/* Top bar */}
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-                    <div className="flex-1 max-w-md">
-                        <div className="relative">
+                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-end px-6">
+                    <div className="flex items-center gap-3">
+                        <div className="relative w-56 md:w-80">
                             <Search
                                 size={16}
                                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -146,8 +135,6 @@ export function AdminShell({
                                 className="w-full pl-9 pr-3 h-9 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-deep/30"
                             />
                         </div>
-                    </div>
-                    <div className="flex items-center gap-3">
                         {/* Notifications */}
                         <div className="relative">
                             <button
@@ -261,6 +248,16 @@ export function AdminShell({
 
                                         {/* Menu Items */}
                                         <div className="p-2">
+                                            <Link
+                                                href="/"
+                                                onClick={() => setShowProfileMenu(false)}
+                                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <div className="h-8 w-8 rounded-lg bg-gray-100 grid place-items-center text-gray-600">
+                                                    <Home size={16} />
+                                                </div>
+                                                <span>Back to home (Customer)</span>
+                                            </Link>
                                             <Link
                                                 href="/admin/profile"
                                                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"

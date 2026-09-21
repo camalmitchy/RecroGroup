@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 
 import { createBooking } from "@/server/actions/booking";
-import { recordBankTransfer } from "@/server/actions/payments";
 
 type Step = "service" | "time" | "intake" | "pay" | "done";
 
@@ -92,6 +91,24 @@ const TIME_SLOTS = Array.from({ length: 9 }, (_, i) => {
     return `${displayHour}:00 ${ampm}`;
 });
 
+function generateAvailableDates(from = new Date()) {
+    const dates: Date[] = [];
+    let daysAdded = 0;
+    let offset = 1;
+
+    while (daysAdded < 14) {
+        const date = new Date(from);
+        date.setDate(from.getDate() + offset);
+
+        if (date.getDay() !== 0) {
+            dates.push(date);
+            daysAdded++;
+        }
+        offset++;
+    }
+    return dates;
+}
+
 export function BookingPage({
     services,
     clinicians,
@@ -103,6 +120,7 @@ export function BookingPage({
 }) {
     const searchParams = useSearchParams();
     const serviceParam = searchParams.get("service");
+    const dateParam = searchParams.get("date");
     const preselectedService =
         services.find((s) => s.key === serviceParam) ?? null;
 
@@ -132,12 +150,9 @@ export function BookingPage({
     const [booking, setBooking] = useState<BookingRecord | null>(null);
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethodKey>("mpesa");
     const [mpesaPhone, setMpesaPhone] = useState("");
-    const [bankRef, setBankRef] = useState("");
-    const [proofFile, setProofFile] = useState<File | null>(null);
     const [busy, setBusy] = useState(false);
-    const [idempotencyKey, setIdempotencyKey] = useState<string>(() =>
-        crypto.randomUUID(),
-    );
+    const [idempotencyKey, setIdempotencyKey] = useState("");
+    const [availableDates, setAvailableDates] = useState<Date[]>([]);
     const [pending, setPending] = useState<{
         reference: string;
         amountKes: number;
@@ -163,6 +178,17 @@ export function BookingPage({
         if (step !== "pay") stopPolling();
     }, [step, stopPolling]);
 
+    useEffect(() => {
+        setIdempotencyKey(crypto.randomUUID());
+        setAvailableDates(generateAvailableDates());
+    }, []);
+
+    useEffect(() => {
+        if (!dateParam || availableDates.length === 0) return;
+        const match = availableDates.find((date) => toDateOnly(date) === dateParam);
+        if (match) setSelectedDate(match);
+    }, [dateParam, availableDates]);
+
     const [lastServiceParam, setLastServiceParam] = useState(serviceParam);
     if (serviceParam !== lastServiceParam) {
         setLastServiceParam(serviceParam);
@@ -172,29 +198,6 @@ export function BookingPage({
             setStep((current) => (current === "service" ? "time" : current));
         }
     }
-
-    // Generate available dates (next 14 days, excluding Sundays)
-    const generateAvailableDates = () => {
-        const dates: Date[] = [];
-        const today = new Date();
-        let daysAdded = 0;
-        let offset = 1;
-
-        while (daysAdded < 14) {
-            const date = new Date(today);
-            date.setDate(today.getDate() + offset);
-
-            // Skip Sundays (0 = Sunday)
-            if (date.getDay() !== 0) {
-                dates.push(date);
-                daysAdded++;
-            }
-            offset++;
-        }
-        return dates;
-    };
-
-    const availableDates = generateAvailableDates();
 
     const canProceedFromService = selectedService !== null;
     const canProceedFromTime =
@@ -313,17 +316,14 @@ export function BookingPage({
         [stopPolling],
     );
 
-    const initiatePayment = async (
-        method: "MPESA" | "CARD",
-        phone?: string,
-    ): Promise<InitiateResponse | null> => {
+    const initiatePayment = async (phone?: string): Promise<InitiateResponse | null> => {
         if (!booking) return null;
 
         const response = await fetch("/api/payments/initiate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                method,
+                method: "MPESA",
                 bookingId: booking.bookingId,
                 phone,
                 email: clientEmail,
@@ -351,79 +351,40 @@ export function BookingPage({
         setPayError(null);
         setTimedOut(false);
 
-        if (paymentMethod === "mpesa") {
-            if (mpesaPhone.length !== 9) {
-                setPayError("Enter a valid 9-digit M-Pesa number");
-                return;
-            }
-
-            setBusy(true);
-            try {
-                const result = await initiatePayment("MPESA", `254${mpesaPhone}`);
-                if (!result) return;
-
-                if (result.status === "PAID") {
-                    setPaidAmountKes(result.amountKes);
-                    setBusy(false);
-                    setStep("done");
-                    return;
-                }
-
-                setPending({
-                    reference: result.reference,
-                    amountKes: result.amountKes,
-                    message: result.customerMessage ?? null,
-                });
-                pollUntilSettled(result.reference);
-            } catch (error) {
-                setBusy(false);
-                toast.error(
-                    error instanceof Error ? error.message : "Could not start payment",
-                );
-            }
+        if (paymentMethod !== "mpesa") {
+            setPayError("Card and bank payments are coming soon. Please pay with M-Pesa.");
             return;
         }
 
-        if (paymentMethod === "card") {
-            setBusy(true);
-            try {
-                const result = await initiatePayment("CARD");
-                if (!result) return;
-
-                if (!result.redirectUrl) {
-                    throw new Error("The card provider did not return a checkout link.");
-                }
-
-                window.location.href = result.redirectUrl;
-            } catch (error) {
-                setBusy(false);
-                toast.error(
-                    error instanceof Error ? error.message : "Could not start payment",
-                );
-            }
-            return;
-        }
-
-        if (!bankRef.trim()) {
-            setPayError("Enter the bank reference from your transfer slip");
+        if (mpesaPhone.length !== 9) {
+            setPayError("Enter a valid 9-digit M-Pesa number");
             return;
         }
 
         setBusy(true);
-        const result = await recordBankTransfer({
-            bookingId: booking.bookingId,
-            bankReference: bankRef.trim(),
-            proof: proofFile,
-        });
-        setBusy(false);
+        try {
+            const result = await initiatePayment(`254${mpesaPhone}`);
+            if (!result) return;
 
-        if (!result.ok) {
-            setPayError(result.error);
-            return;
+            if (result.status === "PAID") {
+                setPaidAmountKes(result.amountKes);
+                setBusy(false);
+                setStep("done");
+                return;
+            }
+
+            setPending({
+                reference: result.reference,
+                amountKes: result.amountKes,
+                message: result.customerMessage ?? null,
+            });
+            pollUntilSettled(result.reference);
+        } catch (error) {
+            setBusy(false);
+            toast.error(
+                error instanceof Error ? error.message : "Could not start payment",
+            );
         }
-
-        setPaidAmountKes(result.data.amountKes);
-        setStep("done");
     };
 
     const handleRetry = () => {
@@ -547,10 +508,6 @@ export function BookingPage({
                         }}
                         mpesaPhone={mpesaPhone}
                         setMpesaPhone={setMpesaPhone}
-                        bankRef={bankRef}
-                        setBankRef={setBankRef}
-                        proofFile={proofFile}
-                        setProofFile={setProofFile}
                         busy={busy}
                         pending={pending}
                         secondsLeft={secondsLeft}
@@ -987,10 +944,6 @@ function PaymentStep({
     setPaymentMethod,
     mpesaPhone,
     setMpesaPhone,
-    bankRef,
-    setBankRef,
-    proofFile,
-    setProofFile,
     busy,
     pending,
     secondsLeft,
@@ -1009,10 +962,6 @@ function PaymentStep({
     setPaymentMethod: (m: PaymentMethodKey) => void;
     mpesaPhone: string;
     setMpesaPhone: (v: string) => void;
-    bankRef: string;
-    setBankRef: (v: string) => void;
-    proofFile: File | null;
-    setProofFile: (f: File | null) => void;
     busy: boolean;
     pending: { reference: string; amountKes: number; message: string | null } | null;
     secondsLeft: number;
@@ -1129,18 +1078,20 @@ function PaymentStep({
                             sub="Instant payment"
                         />
                         <MethodCard
-                            active={paymentMethod === "card"}
-                            onClick={() => setPaymentMethod("card")}
+                            active={false}
+                            disabled
+                            onClick={() => undefined}
                             icon={<CreditCard size={18} />}
                             title="Visa / Mastercard"
-                            sub="Secure checkout"
+                            sub="Coming soon"
                         />
                         <MethodCard
-                            active={paymentMethod === "bank"}
-                            onClick={() => setPaymentMethod("bank")}
+                            active={false}
+                            disabled
+                            onClick={() => undefined}
                             icon={<Building2 size={18} />}
                             title="Bank Transfer"
-                            sub="Upload slip"
+                            sub="Coming soon"
                         />
                     </div>
 
@@ -1178,87 +1129,7 @@ function PaymentStep({
                         </div>
                     )}
 
-                    {/* Card Form */}
-                    {paymentMethod === "card" && (
-                        <div className="mt-6 space-y-4">
-                            <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground leading-relaxed">
-                                You&apos;ll be redirected to Paystack&apos;s secure checkout to
-                                complete your commitment fee. Card details are never stored on
-                                our servers.
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Bank Transfer Form */}
-                    {paymentMethod === "bank" && (
-                        <div className="mt-6 space-y-4">
-                            <div className="grid md:grid-cols-2 gap-3">
-                                <div className="rounded-2xl bg-primary-soft p-4 text-xs leading-relaxed">
-                                    <p className="font-semibold text-primary-deep mb-1">
-                                        Kenya Shilling Account
-                                    </p>
-                                    <p>
-                                        <strong>Bank:</strong> SBM Bank
-                                    </p>
-                                    <p>
-                                        <strong>Account name:</strong> Recro Group Limited
-                                    </p>
-                                    <p>
-                                        <strong>Account number:</strong> 0182074946001
-                                    </p>
-                                    <p>
-                                        <strong>Swift:</strong> CKENKENA
-                                    </p>
-                                </div>
-                                <div className="rounded-2xl bg-surface p-4 text-xs leading-relaxed border border-border">
-                                    <p className="font-semibold text-primary-deep mb-1">
-                                        USD Account
-                                    </p>
-                                    <p>
-                                        <strong>Bank:</strong> SBM Bank
-                                    </p>
-                                    <p>
-                                        <strong>Account name:</strong> Recro Group Limited
-                                    </p>
-                                    <p>
-                                        <strong>Account number:</strong> 0182074946003
-                                    </p>
-                                    <p>
-                                        <strong>Swift:</strong> SBMKKENA
-                                    </p>
-                                </div>
-                            </div>
-                            <Field
-                                label="Bank reference / slip number *"
-                                value={bankRef}
-                                onChange={setBankRef}
-                                placeholder="e.g. TXN20260620-9381"
-                            />
-                            <label className="block">
-                                <span className="text-[11px] tracking-[0.18em] font-semibold uppercase text-muted-foreground">
-                                    Proof of payment (PDF or image)
-                                </span>
-                                <input
-                                    type="file"
-                                    accept="image/*,application/pdf"
-                                    onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
-                                    className="mt-2 block w-full text-sm"
-                                />
-                                {proofFile && (
-                                    <span className="mt-1 block text-xs text-muted-foreground">
-                                        {proofFile.name} selected — please also email it to
-                                        hello@recrogroup.org so we can match it to your booking.
-                                    </span>
-                                )}
-                            </label>
-                            <p className="rounded-2xl bg-surface px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-                                Bank transfers are verified manually. Your booking is saved
-                                under reference{" "}
-                                <strong className="text-foreground">{booking.reference}</strong>{" "}
-                                and confirmed once our team matches your payment.
-                            </p>
-                        </div>
-                    )}
+                    {/* Card and bank are coming soon */}
                 </div>
 
                 {/* Action Buttons */}
@@ -1279,10 +1150,6 @@ function PaymentStep({
                             <>
                                 <Loader2 size={16} className="animate-spin" />{" "}
                                 {waiting ? "Waiting for M-Pesa..." : "Processing..."}
-                            </>
-                        ) : paymentMethod === "bank" ? (
-                            <>
-                                <Building2 size={16} /> Submit transfer details
                             </>
                         ) : (
                             <>
@@ -1444,19 +1311,25 @@ function MethodCard({
     icon,
     title,
     sub,
+    disabled = false,
 }: {
     active: boolean;
     onClick: () => void;
     icon: React.ReactNode;
     title: string;
     sub: string;
+    disabled?: boolean;
 }) {
     return (
         <button
-            onClick={onClick}
-            className={`text-left rounded-2xl border p-5 transition ${active
-                ? "border-primary ring-1 ring-primary bg-background"
-                : "border-border bg-card hover:border-primary"
+            type="button"
+            onClick={disabled ? undefined : onClick}
+            disabled={disabled}
+            className={`text-left rounded-2xl border p-5 transition ${disabled
+                ? "cursor-not-allowed border-border bg-muted/40 opacity-70"
+                : active
+                    ? "border-primary ring-1 ring-primary bg-background"
+                    : "border-border bg-card hover:border-primary"
                 }`}
         >
             <div className="flex items-center gap-2.5 font-semibold">

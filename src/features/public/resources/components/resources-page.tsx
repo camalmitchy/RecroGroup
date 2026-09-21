@@ -5,7 +5,7 @@ import { Search, ArrowRight, Mail } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
-import { Button } from "@/components/ui/button";
+import { NewsletterSignup } from "@/features/public/shared/newsletter-signup";
 import { resources } from "../data/resources-data";
 
 const categories = [
@@ -16,7 +16,6 @@ const categories = [
 export function ResourcesPage() {
     const [active, setActive] = useState("All");
     const [q, setQ] = useState("");
-    const [email, setEmail] = useState("");
 
     const filtered = useMemo(
         () =>
@@ -145,24 +144,10 @@ export function ResourcesPage() {
                                 </p>
                             </div>
                         </div>
-                        <form
-                            className="flex flex-col gap-3 sm:flex-row md:min-w-[380px]"
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                            }}
-                        >
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="you@example.com"
-                                required
-                                className="flex-1 rounded-full border border-border bg-background px-5 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
-                            />
-                            <Button type="submit" className="shrink-0 rounded-full">
-                                Subscribe
-                            </Button>
-                        </form>
+                        <NewsletterSignup
+                            placeholder="you@example.com"
+                            buttonClassName="btn-primary shrink-0 rounded-full"
+                        />
                     </div>
                     <p className="mt-4 text-center text-xs text-muted-foreground md:text-left">
                         We respect your privacy. Unsubscribe anytime.

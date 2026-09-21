@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
-import { Phone, Mail, MapPin, Clock, Send, AlertCircle } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, Send, AlertCircle, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { submitInquiry } from "@/server/actions/inquiry";
+import {
+  formatInquiryMessage,
+  truncateSubject,
+} from "@/features/public/shared/inquiry-message";
 
 const locations = [
   {
@@ -47,6 +53,24 @@ const locations = [
   },
 ];
 
+const SERVICE_LABELS: Record<string, string> = {
+  individual: "Individual Therapy",
+  couples: "Couples Therapy",
+  family: "Family Therapy",
+  group: "Group Therapy",
+  "grief-camp": "Grief Camp",
+  corporate: "Corporate Speaking",
+  consortium: "Consortium",
+  supervision: "Supervision",
+  other: "Other",
+};
+
+const LOCATION_LABELS: Record<string, string> = {
+  nairobi: "Nairobi",
+  mombasa: "Mombasa",
+  nakuru: "Nakuru",
+};
+
 export function ContactPage() {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -56,11 +80,51 @@ export function ContactPage() {
     location: "",
     message: "",
   });
+  const [submitted, setSubmitted] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("Form submitted:", formData);
+    if (isPending) return;
+
+    startTransition(async () => {
+      const serviceLabel = SERVICE_LABELS[formData.service] ?? formData.service;
+      const locationLabel = LOCATION_LABELS[formData.location] ?? formData.location;
+      const result = await submitInquiry({
+        type: "CONTACT",
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        subject: truncateSubject(
+          serviceLabel
+            ? `Contact — ${serviceLabel}`
+            : "Contact form",
+        ),
+        message: formatInquiryMessage([
+          {
+            heading: "Contact",
+            fields: [
+              ["Name", formData.fullName],
+              ["Email", formData.email],
+              ["Phone", formData.phone],
+              ["Location", locationLabel],
+              ["Interest", serviceLabel],
+            ],
+          },
+          {
+            heading: "Message",
+            fields: [["Details", formData.message]],
+          },
+        ]),
+      });
+
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+
+      setSubmitted(true);
+    });
   };
 
   return (
@@ -102,6 +166,19 @@ export function ContactPage() {
       <section className="container-page py-16 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
           {/* Contact Form */}
+          {submitted ? (
+            <div className="space-y-4 rounded-2xl bg-white p-8 shadow-sm">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft">
+                <CheckCircle className="h-7 w-7 text-primary-deep" />
+              </div>
+              <h2 className="font-serif text-2xl text-foreground">
+                Thank you. We have your message.
+              </h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                A member of the Recro team will reply within one working day.
+              </p>
+            </div>
+          ) : (
           <form
             onSubmit={handleSubmit}
             className="space-y-6 rounded-2xl bg-white p-8 shadow-sm"
@@ -219,12 +296,14 @@ export function ContactPage() {
             <Button
               type="submit"
               size="lg"
+              disabled={isPending}
               className="rounded-full bg-primary-deep hover:bg-primary-deep/90"
             >
-              Send message
+              {isPending ? "Sending…" : "Send message"}
               <Send className="size-4 ml-2" />
             </Button>
           </form>
+          )}
 
           {/* Contact Info & Crisis Notice */}
           <div className="space-y-6">

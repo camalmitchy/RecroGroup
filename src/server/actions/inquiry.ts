@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { notifyInquiryReceived } from "@/lib/mail/notifications";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/server/result";
 import { failure, invalid, ok } from "@/server/result";
@@ -31,6 +32,15 @@ export async function submitInquiry(
         message: values.message,
       },
       select: { id: true },
+    });
+
+    await notifyInquiryReceived({
+      name: values.name,
+      email: values.email,
+      phone: values.phone,
+      subject: values.subject,
+      type: values.type,
+      message: values.message,
     });
 
     revalidatePath("/dashboard/inquiries");

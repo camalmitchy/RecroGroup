@@ -187,11 +187,12 @@ export function PaymentStep({
                             sub="A prompt is sent to your phone."
                         />
                         <MethodCard
-                            active={method === "CARD"}
-                            onClick={() => setMethod("CARD")}
+                            active={false}
+                            disabled
+                            onClick={() => undefined}
                             icon={<CreditCard size={18} />}
                             title="Visa / Mastercard"
-                            sub="Secure hosted checkout."
+                            sub="Coming soon"
                         />
                     </div>
 
@@ -218,13 +219,6 @@ export function PaymentStep({
                             <p className="mt-2 text-xs text-muted-foreground">
                                 You will receive an STK push for KES {total.toLocaleString()}.
                             </p>
-                        </div>
-                    )}
-
-                    {method === "CARD" && (
-                        <div className="rounded-lg border border-border bg-card p-5 text-sm leading-relaxed text-muted-foreground">
-                            You will be redirected to a secure hosted checkout to enter your card
-                            details. Card information never touches our servers.
                         </div>
                     )}
                 </>
@@ -255,12 +249,12 @@ export function PaymentStep({
                         disabled={busy}
                         className="inline-flex items-center gap-2 rounded-full bg-primary-deep px-8 py-3 text-sm font-semibold text-white transition hover:bg-primary-deep/90 disabled:opacity-50"
                     >
-                        {phase === "initiating" ? (
-                            <>
-                                <Loader2 className="size-4 animate-spin" />
-                                {method === "CARD" ? "Redirecting…" : "Sending prompt…"}
-                            </>
-                        ) : (
+                                {phase === "initiating" ? (
+                                    <>
+                                        <Loader2 className="size-4 animate-spin" />
+                                        Sending prompt…
+                                    </>
+                                ) : (
                             <>
                                 Pay KES {total.toLocaleString()}
                                 <Check className="size-4" />
@@ -326,20 +320,25 @@ function MethodCard({
     icon,
     title,
     sub,
+    disabled = false,
 }: {
     active: boolean;
     onClick: () => void;
     icon: React.ReactNode;
     title: string;
     sub: string;
+    disabled?: boolean;
 }) {
     return (
         <button
             type="button"
-            onClick={onClick}
-            className={`rounded-2xl border p-5 text-left transition ${active
-                ? "border-primary-deep bg-background ring-1 ring-primary-deep"
-                : "border-border bg-card hover:border-primary-deep"
+            onClick={disabled ? undefined : onClick}
+            disabled={disabled}
+            className={`rounded-2xl border p-5 text-left transition ${disabled
+                ? "cursor-not-allowed border-border bg-muted/40 opacity-70"
+                : active
+                    ? "border-primary-deep bg-background ring-1 ring-primary-deep"
+                    : "border-border bg-card hover:border-primary-deep"
                 }`}
         >
             <span className="flex items-center gap-2.5 font-semibold text-foreground">

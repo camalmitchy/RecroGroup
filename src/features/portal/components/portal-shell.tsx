@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Bell, Search, User, LogOut } from "lucide-react";
+import { Search, User, LogOut, Home } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -13,13 +13,16 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  NotificationsBell,
+  type NotificationRow,
+} from "@/features/portal/components/notifications-panel";
 import type { PortalSession } from "@/features/portal/lib/session";
 import { ROLE_LABELS } from "@/features/portal/lib/roles";
 import { useSignOut } from "@/features/auth/lib/queries";
@@ -27,6 +30,8 @@ import { useSignOut } from "@/features/auth/lib/queries";
 type PortalShellProps = {
   session: PortalSession;
   children: ReactNode;
+  notifications?: NotificationRow[];
+  unreadCount?: number;
 };
 
 function initialsFor(name: string | null, email: string) {
@@ -35,7 +40,12 @@ function initialsFor(name: string | null, email: string) {
   return (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
 }
 
-export function PortalShell({ session, children }: PortalShellProps) {
+export function PortalShell({
+  session,
+  children,
+  notifications = [],
+  unreadCount = 0,
+}: PortalShellProps) {
   const router = useRouter();
   const signOut = useSignOut();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -55,29 +65,19 @@ export function PortalShell({ session, children }: PortalShellProps) {
         <SidebarInset className="bg-[var(--admin-bg)]">
           <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 md:px-6">
             <SidebarTrigger className="-ml-1 lg:hidden" />
-            <Separator orientation="vertical" className="mr-2 hidden h-4 lg:block" />
-            {isStaff ? (
-              <div className="relative max-w-md flex-1">
-                <Search className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search bookings, customers…"
-                  className="h-9 bg-[var(--admin-bg)] pl-9"
-                />
-              </div>
-            ) : (
-              <div className="flex-1" />
-            )}
 
-            {/* User Profile Section */}
-            <div className="flex items-center gap-3">
+            <div className="ml-auto flex items-center gap-3">
               {isStaff && (
-                <button
-                  type="button"
-                  aria-label="Notifications"
-                  className="grid size-9 place-items-center rounded-lg hover:bg-[var(--admin-bg)] transition-colors"
-                >
-                  <Bell className="size-4" />
-                </button>
+                <div className="relative w-56 md:w-80">
+                  <Search className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search bookings, customers…"
+                    className="h-9 bg-[var(--admin-bg)] pl-9"
+                  />
+                </div>
+              )}
+              {isStaff && (
+                <NotificationsBell items={notifications} unreadCount={unreadCount} />
               )}
 
               <div className="relative">
@@ -128,6 +128,16 @@ export function PortalShell({ session, children }: PortalShellProps) {
 
                       {/* Menu Items */}
                       <div className="p-2">
+                        <Link
+                          href="/"
+                          onClick={() => setShowProfileMenu(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="size-8 rounded-lg bg-muted grid place-items-center">
+                            <Home className="size-4" />
+                          </div>
+                          <span>Back to home (Customer)</span>
+                        </Link>
                         <Link
                           href="/dashboard/settings"
                           onClick={() => setShowProfileMenu(false)}
