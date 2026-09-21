@@ -23,7 +23,13 @@ const { deleteService, deleteTherapist, setUserRole, setUserRoleByEmail, upsertS
   "@/server/actions/catalog"
 );
 
-const ADMIN = { userId: "admin_1", email: "a@e.com", name: "Admin", role: "admin" };
+const ADMIN = {
+  userId: "admin_1",
+  email: "a@e.com",
+  name: "Admin",
+  image: null,
+  role: "admin",
+};
 
 const validService = {
   title: "Individual Therapy",

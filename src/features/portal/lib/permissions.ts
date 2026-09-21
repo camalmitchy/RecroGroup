@@ -96,7 +96,7 @@ export function canAccessRoute(role: AppRole, pathname: string) {
     return false;
   }
 
-  if (pathname === "/dashboard") {
+  if (pathname === "/dashboard" || pathname === "/dashboard/profile") {
     return role === "admin" || role === "receptionist";
   }
 

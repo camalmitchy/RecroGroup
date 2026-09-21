@@ -22,6 +22,11 @@ const nextConfig = {
                 hostname: "placehold.co",
                 pathname: "/**",
             },
+            {
+                protocol: "https",
+                hostname: "*.public.blob.vercel-storage.com",
+                pathname: "/**",
+            },
         ],
     },
     async headers() {

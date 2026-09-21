@@ -30,7 +30,13 @@ const {
   setInquiryStatus,
 } = await import("@/server/actions/operations");
 
-const STAFF = { userId: "u1", email: "s@e.com", name: "Staff", role: "receptionist" };
+const STAFF = {
+  userId: "u1",
+  email: "s@e.com",
+  name: "Staff",
+  image: null,
+  role: "receptionist",
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
