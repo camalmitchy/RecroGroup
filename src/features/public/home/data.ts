@@ -20,7 +20,7 @@ export const homeServices = [
   {
     icon: "/assets/icons/group-therapy.svg",
     title: "Group Therapy",
-    body: "Healing through shared experience in small, facilitated, confidential groups.",
+    body: "Healing through shared experience in groups of 8–10. Each session runs for 2 hours; the number of sessions varies based on the topic.",
     serviceKey: "group",
   },
   {
@@ -38,8 +38,14 @@ export const homeServices = [
   {
     icon: "/assets/icons/group-therapy.svg",
     title: "Consortium",
-    body: "A collaborative network of mental health professionals advancing behavioral health services across Kenya.",
+    body: "A collaborative network of mental health professionals advancing behavioral health services across Kenya. Membership is KES 2,000 per month per person.",
     serviceKey: "consortium",
+  },
+  {
+    icon: "/assets/icons/individual-therapy.svg",
+    title: "Supervision",
+    body: "We provide supervision on both levels: Individual and Group. Whether you are a novice therapist or a seasoned one and need Supervision, kindly contact us to schedule your sessions.",
+    serviceKey: "supervision",
   },
 ] as const;
 

@@ -107,6 +107,10 @@ export const familyService: ServiceDetail = {
         q: "Can you help blended families?",
         a: "Yes. Blended family dynamics are one of our most common focus areas.",
       },
+      {
+        q: "How much does a session cost?",
+        a: "Family therapy is KES 7,000 per session. A commitment fee of KES 3,500 is payable to secure your slot.",
+      },
     ],
     testimonial: {
       quote:
@@ -115,8 +119,8 @@ export const familyService: ServiceDetail = {
       role: "Family therapy clients",
     },
     duration: "50 min",
-    pricing: "From KES 8,000",
-    pricingNote: "Extended sessions available for larger families.",
+    pricing: "KES 7,000",
+    pricingNote: "Commitment fee KES 3,500.",
     mode: "In-person · Online",
     availability: "Within 1 week",
     booking: "Parent intake within 3 working days",

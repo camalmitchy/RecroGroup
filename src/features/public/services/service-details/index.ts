@@ -7,6 +7,7 @@ import { childrenService } from "./children";
 import { groupService } from "./group";
 import { corporateService } from "./corporate";
 import { consortiumService } from "./consortium";
+import { supervisionService } from "./supervision";
 
 export { serviceList } from "./service-list";
 
@@ -18,6 +19,7 @@ export const servicesBySlug: Record<string, ServiceDetail> = {
   group: groupService,
   corporate: corporateService,
   consortium: consortiumService,
+  supervision: supervisionService,
 };
 
 export const serviceSlugs = Object.keys(servicesBySlug);

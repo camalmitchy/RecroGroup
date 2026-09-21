@@ -193,6 +193,8 @@ export function ContactPage() {
                   <SelectItem value="group">Group Therapy</SelectItem>
                   <SelectItem value="grief-camp">Grief Camp</SelectItem>
                   <SelectItem value="corporate">Corporate Speaking</SelectItem>
+                  <SelectItem value="consortium">Consortium</SelectItem>
+                  <SelectItem value="supervision">Supervision</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>

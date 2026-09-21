@@ -19,11 +19,50 @@ import {
 import type { ServiceDetail } from "../data";
 import { serviceList } from "../data";
 
-type ServiceDetailPageProps = {
-  service: ServiceDetail;
+type ServiceCta = {
+  href: string;
+  heroLabel: string;
+  glanceLabel: string;
 };
 
-export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
+function getServiceCta(service: ServiceDetail): ServiceCta {
+  if (service.key === "consortium") {
+    return {
+      href: "/services/consortium/apply",
+      heroLabel: service.ctaLabel,
+      glanceLabel: "Apply Now",
+    };
+  }
+  if (service.key === "corporate") {
+    return {
+      href: "/services/corporate/inquiry",
+      heroLabel: service.ctaLabel,
+      glanceLabel: "Apply Now",
+    };
+  }
+  if (service.key === "children") {
+    return {
+      href: "/grief-camp/apply",
+      heroLabel: "Register for camp",
+      glanceLabel: "Register for camp",
+    };
+  }
+  if (service.key === "supervision") {
+    return {
+      href: "/contact",
+      heroLabel: service.ctaLabel,
+      glanceLabel: "Contact us",
+    };
+  }
+  return {
+    href: `/booking?service=${service.key}`,
+    heroLabel: service.ctaLabel,
+    glanceLabel: "Book now",
+  };
+}
+
+export function ServiceDetailPage({ service }: { service: ServiceDetail }) {
+  const cta = getServiceCta(service);
 
   return (
     <>
@@ -50,18 +89,10 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 <Link
-                  href={
-                    service.key === "consortium"
-                      ? `/services/consortium/apply`
-                      : service.key === "corporate"
-                        ? `/services/corporate/inquiry`
-                        : service.key === "children"
-                          ? `/grief-camp/apply`
-                          : `/booking?service=${service.key}`
-                  }
+                  href={cta.href}
                   className="btn-primary rounded-full px-7"
                 >
-                  {service.key === "children" ? "Register for camp" : service.ctaLabel}
+                  {cta.heroLabel}
                 </Link>
                 <Link href="/contact" className="btn-secondary rounded-full px-7">
                   Ask a question
@@ -300,6 +331,11 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
                     <p className="mt-1 text-base font-medium text-foreground">
                       {service.pricing}
                     </p>
+                    {service.pricingNote ? (
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                        {service.pricingNote}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
@@ -333,16 +369,10 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
               </div>
 
               <Link
-                href={
-                  service.key === "consortium"
-                    ? `/services/consortium/apply`
-                    : service.key === "corporate"
-                      ? `/services/corporate/inquiry`
-                      : `/booking?service=${service.key}`
-                }
+                href={cta.href}
                 className="btn-primary mt-8 w-full rounded-full"
               >
-                {service.key === "consortium" || service.key === "corporate" ? "Apply Now" : "Book now"}{" "}
+                {cta.glanceLabel}{" "}
                 <ArrowRight className="ml-2 size-4" />
               </Link>
             </div>
@@ -370,13 +400,15 @@ export function ServiceDetailPage({ service }: ServiceDetailPageProps) {
             .slice(0, 3)
             .map((relatedService) => {
               // Map icon names to actual icon components
-              const iconMap: Record<string, any> = {
+              const iconMap: Record<string, typeof UsersIcon> = {
                 individual: UsersIcon,
                 couples: Heart,
                 family: Home,
                 group: UsersIcon,
                 children: Flame,
                 corporate: Settings,
+                consortium: UsersIcon,
+                supervision: UsersIcon,
               };
 
               const IconComponent = iconMap[relatedService.slug] || Flame;
