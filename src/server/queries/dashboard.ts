@@ -11,6 +11,24 @@ export type DashboardStats = {
   revenueKes: number;
 };
 
+async function safeCount(query: Promise<number>) {
+  try {
+    return await query;
+  } catch (error) {
+    console.error("[getDashboardStats]", error);
+    return 0;
+  }
+}
+
+async function safeSum(query: Promise<{ _sum: { amountKes: number | null } }>) {
+  try {
+    return await query;
+  } catch (error) {
+    console.error("[getDashboardStats]", error);
+    return { _sum: { amountKes: 0 } };
+  }
+}
+
 export async function getDashboardStats(): Promise<DashboardStats> {
   const [
     bookingTotal,
@@ -27,25 +45,31 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     donationPaid,
     revenue,
   ] = await Promise.all([
-    prisma.booking.count(),
-    prisma.booking.count({ where: { status: "REQUESTED" } }),
-    prisma.booking.count({ where: { status: "CONFIRMED" } }),
-    prisma.payment.count(),
-    prisma.payment.count({ where: { status: "PENDING" } }),
-    prisma.payment.count({ where: { status: "PAID" } }),
-    prisma.griefApplication.count(),
-    prisma.griefApplication.count({ where: { status: "PENDING" } }),
-    prisma.inquiry.count(),
-    prisma.inquiry.count({ where: { status: { in: ["NEW", "IN_PROGRESS"] } } }),
-    prisma.donation.count(),
-    prisma.donation.aggregate({
-      where: { paymentStatus: "PAID" },
-      _sum: { amountKes: true },
-    }),
-    prisma.payment.aggregate({
-      where: { status: "PAID" },
-      _sum: { amountKes: true },
-    }),
+    safeCount(prisma.booking.count()),
+    safeCount(prisma.booking.count({ where: { status: "REQUESTED" } })),
+    safeCount(prisma.booking.count({ where: { status: "CONFIRMED" } })),
+    safeCount(prisma.payment.count()),
+    safeCount(prisma.payment.count({ where: { status: "PENDING" } })),
+    safeCount(prisma.payment.count({ where: { status: "PAID" } })),
+    safeCount(prisma.griefApplication.count()),
+    safeCount(prisma.griefApplication.count({ where: { status: "PENDING" } })),
+    safeCount(prisma.inquiry.count()),
+    safeCount(
+      prisma.inquiry.count({ where: { status: { in: ["NEW", "IN_PROGRESS"] } } }),
+    ),
+    safeCount(prisma.donation.count()),
+    safeSum(
+      prisma.donation.aggregate({
+        where: { paymentStatus: "PAID" },
+        _sum: { amountKes: true },
+      }),
+    ),
+    safeSum(
+      prisma.payment.aggregate({
+        where: { status: "PAID" },
+        _sum: { amountKes: true },
+      }),
+    ),
   ]);
 
   return {
@@ -67,18 +91,38 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
 export async function getRecentActivity(take = 5) {
   const [bookings, payments, applications, inquiries] = await Promise.all([
-    prisma.booking.findMany({
-      orderBy: { createdAt: "desc" },
-      take,
-      include: { service: { select: { title: true } } },
-    }),
-    prisma.payment.findMany({
-      orderBy: { createdAt: "desc" },
-      take,
-      include: { booking: { select: { reference: true, clientName: true } } },
-    }),
-    prisma.griefApplication.findMany({ orderBy: { createdAt: "desc" }, take }),
-    prisma.inquiry.findMany({ orderBy: { createdAt: "desc" }, take }),
+    prisma.booking
+      .findMany({
+        orderBy: { createdAt: "desc" },
+        take,
+        include: { service: { select: { title: true } } },
+      })
+      .catch((error) => {
+        console.error("[getRecentActivity.bookings]", error);
+        return [];
+      }),
+    prisma.payment
+      .findMany({
+        orderBy: { createdAt: "desc" },
+        take,
+        include: { booking: { select: { reference: true, clientName: true } } },
+      })
+      .catch((error) => {
+        console.error("[getRecentActivity.payments]", error);
+        return [];
+      }),
+    prisma.griefApplication
+      .findMany({ orderBy: { createdAt: "desc" }, take })
+      .catch((error) => {
+        console.error("[getRecentActivity.applications]", error);
+        return [];
+      }),
+    prisma.inquiry
+      .findMany({ orderBy: { createdAt: "desc" }, take })
+      .catch((error) => {
+        console.error("[getRecentActivity.inquiries]", error);
+        return [];
+      }),
   ]);
 
   return { bookings, payments, applications, inquiries };

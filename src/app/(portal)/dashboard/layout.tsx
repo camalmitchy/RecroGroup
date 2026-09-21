@@ -18,7 +18,7 @@ export default async function PortalLayout({ children }: PortalLayoutProps) {
   const feed = await getStaffNotifications(session.userId, {
     take: 8,
     unreadOnly: true,
-  });
+  }).catch(() => ({ items: [], unreadCount: 0 }));
 
   return (
     <PortalShell

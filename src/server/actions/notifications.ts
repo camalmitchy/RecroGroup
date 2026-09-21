@@ -4,19 +4,9 @@ import { revalidatePath } from "next/cache";
 
 import { getPortalSession } from "@/features/portal/lib/session";
 import { prisma } from "@/lib/prisma";
+import { ensureStaffInboxTables } from "@/server/queries/notifications";
 import type { ActionResult } from "@/server/result";
 import { fail, failure, ok } from "@/server/result";
-
-async function ensureReadTable() {
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "staff_notification_reads" (
-      "userId" TEXT NOT NULL,
-      "notificationId" TEXT NOT NULL,
-      "readAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY ("userId", "notificationId")
-    )
-  `);
-}
 
 function revalidateInbox() {
   revalidatePath("/dashboard", "layout");
@@ -30,8 +20,9 @@ export async function markNotificationsRead(
     const session = await getPortalSession();
     if (!session) return fail("You must be signed in to do that");
 
+    await ensureStaffInboxTables();
+
     if (notificationId) {
-      await ensureReadTable();
       await prisma.$executeRaw`
         INSERT INTO "staff_notification_reads" ("userId", "notificationId")
         VALUES (${session.userId}, ${notificationId})
