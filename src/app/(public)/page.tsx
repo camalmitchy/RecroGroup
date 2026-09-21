@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 
 import { HomePage } from "@/features/public/home/components/home-page";
+import {
+  listPublishedMedia,
+  listPublishedResources,
+} from "@/server/queries/catalog";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Recro Group — Restoring families through therapy & care",
@@ -13,6 +19,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
-  return <HomePage />;
+export default async function Page() {
+  const [resources, videos] = await Promise.all([
+    listPublishedResources(),
+    listPublishedMedia(),
+  ]);
+
+  return <HomePage resources={resources} videos={videos} />;
 }

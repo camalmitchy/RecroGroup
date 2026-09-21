@@ -84,30 +84,6 @@ export const homeTrustFeatures = [
   },
 ] as const;
 
-export const homeVideos = [
-  {
-    title: "Benefits of Therapy",
-    desc: "Why talking helps — and what changes inside us when it does.",
-    duration: "12:40",
-    videoId: "yrtRlE6HlUU",
-    thumbnail: "https://i.ytimg.com/vi/yrtRlE6HlUU/hqdefault.jpg",
-  },
-  {
-    title: "Forgiveness",
-    desc: "Understanding the emotional architecture of letting go.",
-    duration: "9:08",
-    videoId: "f3omumMGIw0",
-    thumbnail: "https://i.ytimg.com/vi/f3omumMGIw0/hqdefault.jpg",
-  },
-  {
-    title: "Expectations in Relationships",
-    desc: "Where unspoken expectations come from and how to name them.",
-    duration: "14:22",
-    videoId: "6yd3gLyuR_0",
-    thumbnail: "https://i.ytimg.com/vi/6yd3gLyuR_0/hqdefault.jpg",
-  },
-] as const;
-
 export const homeBookingPerks = [
   "Commitment fee: half now, balance at session",
   "In-person sessions in Nairobi",

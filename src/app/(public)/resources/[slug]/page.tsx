@@ -2,23 +2,22 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ResourceArticlePage } from "@/features/public/resources/components/resource-article-page";
-import { resources } from "@/features/public/resources/data/resources-data";
+import {
+  getPublishedResourceBySlug,
+  listRelatedResources,
+} from "@/server/queries/catalog";
+
+export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return resources.map((resource) => ({
-    slug: resource.slug,
-  }));
-}
-
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const resource = resources.find((r) => r.slug === slug);
+  const resource = await getPublishedResourceBySlug(slug);
 
   if (!resource) {
     return {
@@ -39,11 +38,13 @@ export async function generateMetadata({
 
 export default async function Page({ params }: PageProps) {
   const { slug } = await params;
-  const resource = resources.find((r) => r.slug === slug);
+  const resource = await getPublishedResourceBySlug(slug);
 
   if (!resource) {
     notFound();
   }
 
-  return <ResourceArticlePage resource={resource} />;
+  const related = await listRelatedResources(resource.slug, resource.category);
+
+  return <ResourceArticlePage resource={resource} related={related} />;
 }

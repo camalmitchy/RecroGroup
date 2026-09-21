@@ -6,14 +6,13 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { NewsletterSignup } from "@/features/public/shared/newsletter-signup";
-import { resources } from "../data/resources-data";
+import type { PublicResource } from "@/features/public/content/types";
 
-const categories = [
-    "All",
-    ...Array.from(new Set(resources.map((r) => r.category))),
-];
-
-export function ResourcesPage() {
+export function ResourcesPage({ resources }: { resources: PublicResource[] }) {
+    const categories = [
+        "All",
+        ...Array.from(new Set(resources.map((r) => r.category))),
+    ];
     const [active, setActive] = useState("All");
     const [q, setQ] = useState("");
 
@@ -24,7 +23,7 @@ export function ResourcesPage() {
                     (active === "All" || r.category === active) &&
                     (q.trim() === "" || r.title.toLowerCase().includes(q.toLowerCase())),
             ),
-        [active, q],
+        [resources, active, q],
     );
 
     return (
@@ -93,7 +92,9 @@ export function ResourcesPage() {
                 <div className="container-page py-12 md:py-16">
                     {filtered.length === 0 ? (
                         <p className="py-16 text-center text-muted-foreground">
-                            No articles match that search.
+                            {resources.length === 0
+                                ? "No articles published yet."
+                                : "No articles match that search."}
                         </p>
                     ) : (
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

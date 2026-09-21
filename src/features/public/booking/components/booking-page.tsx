@@ -21,6 +21,16 @@ import {
 } from "lucide-react";
 
 import { createBooking } from "@/server/actions/booking";
+import {
+    TIME_SLOTS,
+    bookingEntryStep,
+    formatBookingDateLong,
+    formatWeekday,
+    generateAvailableDates,
+    normalizeTimeSlot,
+    parseDateOnly,
+    toDateOnly,
+} from "@/features/public/booking/lib/schedule";
 
 type Step = "service" | "time" | "intake" | "pay" | "done";
 
@@ -83,31 +93,6 @@ type BookingRecord = {
 const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 120_000;
 
-// Generate time slots (9 AM to 5 PM, hourly)
-const TIME_SLOTS = Array.from({ length: 9 }, (_, i) => {
-    const hour = i + 9;
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const displayHour = hour > 12 ? hour - 12 : hour;
-    return `${displayHour}:00 ${ampm}`;
-});
-
-function generateAvailableDates(from = new Date()) {
-    const dates: Date[] = [];
-    let daysAdded = 0;
-    let offset = 1;
-
-    while (daysAdded < 14) {
-        const date = new Date(from);
-        date.setDate(from.getDate() + offset);
-
-        if (date.getDay() !== 0) {
-            dates.push(date);
-            daysAdded++;
-        }
-        offset++;
-    }
-    return dates;
-}
 
 export function BookingPage({
     services,
@@ -121,11 +106,16 @@ export function BookingPage({
     const searchParams = useSearchParams();
     const serviceParam = searchParams.get("service");
     const dateParam = searchParams.get("date");
+    const timeParam = normalizeTimeSlot(searchParams.get("time"));
     const preselectedService =
         services.find((s) => s.key === serviceParam) ?? null;
 
     const [step, setStep] = useState<Step>(
-        preselectedService ? "time" : "service",
+        bookingEntryStep({
+            hasService: Boolean(preselectedService),
+            date: dateParam,
+            time: timeParam,
+        }),
     );
 
     // Service step
@@ -135,8 +125,10 @@ export function BookingPage({
 
     // Time step
     const [clinician, setClinician] = useState<string>(clinicians[0]?.id ?? "");
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const [selectedTime, setSelectedTime] = useState<string>("");
+    const [selectedDate, setSelectedDate] = useState<Date | null>(
+        () => parseDateOnly(dateParam),
+    );
+    const [selectedTime, setSelectedTime] = useState<string>(timeParam ?? "");
 
     // Intake step
     const [clientName, setClientName] = useState(defaultClient?.name ?? "");
@@ -195,7 +187,14 @@ export function BookingPage({
         const nextService = services.find((s) => s.key === serviceParam);
         if (nextService) {
             setSelectedService(nextService);
-            setStep((current) => (current === "service" ? "time" : current));
+            const parsedDate = parseDateOnly(dateParam);
+            if (parsedDate && timeParam) {
+                setSelectedDate(parsedDate);
+                setSelectedTime(timeParam);
+                setStep("intake");
+            } else {
+                setStep((current) => (current === "service" ? "time" : current));
+            }
         }
     }
 
@@ -479,6 +478,15 @@ export function BookingPage({
 
                 {step === "intake" && (
                     <IntakeStep
+                        recap={
+                            selectedService && selectedDate && selectedTime
+                                ? {
+                                      service: selectedService.title,
+                                      date: selectedDate,
+                                      time: selectedTime,
+                                  }
+                                : null
+                        }
                         clientName={clientName}
                         setClientName={setClientName}
                         clientEmail={clientEmail}
@@ -659,7 +667,7 @@ function TimeStep({
     onNext: () => void;
 }) {
     const weekdayLabel = selectedDate
-        ? selectedDate.toLocaleDateString("en-US", { weekday: "long" })
+        ? formatWeekday(selectedDate)
         : null;
 
     return (
@@ -815,6 +823,7 @@ function TimeStep({
 }
 
 function IntakeStep({
+    recap,
     clientName,
     setClientName,
     clientEmail,
@@ -828,6 +837,7 @@ function IntakeStep({
     onBack,
     onNext,
 }: {
+    recap: { service: string; date: Date; time: string } | null;
     clientName: string;
     setClientName: (v: string) => void;
     clientEmail: string;
@@ -849,6 +859,20 @@ function IntakeStep({
 
     return (
         <div className="space-y-6">
+            {recap && (
+                <div className="rounded-2xl border border-border bg-primary-soft/50 px-5 py-4">
+                    <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                        Your session
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                        {recap.service}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        {formatBookingDateLong(recap.date)} at {recap.time} ·
+                        In-person, Nairobi
+                    </p>
+                </div>
+            )}
             <div className="bg-background rounded-2xl border-2 border-border p-7 md:p-9 shadow-sm">
                 <div className="space-y-4">
                     <Field
@@ -1372,11 +1396,6 @@ function Field({
             {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
         </div>
     );
-}
-
-function toDateOnly(date: Date) {
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
 function toLocalDigits(phone: string) {

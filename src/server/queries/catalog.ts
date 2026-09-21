@@ -1,6 +1,26 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import {
+  extractYoutubeId,
+  readingTimeLabel,
+  youtubeEmbedUrl,
+  youtubeThumbnailUrl,
+} from "@/lib/content";
+import type {
+  PublicMediaItem,
+  PublicResource,
+} from "@/features/public/content/types";
+import {
+  getPublishedBlogPostBySlug,
+  listBlogPosts as listBlogPostRecords,
+  listMediaItems as listMediaItemRecords,
+  listPublishedBlogPosts,
+  listPublishedMediaItems,
+  listRelatedBlogPosts,
+} from "@/server/queries/content-store";
+
+export type { PublicMediaItem, PublicResource };
 
 export async function listServices() {
   return prisma.service.findMany({
@@ -27,11 +47,95 @@ export async function listTestimonials() {
 }
 
 export async function listBlogPosts() {
-  return prisma.blogPost.findMany({ orderBy: { createdAt: "desc" } });
+  return listBlogPostRecords();
 }
 
 export async function listMediaItems() {
-  return prisma.mediaItem.findMany({ orderBy: { createdAt: "desc" } });
+  return listMediaItemRecords();
+}
+
+function toPublicResource(post: {
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  body: string | null;
+  category: string | null;
+  publishedAt: Date | null;
+  createdAt: Date;
+  author: string | null;
+}): PublicResource {
+  return {
+    slug: post.slug,
+    title: post.title,
+    excerpt: post.excerpt ?? "",
+    category: post.category ?? "Resources",
+    readingTime: readingTimeLabel(post.body),
+    publishedAt: (post.publishedAt ?? post.createdAt).toISOString(),
+    content: post.body,
+    author: post.author,
+  };
+}
+
+function toPublicMediaItem(item: {
+  id: string;
+  title: string;
+  description: string | null;
+  url: string;
+  thumbnailUrl: string | null;
+  category: string | null;
+  duration: string | null;
+  therapist: string | null;
+}): PublicMediaItem {
+  const videoId = extractYoutubeId(item.url);
+  return {
+    id: item.id,
+    title: item.title,
+    excerpt: item.description ?? "",
+    category: item.category ?? "Media",
+    duration: item.duration ?? "",
+    videoId,
+    embedUrl: videoId ? youtubeEmbedUrl(videoId, true) : item.url,
+    thumbnail:
+      item.thumbnailUrl ||
+      (videoId ? youtubeThumbnailUrl(videoId) : "/assets/media.jpg"),
+    therapist: item.therapist ?? "",
+  };
+}
+
+export async function listPublishedResources(): Promise<PublicResource[]> {
+  const posts = await listPublishedBlogPosts();
+  return posts.map(toPublicResource);
+}
+
+export async function getPublishedResourceBySlug(
+  slug: string,
+): Promise<PublicResource | null> {
+  const post = await getPublishedBlogPostBySlug(slug);
+  return post ? toPublicResource(post) : null;
+}
+
+export async function listRelatedResources(
+  slug: string,
+  category: string,
+  take = 3,
+): Promise<PublicResource[]> {
+  const others = await listRelatedBlogPosts(slug, 20);
+
+  const sameCategory = others.filter((post) => post.category === category);
+  const selected =
+    sameCategory.length > 0
+      ? [
+          ...sameCategory,
+          ...others.filter((post) => post.category !== category),
+        ].slice(0, take)
+      : others.slice(0, take);
+
+  return selected.map(toPublicResource);
+}
+
+export async function listPublishedMedia(): Promise<PublicMediaItem[]> {
+  const items = await listPublishedMediaItems();
+  return items.map(toPublicMediaItem);
 }
 
 export type StaffMember = {
