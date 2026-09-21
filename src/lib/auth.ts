@@ -9,7 +9,7 @@ import {
   syncBootstrapStaffRole,
 } from "@/lib/staff-bootstrap";
 
-const PRODUCTION_HOST = "recro-group.vercel.app";
+const PRODUCTION_HOST = "recrogroup.org";
 const isVercel = Boolean(process.env.VERCEL);
 
 function hostFromUrl(value: string | undefined) {
@@ -67,6 +67,7 @@ export const auth = betterAuth({
       "127.0.0.1:3000",
       "localhost:*",
       PRODUCTION_HOST,
+      "www.recrogroup.org",
       "*.vercel.app",
       hostFromUrl(configuredUrl),
       process.env.VERCEL_URL,
@@ -78,6 +79,7 @@ export const auth = betterAuth({
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     `https://${PRODUCTION_HOST}`,
+    "https://www.recrogroup.org",
     "https://*.vercel.app",
     originFromUrl(configuredUrl),
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,

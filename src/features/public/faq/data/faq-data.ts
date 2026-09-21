@@ -60,7 +60,7 @@ export const faqs: FAQCategory[] = [
             },
             {
                 q: "How do I book a session online?",
-                a: "Visit our booking page, select your preferred service, choose a date and time that works for you, and fill in your contact details. We'll confirm your appointment within one working day.",
+                a: "Visit our booking page, select your preferred service, choose a date and time, and fill in your contact details. Pay the commitment fee by M-Pesa to confirm your slot. Card and bank payments will be available soon.",
             },
             {
                 q: "Can I book for someone else?",
@@ -85,7 +85,7 @@ export const faqs: FAQCategory[] = [
             },
             {
                 q: "What payment methods do you accept?",
-                a: "We accept M-Pesa, bank transfers (both KES and USD), and cash payments. Full payment details are provided after booking confirmation.",
+                a: "Online payments currently run through M-Pesa STK (Buy Goods, till 747736). Card and bank transfer options are coming soon. Cash is still accepted at the clinic. Full payment details are confirmed when you book.",
             },
             {
                 q: "Do you offer sliding-scale fees?",

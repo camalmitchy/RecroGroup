@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
@@ -11,180 +11,108 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { PortalPageHeader } from "@/features/portal/components/portal-page-header";
+import { PortalTabBar } from "@/features/portal/components/portal-tab-bar";
 import {
   StatusBadge,
   bookingStatusTone,
   paymentStatusTone,
 } from "@/features/portal/components/status-badge";
-import { requestBookingBalance } from "@/server/actions/payments";
 
 export type BookingRow = {
   id: string;
-  reference: string;
   clientName: string;
-  clientEmail: string;
-  clientPhone: string | null;
-  preferredDateLabel: string;
-  therapistId: string | null;
-  therapistName: string | null;
   serviceTitle: string | null;
+  preferredDateLabel: string;
   status: string;
   paymentStatus: string;
-  amountKes: number | null;
-  depositKes: number | null;
-  amountPaidKes: number;
 };
 
-type BookingsPanelProps = {
-  bookings: BookingRow[];
-};
+type StatusFilter = "all" | "REQUESTED" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
 
-export function BookingsPanel({ bookings }: BookingsPanelProps) {
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+function humanize(value: string) {
+  return value.toLowerCase().replace(/_/g, " ");
+}
 
-  const sendRequest = (row: BookingRow, method: "MPESA" | "BANK") => {
-    setPendingId(row.id);
-    startTransition(async () => {
-      const result = await requestBookingBalance(
-        row.id,
-        method,
-        row.clientPhone ?? undefined,
-      );
-      setPendingId(null);
-      if (result.ok) {
-        toast.success(`Payment request sent to ${row.clientName}`);
-      } else {
-        toast.error(result.error);
-      }
-    });
-  };
+export function BookingsPanel({ bookings }: { bookings: BookingRow[] }) {
+  const [filter, setFilter] = useState<StatusFilter>("all");
+
+  const visible = useMemo(
+    () => (filter === "all" ? bookings : bookings.filter((row) => row.status === filter)),
+    [bookings, filter],
+  );
+
+  const count = (status: Exclude<StatusFilter, "all">) =>
+    bookings.filter((row) => row.status === status).length;
 
   return (
-    <div>
+    <div className="space-y-5">
       <PortalPageHeader
         title="Bookings"
-        description="Incoming booking requests and lifecycle actions."
+        description="Open a booking to see contact details, payment, and actions."
       />
+
+      <PortalTabBar
+        className="overflow-x-auto"
+        tabs={[
+          { key: "all", label: `All (${bookings.length})` },
+          { key: "REQUESTED", label: `Requested (${count("REQUESTED")})` },
+          { key: "CONFIRMED", label: `Confirmed (${count("CONFIRMED")})` },
+          { key: "COMPLETED", label: `Completed (${count("COMPLETED")})` },
+          { key: "CANCELLED", label: `Cancelled (${count("CANCELLED")})` },
+        ]}
+        active={filter}
+        onChange={setFilter}
+      />
+
       <Card>
         <CardContent className="p-0">
-          {bookings.length === 0 ? (
+          {visible.length === 0 ? (
             <Empty className="py-12">
               <EmptyHeader>
-                <EmptyTitle>No bookings yet</EmptyTitle>
+                <EmptyTitle>
+                  {bookings.length === 0 ? "No bookings yet" : "No bookings in this view"}
+                </EmptyTitle>
                 <EmptyDescription>
-                  Requests submitted from the public booking form land here.
+                  {bookings.length === 0
+                    ? "Requests submitted from the public booking form land here."
+                    : "Try another status tab."}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ref</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Therapist</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead>Balance</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bookings.map((row) => {
-                  const total = row.amountKes ?? 0;
-                  const outstanding = Math.max(0, total - row.amountPaidKes);
-                  const busy = isPending && pendingId === row.id;
-
-                  return (
-                    <TableRow key={row.id}>
-                      <TableCell className="font-mono text-xs">
-                        {row.reference}
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">{row.clientName}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {row.clientEmail}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {row.preferredDateLabel}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {row.therapistName ?? (
-                          <span className="text-muted-foreground">
-                            Unassigned
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge tone={bookingStatusTone(row.status)}>
-                          {row.status.toLowerCase()}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge tone={paymentStatusTone(row.paymentStatus)}>
-                          {row.paymentStatus.toLowerCase()}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell>
-                        {outstanding > 0 ? (
-                          <div>
-                            <div className="font-medium">
-                              KES {outstanding.toLocaleString()}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {row.amountPaidKes.toLocaleString()} of{" "}
-                              {total.toLocaleString()} paid
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            Settled
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {outstanding > 0 && (
-                            <>
-                              <Button
-                                type="button"
-                                variant="link"
-                                className="h-auto p-0"
-                                disabled={busy}
-                                onClick={() => sendRequest(row, "MPESA")}
-                              >
-                                Send payment request
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="link"
-                                className="h-auto p-0 text-muted-foreground"
-                                disabled={busy}
-                                onClick={() => sendRequest(row, "BANK")}
-                              >
-                                Bank
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <ul className="divide-y divide-border">
+              {visible.map((row) => (
+                <li key={row.id}>
+                  <Link
+                    href={`/dashboard/bookings/${row.id}`}
+                    className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{row.clientName}</p>
+                      <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                        {row.serviceTitle ?? "Session"} · {row.preferredDateLabel}
+                      </p>
+                    </div>
+                    <div className="hidden shrink-0 items-center gap-2 sm:flex">
+                      <StatusBadge tone={bookingStatusTone(row.status)}>
+                        {humanize(row.status)}
+                      </StatusBadge>
+                      <StatusBadge tone={paymentStatusTone(row.paymentStatus)}>
+                        {humanize(row.paymentStatus)}
+                      </StatusBadge>
+                    </div>
+                    <StatusBadge
+                      className="sm:hidden"
+                      tone={bookingStatusTone(row.status)}
+                    >
+                      {humanize(row.status)}
+                    </StatusBadge>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
         </CardContent>
       </Card>

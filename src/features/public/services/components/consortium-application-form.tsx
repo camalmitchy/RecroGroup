@@ -1,8 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, Upload } from "lucide-react";
+import { useState, useTransition } from "react";
+import { ArrowRight, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
+import { submitInquiry } from "@/server/actions/inquiry";
+import {
+    formatInquiryMessage,
+    truncateSubject,
+} from "@/features/public/shared/inquiry-message";
 
 export function ConsortiumApplicationForm() {
     const [formData, setFormData] = useState({
@@ -20,9 +27,7 @@ export function ConsortiumApplicationForm() {
         clinicalExpertise: "",
         researchInterest: "",
         currentEmployment: "",
-
-        // Essay
-        essayFile: null as File | null,
+        essay: "",
     });
 
     const [referees, setReferees] = useState([
@@ -31,16 +36,72 @@ export function ConsortiumApplicationForm() {
         { name: "", phone: "", email: "", organization: "" },
     ]);
 
+    const [submitted, setSubmitted] = useState(false);
+    const [isPending, startTransition] = useTransition();
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("Form submitted:", { formData, referees });
-        // Handle form submission
-    };
+        if (isPending) return;
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setFormData({ ...formData, essayFile: e.target.files[0] });
+        const wordCount = formData.essay.trim().split(/\s+/).filter(Boolean).length;
+        if (wordCount < 150) {
+            toast.error("The essay needs at least 150 words.");
+            return;
         }
+
+        startTransition(async () => {
+            const result = await submitInquiry({
+                type: "CONTACT",
+                name: formData.names,
+                email: formData.emailAddress,
+                phone: formData.phoneNumber || undefined,
+                subject: truncateSubject("Consortium application"),
+                message: formatInquiryMessage([
+                    {
+                        heading: "Applicant",
+                        fields: [
+                            ["Name", formData.names],
+                            ["Email", formData.emailAddress],
+                            ["Phone", formData.phoneNumber],
+                        ],
+                    },
+                    {
+                        heading: "Education and career",
+                        fields: [
+                            ["Degrees", formData.degrees],
+                            ["Universities", formData.universities],
+                            ["License number", formData.professionalLicenseNumber],
+                            ["Professional board", formData.professionalBoard],
+                            ["Member number", formData.memberNumber],
+                            ["Clinical expertise", formData.clinicalExpertise],
+                            ["Research interest", formData.researchInterest],
+                            ["Current employment", formData.currentEmployment],
+                        ],
+                    },
+                    {
+                        heading: "Essay",
+                        fields: [["Personal values and career plans", formData.essay]],
+                    },
+                    {
+                        heading: "Referees",
+                        fields: referees.flatMap((referee, index) => [
+                            [`Referee ${index + 1} name`, referee.name],
+                            [`Referee ${index + 1} phone`, referee.phone],
+                            [`Referee ${index + 1} email`, referee.email],
+                            [`Referee ${index + 1} organization`, referee.organization],
+                        ]),
+                    },
+                ]),
+            });
+
+            if (!result.ok) {
+                toast.error(result.error);
+                return;
+            }
+
+            setSubmitted(true);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
     };
 
     const updateReferee = (index: number, field: string, value: string) => {
@@ -48,6 +109,23 @@ export function ConsortiumApplicationForm() {
         newReferees[index] = { ...newReferees[index], [field]: value };
         setReferees(newReferees);
     };
+
+    if (submitted) {
+        return (
+            <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-card p-10 text-center shadow-[var(--shadow-soft)]">
+                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary-soft">
+                    <CheckCircle className="h-8 w-8 text-primary-deep" />
+                </div>
+                <h2 className="font-serif text-3xl text-primary-deep">
+                    Application received
+                </h2>
+                <p className="mt-4 text-muted-foreground">
+                    Thank you. The consortium committee will review your application and
+                    contact you.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="mx-auto max-w-4xl">
@@ -275,27 +353,21 @@ export function ConsortiumApplicationForm() {
                                 of Recro Group Limited-Consortium.
                             </p>
                             <p className="mt-2 text-xs text-muted-foreground">
-                                Minimum 150 words. Typed in 12pt font. Please upload as a PDF or Word document.
+                                Minimum 150 words.
                             </p>
 
                             <div className="mt-4">
                                 <label className="mb-2 block text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                                    Upload Essay *
+                                    Essay *
                                 </label>
-                                <div className="relative">
-                                    <input
-                                        type="file"
-                                        required
-                                        accept=".pdf,.doc,.docx"
-                                        onChange={handleFileChange}
-                                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                                    />
-                                    {formData.essayFile && (
-                                        <p className="mt-2 text-xs text-primary-deep">
-                                            Selected: {formData.essayFile.name}
-                                        </p>
-                                    )}
-                                </div>
+                                <textarea
+                                    required
+                                    rows={10}
+                                    className="w-full resize-y rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, essay: e.target.value })
+                                    }
+                                />
                             </div>
                         </div>
                     </div>
@@ -395,9 +467,10 @@ export function ConsortiumApplicationForm() {
                         <Button
                             type="submit"
                             size="lg"
+                            disabled={isPending}
                             className="w-full rounded-full bg-primary-deep hover:bg-primary-deep/90 sm:w-auto"
                         >
-                            Submit Application
+                            {isPending ? "Submitting…" : "Submit Application"}
                             <ArrowRight className="ml-2 size-4" />
                         </Button>
                     </div>

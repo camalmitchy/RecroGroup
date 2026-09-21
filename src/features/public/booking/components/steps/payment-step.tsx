@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import type { ServiceOption } from "../booking-types";
-import { Field, MethodCard } from "../booking-form-controls";
+import { MethodCard } from "../booking-form-controls";
 
 export function PaymentStep({
     service,
@@ -25,10 +25,6 @@ export function PaymentStep({
     setPaymentMethod,
     mpesaPhone,
     setMpesaPhone,
-    bankRef,
-    setBankRef,
-    proofFile,
-    setProofFile,
     busy,
     onBack,
     onPay,
@@ -41,10 +37,6 @@ export function PaymentStep({
     setPaymentMethod: (m: "mpesa" | "card" | "bank") => void;
     mpesaPhone: string;
     setMpesaPhone: (v: string) => void;
-    bankRef: string;
-    setBankRef: (v: string) => void;
-    proofFile: File | null;
-    setProofFile: (f: File | null) => void;
     busy: boolean;
     onBack: () => void;
     onPay: () => void;
@@ -88,18 +80,20 @@ export function PaymentStep({
                             sub="Instant payment"
                         />
                         <MethodCard
-                            active={paymentMethod === "card"}
-                            onClick={() => setPaymentMethod("card")}
+                            active={false}
+                            disabled
+                            onClick={() => undefined}
                             icon={<CreditCard size={18} />}
                             title="Visa / Mastercard"
-                            sub="Secure checkout"
+                            sub="Coming soon"
                         />
                         <MethodCard
-                            active={paymentMethod === "bank"}
-                            onClick={() => setPaymentMethod("bank")}
+                            active={false}
+                            disabled
+                            onClick={() => undefined}
                             icon={<Building2 size={18} />}
                             title="Bank Transfer"
-                            sub="Upload slip"
+                            sub="Coming soon"
                         />
                     </div>
 
@@ -136,74 +130,7 @@ export function PaymentStep({
                         </div>
                     )}
 
-                    {/* Card Form */}
-                    {paymentMethod === "card" && (
-                        <div className="mt-6 space-y-4">
-                            <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground leading-relaxed">
-                                You&apos;ll be redirected to Pesapal&apos;s secure checkout to complete
-                                your commitment fee. Card details are never stored on our servers.
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Bank Transfer Form */}
-                    {paymentMethod === "bank" && (
-                        <div className="mt-6 space-y-4">
-                            <div className="grid md:grid-cols-2 gap-3">
-                                <div className="rounded-2xl bg-primary-soft p-4 text-xs leading-relaxed">
-                                    <p className="font-semibold text-primary-deep mb-1">
-                                        Kenya Shilling Account
-                                    </p>
-                                    <p>
-                                        <strong>Bank:</strong> SBM Bank
-                                    </p>
-                                    <p>
-                                        <strong>Account name:</strong> Recro Group Limited
-                                    </p>
-                                    <p>
-                                        <strong>Account number:</strong> 0182074946001
-                                    </p>
-                                    <p>
-                                        <strong>Swift:</strong> CKENKENA
-                                    </p>
-                                </div>
-                                <div className="rounded-2xl bg-surface p-4 text-xs leading-relaxed border border-border">
-                                    <p className="font-semibold text-primary-deep mb-1">
-                                        USD Account
-                                    </p>
-                                    <p>
-                                        <strong>Bank:</strong> SBM Bank
-                                    </p>
-                                    <p>
-                                        <strong>Account name:</strong> Recro Group Limited
-                                    </p>
-                                    <p>
-                                        <strong>Account number:</strong> 0182074946003
-                                    </p>
-                                    <p>
-                                        <strong>Swift:</strong> SBMKKENA
-                                    </p>
-                                </div>
-                            </div>
-                            <Field
-                                label="Bank reference / slip number"
-                                value={bankRef}
-                                onChange={setBankRef}
-                                placeholder="e.g. TXN20260620-9381"
-                            />
-                            <label className="block">
-                                <span className="text-[11px] tracking-[0.18em] font-semibold uppercase text-muted-foreground">
-                                    Proof of payment (PDF or image)
-                                </span>
-                                <input
-                                    type="file"
-                                    accept="image/*,application/pdf"
-                                    onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
-                                    className="mt-2 block w-full text-sm"
-                                />
-                            </label>
-                        </div>
-                    )}
+                    {/* Card and bank are coming soon */}
                 </div>
 
                 {/* Action Buttons */}

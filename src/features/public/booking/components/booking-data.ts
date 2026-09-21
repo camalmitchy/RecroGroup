@@ -1,5 +1,7 @@
 import type { ServiceOption } from "./booking-types";
 
+export { TIME_SLOTS } from "../lib/schedule";
+
 export const SERVICES: ServiceOption[] = [
     {
         key: "individual",
@@ -54,11 +56,3 @@ export const CLINICIANS = [
         specialties: ["Medical family therapy", "Marriage $ family"],
     },
 ];
-
-/** Generate time slots (9 AM to 5 PM, hourly) */
-export const TIME_SLOTS = Array.from({ length: 9 }, (_, i) => {
-    const hour = i + 9;
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const displayHour = hour > 12 ? hour - 12 : hour;
-    return `${displayHour}:00 ${ampm}`;
-});

@@ -5,7 +5,10 @@ import { Pool } from "pg";
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
   pool?: Pool;
+  prismaRev?: string;
 };
+
+const PRISMA_SCHEMA_REV = "content-fields-2";
 
 function getConnectionString() {
   const connectionString = (
@@ -73,8 +76,9 @@ function createPrismaClient() {
 }
 
 function getPrisma() {
-  if (!globalForPrisma.prisma) {
+  if (!globalForPrisma.prisma || globalForPrisma.prismaRev !== PRISMA_SCHEMA_REV) {
     globalForPrisma.prisma = createPrismaClient();
+    globalForPrisma.prismaRev = PRISMA_SCHEMA_REV;
   }
 
   return globalForPrisma.prisma;

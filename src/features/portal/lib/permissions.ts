@@ -1,6 +1,7 @@
 import type { AppRole } from "./roles";
 import type { LucideIcon } from "lucide-react";
 import {
+  Bell,
   CalendarDays,
   CreditCard,
   FileText,
@@ -53,6 +54,13 @@ export const PORTAL_NAV: PortalNavItem[] = [
     href: "/dashboard/inquiries",
     label: "Messages",
     icon: Inbox,
+    roles: ["admin", "receptionist"],
+    group: "Engagement",
+  },
+  {
+    href: "/dashboard/notifications",
+    label: "Notifications",
+    icon: Bell,
     roles: ["admin", "receptionist"],
     group: "Engagement",
   },

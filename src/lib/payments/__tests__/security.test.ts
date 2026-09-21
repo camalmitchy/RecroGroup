@@ -54,9 +54,27 @@ describe("isTrustedDarajaIp", () => {
     expect(isTrustedDarajaIp(null)).toBe(true);
   });
 
-  it("treats an unset flag as disabled", () => {
+  it("treats an unset flag as disabled outside production", () => {
     vi.stubEnv("MPESA_ENFORCE_IP_ALLOWLIST", "");
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("VERCEL", "");
     expect(isTrustedDarajaIp(FOREIGN_IP)).toBe(true);
+  });
+
+  it("enforces the allowlist by default in production", () => {
+    vi.stubEnv("MPESA_ENFORCE_IP_ALLOWLIST", "");
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VERCEL", "");
+    expect(isTrustedDarajaIp(FOREIGN_IP)).toBe(false);
+    expect(isTrustedDarajaIp(SAFARICOM_IP)).toBe(true);
+  });
+
+  it("enforces the allowlist by default on Vercel", () => {
+    vi.stubEnv("MPESA_ENFORCE_IP_ALLOWLIST", "");
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("VERCEL", "1");
+    expect(isTrustedDarajaIp(FOREIGN_IP)).toBe(false);
+    expect(isTrustedDarajaIp(null)).toBe(false);
   });
 
   it.each([

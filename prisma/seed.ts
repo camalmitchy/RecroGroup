@@ -4,6 +4,9 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 
+import { youtubeThumbnailUrl, youtubeWatchUrl } from "../src/lib/content";
+import { seedMedia, seedResources } from "./seed-content";
+
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
@@ -176,10 +179,68 @@ async function seedCamp() {
   console.info(`Seeded ${camp.name} with ${tiers.length} price tiers`);
 }
 
+async function seedResourcesAndMedia() {
+  for (const resource of seedResources) {
+    await prisma.blogPost.upsert({
+      where: { slug: resource.slug },
+      update: {
+        title: resource.title,
+        excerpt: resource.excerpt,
+        body: resource.body,
+        category: resource.category,
+        author: resource.author,
+        isPublished: true,
+        publishedAt: resource.publishedAt,
+      },
+      create: {
+        slug: resource.slug,
+        title: resource.title,
+        excerpt: resource.excerpt,
+        body: resource.body,
+        category: resource.category,
+        author: resource.author,
+        isPublished: true,
+        publishedAt: resource.publishedAt,
+      },
+    });
+  }
+
+  for (const item of seedMedia) {
+    const url = youtubeWatchUrl(item.videoId);
+    const existing = await prisma.mediaItem.findFirst({
+      where: { url },
+      select: { id: true },
+    });
+
+    const data = {
+      title: item.title,
+      description: item.description,
+      mediaType: "VIDEO" as const,
+      url,
+      thumbnailUrl: youtubeThumbnailUrl(item.videoId),
+      category: item.category,
+      duration: item.duration,
+      therapist: item.therapist,
+      isPublished: true,
+    };
+
+    if (existing) {
+      await prisma.mediaItem.update({ where: { id: existing.id }, data });
+    } else {
+      await prisma.mediaItem.create({ data });
+    }
+  }
+
+  console.info(
+    `Seeded ${seedResources.length} resources and ${seedMedia.length} media items`,
+  );
+}
+
 async function main() {
   await seedServices();
   await seedTherapists();
   await seedCamp();
+  await seedResourcesAndMedia();
 }
 
 main()

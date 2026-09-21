@@ -56,6 +56,7 @@ export type CrudFieldDef = {
   options?: { value: string; label: string }[];
   required?: boolean;
   defaultValue?: string | number | boolean;
+  rows?: number;
 };
 
 export type CrudColumn<T extends { id: string }> = {
@@ -80,6 +81,7 @@ type PortalCrudProps<T extends { id: string }> = {
   ) => Promise<ActionResult<{ id: string }>>;
   onDelete?: (id: string) => Promise<ActionResult<{ id: string }>>;
   deleteDescription?: string;
+  dialogClassName?: string;
 };
 
 function fieldValue<T extends { id: string }>(
@@ -125,6 +127,7 @@ export function PortalCrud<T extends { id: string }>({
   onSave,
   onDelete,
   deleteDescription = "This action cannot be undone.",
+  dialogClassName,
 }: PortalCrudProps<T>) {
   const [editing, setEditing] = useState<T | null>(null);
   const [open, setOpen] = useState(false);
@@ -204,7 +207,7 @@ export function PortalCrud<T extends { id: string }>({
                   Add
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg">
+              <DialogContent className={dialogClassName ?? "max-w-lg"}>
                 <DialogHeader>
                   <DialogTitle>
                     {editing ? `Edit ${singular}` : `New ${singular}`}
@@ -235,19 +238,18 @@ export function PortalCrud<T extends { id: string }>({
                             required={field.required}
                             defaultValue={String(initial)}
                             aria-invalid={Boolean(fieldError)}
-                            rows={4}
+                            rows={field.rows ?? 4}
                           />
                         ) : field.type === "select" ? (
                           <NativeSelect
                             id={field.name}
                             name={field.name}
                             required={field.required}
+                            className="w-full"
                             defaultValue={String(
-                              editing
-                                ? initial
-                                : (field.options?.[0]?.value ??
-                                  field.defaultValue ??
-                                  ""),
+                              (editing ? initial : field.defaultValue) ||
+                                field.options?.[0]?.value ||
+                                "",
                             )}
                             aria-invalid={Boolean(fieldError)}
                           >

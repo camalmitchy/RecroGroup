@@ -5,18 +5,16 @@ import { Search, ArrowRight, Mail } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
-import { Button } from "@/components/ui/button";
-import { resources } from "../data/resources-data";
+import { NewsletterSignup } from "@/features/public/shared/newsletter-signup";
+import type { PublicResource } from "@/features/public/content/types";
 
-const categories = [
-    "All",
-    ...Array.from(new Set(resources.map((r) => r.category))),
-];
-
-export function ResourcesPage() {
+export function ResourcesPage({ resources }: { resources: PublicResource[] }) {
+    const categories = [
+        "All",
+        ...Array.from(new Set(resources.map((r) => r.category))),
+    ];
     const [active, setActive] = useState("All");
     const [q, setQ] = useState("");
-    const [email, setEmail] = useState("");
 
     const filtered = useMemo(
         () =>
@@ -25,7 +23,7 @@ export function ResourcesPage() {
                     (active === "All" || r.category === active) &&
                     (q.trim() === "" || r.title.toLowerCase().includes(q.toLowerCase())),
             ),
-        [active, q],
+        [resources, active, q],
     );
 
     return (
@@ -94,7 +92,9 @@ export function ResourcesPage() {
                 <div className="container-page py-12 md:py-16">
                     {filtered.length === 0 ? (
                         <p className="py-16 text-center text-muted-foreground">
-                            No articles match that search.
+                            {resources.length === 0
+                                ? "No articles published yet."
+                                : "No articles match that search."}
                         </p>
                     ) : (
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -145,24 +145,10 @@ export function ResourcesPage() {
                                 </p>
                             </div>
                         </div>
-                        <form
-                            className="flex flex-col gap-3 sm:flex-row md:min-w-[380px]"
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                            }}
-                        >
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="you@example.com"
-                                required
-                                className="flex-1 rounded-full border border-border bg-background px-5 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
-                            />
-                            <Button type="submit" className="shrink-0 rounded-full">
-                                Subscribe
-                            </Button>
-                        </form>
+                        <NewsletterSignup
+                            placeholder="you@example.com"
+                            buttonClassName="btn-primary shrink-0 rounded-full"
+                        />
                     </div>
                     <p className="mt-4 text-center text-xs text-muted-foreground md:text-left">
                         We respect your privacy. Unsubscribe anytime.

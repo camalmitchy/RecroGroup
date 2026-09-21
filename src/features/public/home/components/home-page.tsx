@@ -23,8 +23,6 @@ import {
   Star,
   MoveRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 import {
   homeBookingPerks,
@@ -32,81 +30,21 @@ import {
   homeServices,
   homeSelfCareTips,
   homeTrustFeatures,
-  homeVideos,
 } from "../data";
-import { resources } from "@/features/public/resources/data/resources-data";
+import { NewsletterSignup } from "@/features/public/shared/newsletter-signup";
 import { HomeVideoCard } from "./home-video-card";
+import { HomeBookingForm } from "./home-booking-form";
+import type { PublicMediaItem, PublicResource } from "@/features/public/content/types";
 
 const trustIcons = [ShieldCheck, HeartHandshake, Flame] as const;
 
-function HomeBookingForm() {
-  const router = useRouter();
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const fd = new FormData(e.currentTarget);
-        const service = String(fd.get("service") || "individual");
-        router.push(`/join-us?service=${encodeURIComponent(service)}`);
-      }}
-      className="flex flex-col gap-5"
-    >
-      <label className="block">
-        <span className="mb-3 block text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-          Support type
-        </span>
-        <select
-          name="service"
-          defaultValue="individual"
-          className="w-full cursor-pointer appearance-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
-        >
-          <option value="individual">Individual Therapy</option>
-          <option value="couples">Couples &amp; Families</option>
-          <option value="children">Children &amp; Grief</option>
-          <option value="corporate">Corporate speaking</option>
-        </select>
-      </label>
-      <div className="grid grid-cols-2 gap-4">
-        <label className="block">
-          <span className="mb-3 block text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-            Preferred date
-          </span>
-          <input
-            type="date"
-            name="date"
-            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
-          />
-        </label>
-        <label className="block">
-          <span className="mb-3 block text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-            Mode
-          </span>
-          <select
-            name="mode"
-            className="w-full cursor-pointer appearance-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground transition-colors hover:border-primary"
-          >
-            <option>In-person</option>
-          </select>
-        </label>
-      </div>
-      <p className="text-xs leading-relaxed text-muted-foreground">
-        Online booking is for Nairobi clinic visits. Diaspora clients:{" "}
-        <Link href="/contact" className="font-semibold text-primary-deep">
-          contact us
-        </Link>{" "}
-        or email hello@recrogroup.org.
-      </p>
-      <button type="submit" className="btn-primary mt-2 w-full justify-center">
-        Continue to booking <ArrowRight size={16} />
-      </button>
-    </form>
-  );
-}
-
-export function HomePage() {
-  const [email, setEmail] = useState("");
-
+export function HomePage({
+  resources = [],
+  videos = [],
+}: {
+  resources?: PublicResource[];
+  videos?: PublicMediaItem[];
+}) {
   return (
     <>
       {/* HERO */}
@@ -368,8 +306,20 @@ export function HomePage() {
             </Link>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {homeVideos.map((v) => (
-              <HomeVideoCard key={v.title} video={v} />
+            {videos
+              .filter((video) => video.videoId)
+              .slice(0, 3)
+              .map((video) => (
+              <HomeVideoCard
+                key={video.id}
+                video={{
+                  title: video.title,
+                  desc: video.excerpt,
+                  duration: video.duration,
+                  videoId: video.videoId ?? "",
+                  thumbnail: video.thumbnail,
+                }}
+              />
             ))}
           </div>
         </div>
@@ -394,7 +344,7 @@ export function HomePage() {
             </Link>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {resources.map((b) => (
+            {resources.slice(0, 3).map((b) => (
               <Link
                 key={b.slug}
                 href={`/resources/${b.slug}`}
@@ -463,7 +413,9 @@ export function HomePage() {
                         {tip.frequency}
                       </h3>
                       {tipIndex < 2 && (
-                        <MoveRight className="hidden md:block text-primary/40" size={16} />
+                        <span className="hidden md:block text-primary/40">
+                          <MoveRight size={16} />
+                        </span>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mb-4 text-center">
@@ -530,24 +482,7 @@ export function HomePage() {
                 </p>
               </div>
             </div>
-            <form
-              className="flex flex-col gap-3 sm:flex-row md:min-w-[380px]"
-              onSubmit={(e) => {
-                e.preventDefault();
-              }}
-            >
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your email address"
-                required
-                className="flex-1 rounded-full border border-border bg-background px-5 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
-              />
-              <button type="submit" className="btn-primary shrink-0">
-                Subscribe
-              </button>
-            </form>
+            <NewsletterSignup />
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground md:text-left">
             We respect your privacy. Unsubscribe anytime.

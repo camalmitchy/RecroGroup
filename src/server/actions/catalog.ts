@@ -4,9 +4,25 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
+import {
+  extractYoutubeId,
+  slugify,
+  youtubeThumbnailUrl,
+  youtubeWatchUrl,
+} from "@/lib/content";
 import { AuthorizationError, requireAdmin } from "@/server/authz";
 import type { ActionResult } from "@/server/result";
 import { fail, failure, invalid, ok } from "@/server/result";
+import {
+  deleteBlogPost,
+  deleteMediaItemRecord,
+  getBlogPostById,
+  getBlogPostBySlug,
+  insertBlogPost,
+  insertMediaItem,
+  updateBlogPost,
+  updateMediaItem,
+} from "@/server/queries/content-store";
 
 const slug = z
   .string()
@@ -50,6 +66,29 @@ const testimonialSchema = z.object({
   isPublished: z.boolean().default(true),
 });
 
+const resourceSchema = z.object({
+  title: z.string().trim().min(2, "Title is required"),
+  slug: z.string().trim().optional(),
+  excerpt: z.string().trim().max(2000).optional(),
+  body: z.string().trim().optional(),
+  category: z.string().trim().max(80).optional(),
+  author: z.string().trim().max(120).optional(),
+  coverUrl: z.string().trim().max(500).optional(),
+  isPublished: z.boolean().default(true),
+});
+
+const mediaItemSchema = z.object({
+  title: z.string().trim().min(2, "Title is required"),
+  description: z.string().trim().max(2000).optional(),
+  url: z.string().trim().min(1, "A YouTube URL or video ID is required"),
+  category: z.string().trim().max(80).optional(),
+  duration: z.string().trim().max(40).optional(),
+  therapist: z.string().trim().max(120).optional(),
+  thumbnailUrl: z.string().trim().max(500).optional(),
+  mediaType: z.enum(["VIDEO", "ARTICLE", "PODCAST"]).default("VIDEO"),
+  isPublished: z.boolean().default(true),
+});
+
 function revalidateCatalog() {
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/content");
@@ -57,10 +96,20 @@ function revalidateCatalog() {
   revalidatePath("/admin/content");
 }
 
+function revalidatePublicContent(slug?: string) {
+  revalidateCatalog();
+  revalidatePath("/media");
+  revalidatePath("/resources");
+  revalidatePath("/");
+  if (slug) revalidatePath(`/resources/${slug}`);
+}
+
 export type ServiceInput = z.input<typeof serviceSchema>;
 export type TherapistInput = z.input<typeof therapistSchema>;
 export type FaqInput = z.input<typeof faqSchema>;
 export type TestimonialInput = z.input<typeof testimonialSchema>;
+export type ResourceInput = z.input<typeof resourceSchema>;
+export type MediaItemInput = z.input<typeof mediaItemSchema>;
 
 export async function upsertService(
   input: ServiceInput & { id?: string },
@@ -257,6 +306,126 @@ export async function deleteTestimonial(
   } catch (error) {
     if (error instanceof AuthorizationError) return fail(error.message);
     return failure("deleteTestimonial", error);
+  }
+}
+
+export async function upsertResource(
+  input: ResourceInput & { id?: string },
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireAdmin();
+
+    const parsed = resourceSchema.safeParse(input);
+    if (!parsed.success) return invalid(parsed.error);
+
+    const generated = slugify(parsed.data.slug || parsed.data.title);
+    if (!generated) {
+      return fail("Add a title so we can create a URL slug", {
+        title: ["Add a title so we can create a URL slug"],
+      });
+    }
+
+    const existing = await getBlogPostBySlug(generated);
+
+    if (existing && existing.id !== input.id) {
+      return fail("Another resource already uses that slug", {
+        slug: ["Another resource already uses that slug"],
+      });
+    }
+
+    const current = input.id ? await getBlogPostById(input.id) : null;
+
+    const data = {
+      title: parsed.data.title,
+      slug: generated,
+      excerpt: parsed.data.excerpt || null,
+      body: parsed.data.body || null,
+      category: parsed.data.category || null,
+      author: parsed.data.author || null,
+      coverUrl: parsed.data.coverUrl || null,
+      isPublished: parsed.data.isPublished,
+      publishedAt: parsed.data.isPublished
+        ? (current?.publishedAt ?? existing?.publishedAt ?? new Date())
+        : (current?.publishedAt ?? null),
+    };
+
+    const post = input.id
+      ? await updateBlogPost(input.id, data)
+      : await insertBlogPost(data);
+
+    revalidatePublicContent(post.slug);
+    return ok({ id: post.id });
+  } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
+    return failure("upsertResource", error);
+  }
+}
+
+export async function deleteResource(
+  id: string,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireAdmin();
+    const post = await deleteBlogPost(id);
+    revalidatePublicContent(post.slug);
+    return ok({ id: post.id });
+  } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
+    return failure("deleteResource", error);
+  }
+}
+
+export async function upsertMediaItem(
+  input: MediaItemInput & { id?: string },
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireAdmin();
+
+    const parsed = mediaItemSchema.safeParse(input);
+    if (!parsed.success) return invalid(parsed.error);
+
+    const videoId = extractYoutubeId(parsed.data.url);
+    if (!videoId) {
+      return fail("Enter a valid YouTube URL or 11-character video ID", {
+        url: ["Enter a valid YouTube URL or 11-character video ID"],
+      });
+    }
+
+    const data = {
+      title: parsed.data.title,
+      description: parsed.data.description || null,
+      url: youtubeWatchUrl(videoId),
+      thumbnailUrl: parsed.data.thumbnailUrl || youtubeThumbnailUrl(videoId),
+      category: parsed.data.category || null,
+      duration: parsed.data.duration || null,
+      therapist: parsed.data.therapist || null,
+      mediaType: parsed.data.mediaType,
+      isPublished: parsed.data.isPublished,
+    };
+
+    const item = input.id
+      ? await updateMediaItem(input.id, data)
+      : await insertMediaItem(data);
+
+    revalidatePublicContent();
+    return ok({ id: item.id });
+  } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
+    return failure("upsertMediaItem", error);
+  }
+}
+
+export async function deleteMediaItem(
+  id: string,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireAdmin();
+    await deleteMediaItemRecord(id);
+    revalidatePublicContent();
+    return ok({ id });
+  } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
+    return failure("deleteMediaItem", error);
   }
 }
 

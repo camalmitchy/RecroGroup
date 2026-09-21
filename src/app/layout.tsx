@@ -4,7 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/shared/providers/app-providers";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +16,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+function siteUrl() {
+  const raw =
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    process.env.BETTER_AUTH_URL?.trim() ||
+    "https://recrogroup.org";
+  try {
+    return new URL(raw.includes("://") ? raw : `https://${raw}`);
+  } catch {
+    return new URL("https://recrogroup.org");
+  }
+}
+
 export const metadata: Metadata = {
+  metadataBase: siteUrl(),
   title: {
     default: "Recro Group",
     template: "%s | Recro Group",

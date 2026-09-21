@@ -6,140 +6,122 @@ import {
   PortalCrud,
   type CrudValues,
 } from "@/features/portal/components/portal-crud";
+import { PortalPageHeader } from "@/features/portal/components/portal-page-header";
 import { PortalTabBar } from "@/features/portal/components/portal-tab-bar";
 import { StatusBadge } from "@/features/portal/components/status-badge";
 import {
-  deleteFaq,
-  deleteTestimonial,
-  upsertFaq,
-  upsertTestimonial,
+  MEDIA_CATEGORIES,
+  RESOURCE_CATEGORIES,
+  dropdownOptions,
+} from "@/features/public/content/options";
+import {
+  deleteMediaItem,
+  deleteResource,
+  upsertMediaItem,
+  upsertResource,
 } from "@/server/actions/catalog";
 
-export type BlogPostRow = {
+export type ResourceRow = {
   id: string;
   title: string;
   slug: string;
-  author: string | null;
+  excerpt: string;
+  body: string;
+  category: string;
+  author: string;
   isPublished: boolean;
   publishedLabel: string;
-  createdLabel: string;
 };
 
 export type MediaItemRow = {
   id: string;
   title: string;
-  mediaType: string;
+  description: string;
   url: string;
+  category: string;
+  duration: string;
+  therapist: string;
   isPublished: boolean;
   createdLabel: string;
 };
 
-export type FaqRow = {
-  id: string;
-  question: string;
-  answer: string;
-  category: string | null;
-  sortOrder: number;
-  isPublished: boolean;
-};
-
-export type TestimonialRow = {
-  id: string;
-  authorName: string;
-  authorRole: string | null;
-  quote: string;
-  rating: number | null;
-  isPublished: boolean;
-};
-
 type ContentPanelProps = {
-  blogPosts: BlogPostRow[];
+  resources: ResourceRow[];
   mediaItems: MediaItemRow[];
-  faqs: FaqRow[];
-  testimonials: TestimonialRow[];
+  therapists: string[];
 };
 
-type ContentTab = "blog" | "media" | "faqs" | "testimonials";
-
-const TABS: { key: ContentTab; label: string }[] = [
-  { key: "blog", label: "Blog" },
-  { key: "media", label: "Media" },
-  { key: "faqs", label: "FAQs" },
-  { key: "testimonials", label: "Testimonials" },
-];
+type ContentTab = "media" | "resources";
 
 function text(value: string | number | boolean | null | undefined): string {
   return typeof value === "string" ? value : "";
 }
 
 export function ContentPanel({
-  blogPosts,
+  resources,
   mediaItems,
-  faqs,
-  testimonials,
+  therapists = [],
 }: ContentPanelProps) {
-  const [tab, setTab] = useState<ContentTab>("blog");
+  const [tab, setTab] = useState<ContentTab>("media");
+  const speakerOptions = dropdownOptions(
+    therapists.length > 0 ? therapists : ["Recro Group"],
+    [
+      "Recro Group",
+      ...mediaItems.map((item) => item.therapist),
+      ...resources.map((item) => item.author),
+    ],
+  );
+  const mediaCategoryOptions = dropdownOptions(
+    MEDIA_CATEGORIES,
+    mediaItems.map((item) => item.category),
+  );
+  const resourceCategoryOptions = dropdownOptions(
+    RESOURCE_CATEGORIES,
+    resources.map((item) => item.category),
+  );
 
   return (
     <div className="space-y-5">
-      <PortalTabBar tabs={TABS} active={tab} onChange={setTab} />
-
-      {tab === "blog" && (
-        <PortalCrud<BlogPostRow>
-          title="Blog posts"
-          description="Articles published on the public site. Read-only here — edit them in the database."
-          rows={blogPosts}
-          emptyDescription="Published articles will be listed here."
-          columns={[
-            { key: "title", label: "Title" },
-            { key: "slug", label: "Slug" },
-            {
-              key: "author",
-              label: "Author",
-              render: (row) => row.author ?? "—",
-            },
-            { key: "publishedLabel", label: "Published on" },
-            { key: "createdLabel", label: "Created" },
-            {
-              key: "isPublished",
-              label: "Status",
-              render: (row) => (
-                <StatusBadge tone={row.isPublished ? "success" : "muted"}>
-                  {row.isPublished ? "Published" : "Draft"}
-                </StatusBadge>
-              ),
-            },
-          ]}
-        />
-      )}
+      <PortalPageHeader
+        title="Content"
+        description="Videos and articles published on the public Media and Resources pages."
+      />
+      <PortalTabBar
+        tabs={[
+          { key: "media", label: `Media (${mediaItems.length})` },
+          { key: "resources", label: `Resources (${resources.length})` },
+        ]}
+        active={tab}
+        onChange={setTab}
+      />
 
       {tab === "media" && (
         <PortalCrud<MediaItemRow>
           title="Media"
-          description="Videos and podcast episodes. Read-only here — edit them in the database."
+          description="Videos shown on the public Media page. Paste a YouTube URL or video ID."
           rows={mediaItems}
-          emptyDescription="Videos and podcast episodes will be listed here."
+          emptyDescription="Add a video to show it on the public Media page."
           columns={[
             { key: "title", label: "Title" },
             {
-              key: "mediaType",
-              label: "Type",
-              render: (row) => (
-                <span className="capitalize">
-                  {row.mediaType.toLowerCase()}
-                </span>
-              ),
+              key: "category",
+              label: "Category",
+              render: (row) => row.category || "—",
+            },
+            {
+              key: "duration",
+              label: "Duration",
+              render: (row) => row.duration || "—",
             },
             {
               key: "url",
-              label: "URL",
+              label: "YouTube",
               render: (row) => (
-                <span className="block max-w-[260px] truncate text-muted-foreground">
+                <span className="block max-w-[240px] truncate text-muted-foreground">
                   {row.url}
                 </span>
               ),
             },
-            { key: "createdLabel", label: "Created" },
             {
               key: "isPublished",
               label: "Status",
@@ -150,104 +132,78 @@ export function ContentPanel({
               ),
             },
           ]}
+          fields={[
+            { name: "title", label: "Title", required: true },
+            {
+              name: "url",
+              label: "YouTube URL or video ID",
+              required: true,
+            },
+            {
+              name: "description",
+              label: "Excerpt",
+              type: "textarea",
+              rows: 3,
+              required: true,
+            },
+            {
+              name: "category",
+              label: "Category",
+              type: "select",
+              options: mediaCategoryOptions,
+              required: true,
+            },
+            { name: "duration", label: "Duration", required: true },
+            {
+              name: "therapist",
+              label: "Therapist",
+              type: "select",
+              options: speakerOptions,
+              required: true,
+            },
+            {
+              name: "isPublished",
+              label: "Published",
+              type: "checkbox",
+              defaultValue: true,
+            },
+          ]}
+          onSave={(values: CrudValues, id) =>
+            upsertMediaItem({
+              id,
+              title: text(values.title),
+              url: text(values.url),
+              description: text(values.description),
+              category: text(values.category),
+              duration: text(values.duration),
+              therapist: text(values.therapist),
+              isPublished: Boolean(values.isPublished),
+            })
+          }
+          onDelete={deleteMediaItem}
         />
       )}
 
-      {tab === "faqs" && (
-        <PortalCrud<FaqRow>
-          title="FAQs"
-          description="Frequently asked questions on the public site."
-          rows={faqs}
-          emptyDescription="Add a question to show it on the public FAQ page."
+      {tab === "resources" && (
+        <PortalCrud<ResourceRow>
+          title="Resources"
+          description="Articles shown on the public Resources page."
+          rows={resources}
+          emptyDescription="Add an article to show it on the public Resources page."
+          dialogClassName="max-w-2xl"
           columns={[
-            {
-              key: "question",
-              label: "Question",
-              render: (row) => (
-                <span className="block max-w-[320px] truncate">
-                  {row.question}
-                </span>
-              ),
-            },
+            { key: "title", label: "Title" },
             {
               key: "category",
               label: "Category",
-              render: (row) => row.category ?? "—",
-            },
-            { key: "sortOrder", label: "Order" },
-            {
-              key: "isPublished",
-              label: "Status",
-              render: (row) => (
-                <StatusBadge tone={row.isPublished ? "success" : "muted"}>
-                  {row.isPublished ? "Live" : "Hidden"}
-                </StatusBadge>
-              ),
-            },
-          ]}
-          fields={[
-            { name: "question", label: "Question", required: true },
-            {
-              name: "answer",
-              label: "Answer",
-              type: "textarea",
-              required: true,
-            },
-            { name: "category", label: "Category" },
-            {
-              name: "sortOrder",
-              label: "Sort order",
-              type: "number",
-              defaultValue: 0,
+              render: (row) => row.category || "—",
             },
             {
-              name: "isPublished",
-              label: "Published",
-              type: "checkbox",
-              defaultValue: true,
+              key: "author",
+              label: "Author",
+              render: (row) => row.author || "—",
             },
-          ]}
-          onSave={(values: CrudValues, id) =>
-            upsertFaq({
-              id,
-              question: text(values.question),
-              answer: text(values.answer),
-              category: text(values.category),
-              sortOrder: values.sortOrder === null ? 0 : Number(values.sortOrder),
-              isPublished: Boolean(values.isPublished),
-            })
-          }
-          onDelete={deleteFaq}
-        />
-      )}
-
-      {tab === "testimonials" && (
-        <PortalCrud<TestimonialRow>
-          title="Testimonials"
-          description="Client testimonials shown across the site."
-          rows={testimonials}
-          emptyDescription="Add a testimonial to feature it on the public site."
-          columns={[
-            { key: "authorName", label: "Author" },
-            {
-              key: "authorRole",
-              label: "Role",
-              render: (row) => row.authorRole ?? "—",
-            },
-            {
-              key: "quote",
-              label: "Quote",
-              render: (row) => (
-                <span className="block max-w-[320px] truncate text-muted-foreground">
-                  {row.quote}
-                </span>
-              ),
-            },
-            {
-              key: "rating",
-              label: "Rating",
-              render: (row) => (row.rating === null ? "—" : `${row.rating}/5`),
-            },
+            { key: "publishedLabel", label: "Published" },
             {
               key: "isPublished",
               label: "Status",
@@ -259,14 +215,34 @@ export function ContentPanel({
             },
           ]}
           fields={[
-            { name: "authorName", label: "Author name", required: true },
-            { name: "authorRole", label: "Role / context" },
-            { name: "quote", label: "Quote", type: "textarea", required: true },
+            { name: "title", label: "Title", required: true },
             {
-              name: "rating",
-              label: "Rating (1-5)",
-              type: "number",
-              defaultValue: 5,
+              name: "category",
+              label: "Category",
+              type: "select",
+              options: resourceCategoryOptions,
+              required: true,
+            },
+            {
+              name: "author",
+              label: "Author",
+              type: "select",
+              options: speakerOptions,
+              required: true,
+            },
+            {
+              name: "excerpt",
+              label: "Excerpt",
+              type: "textarea",
+              rows: 3,
+              required: true,
+            },
+            {
+              name: "body",
+              label: "Article",
+              type: "textarea",
+              rows: 12,
+              required: true,
             },
             {
               name: "isPublished",
@@ -276,16 +252,20 @@ export function ContentPanel({
             },
           ]}
           onSave={(values: CrudValues, id) =>
-            upsertTestimonial({
+            upsertResource({
               id,
-              authorName: text(values.authorName),
-              authorRole: text(values.authorRole),
-              quote: text(values.quote),
-              rating: values.rating === null ? null : Number(values.rating),
+              title: text(values.title),
+              slug: id
+                ? resources.find((row) => row.id === id)?.slug
+                : undefined,
+              excerpt: text(values.excerpt),
+              body: text(values.body),
+              category: text(values.category),
+              author: text(values.author),
               isPublished: Boolean(values.isPublished),
             })
           }
-          onDelete={deleteTestimonial}
+          onDelete={deleteResource}
         />
       )}
     </div>

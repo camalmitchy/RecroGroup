@@ -322,6 +322,44 @@ export function passwordReset(input: {
   };
 }
 
+export function staffInquiryAlert(input: {
+  recipientEmail: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  subject?: string | null;
+  type: string;
+  message: string;
+}): EmailMessage {
+  const preview =
+    input.message.length > 600
+      ? `${input.message.slice(0, 600)}…`
+      : input.message;
+
+  const { html, text } = layout({
+    heading: "New website inquiry",
+    paragraphs: [
+      `${input.name} submitted a ${input.type.toLowerCase()} inquiry.`,
+    ],
+    details: [
+      { label: "Name", value: input.name },
+      { label: "Email", value: input.email },
+      ...(input.phone ? [{ label: "Phone", value: input.phone }] : []),
+      ...(input.subject ? [{ label: "Subject", value: input.subject }] : []),
+      { label: "Message", value: preview },
+    ],
+  });
+
+  return {
+    to: input.recipientEmail,
+    subject: input.subject
+      ? `Inquiry: ${input.subject}`
+      : `New ${input.type.toLowerCase()} inquiry from ${input.name}`,
+    html,
+    text,
+  };
+}
+
 export function staffPaymentAlert(input: {
   recipientEmail: string;
   reference: string;

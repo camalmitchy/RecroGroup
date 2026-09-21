@@ -26,7 +26,13 @@ export function clientIpFrom(headers: Headers) {
 }
 
 export function isTrustedDarajaIp(ip: string | null) {
-  if (process.env.MPESA_ENFORCE_IP_ALLOWLIST !== "true") return true;
+  const flag = process.env.MPESA_ENFORCE_IP_ALLOWLIST?.trim().toLowerCase();
+  const enforce =
+    flag === "true" ||
+    (flag !== "false" &&
+      (process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL)));
+
+  if (!enforce) return true;
   if (!ip) return false;
 
   const allowlist = extraAllowlist();

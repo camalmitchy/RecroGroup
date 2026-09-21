@@ -38,3 +38,26 @@ export function formatKes(amount: number | null | undefined): string {
     ? "—"
     : amount.toLocaleString("en-KE");
 }
+
+export function formatRelativeTime(value: Date | string | null | undefined): string {
+  if (!value) return "—";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  const deltaMs = Date.now() - date.getTime();
+  const deltaSec = Math.round(deltaMs / 1000);
+  if (deltaSec < 45) return "Just now";
+  if (deltaSec < 3600) {
+    const mins = Math.max(1, Math.round(deltaSec / 60));
+    return `${mins} min ago`;
+  }
+  if (deltaSec < 86400) {
+    const hours = Math.round(deltaSec / 3600);
+    return `${hours}h ago`;
+  }
+  if (deltaSec < 604800) {
+    const days = Math.round(deltaSec / 86400);
+    return `${days}d ago`;
+  }
+  return formatDate(date);
+}

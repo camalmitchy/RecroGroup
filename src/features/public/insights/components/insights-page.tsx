@@ -15,6 +15,7 @@ import {
   type InsightCategory,
   type InsightContent,
 } from "../data";
+import { NewsletterSignup } from "@/features/public/shared/newsletter-signup";
 import { InsightsVideoCard } from "./insights-video-card";
 
 function scrollToFilterBar() {
@@ -117,7 +118,6 @@ function InsightCard({ content }: { content: InsightContent }) {
 
 export function InsightsPage() {
   const [activeCategory, setActiveCategory] = useState<InsightCategory>("All");
-  const [email, setEmail] = useState("");
 
   const featuredContent = getFeaturedContent();
   const filteredContentAll = filterInsights(allContent, activeCategory);
@@ -317,24 +317,7 @@ export function InsightsPage() {
                 </p>
               </div>
             </div>
-            <form
-              className="flex flex-col gap-3 sm:flex-row md:min-w-[380px]"
-              onSubmit={(e) => {
-                e.preventDefault();
-              }}
-            >
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your email address"
-                required
-                className="flex-1 rounded-full border border-border bg-background px-5 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
-              />
-              <button type="submit" className="btn-primary shrink-0">
-                Subscribe
-              </button>
-            </form>
+            <NewsletterSignup />
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground md:text-left">
             We respect your privacy. Unsubscribe anytime.
