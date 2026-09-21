@@ -63,6 +63,7 @@ export async function requestBookingBalance(
     });
 
     revalidatePath("/dashboard/bookings");
+    revalidatePath(`/dashboard/bookings/${booking.id}`);
     revalidatePath("/dashboard/payments");
 
     return ok({

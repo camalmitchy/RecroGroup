@@ -108,6 +108,7 @@ export async function setBookingStatus(
     });
 
     revalidatePath("/dashboard/bookings");
+    revalidatePath(`/dashboard/bookings/${bookingId}`);
     revalidatePath("/admin/bookings");
 
     return ok(booking);
@@ -141,6 +142,7 @@ export async function assignTherapist(
     });
 
     revalidatePath("/dashboard/bookings");
+    revalidatePath(`/dashboard/bookings/${bookingId}`);
     revalidatePath("/admin/bookings");
 
     return ok(booking);

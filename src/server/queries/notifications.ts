@@ -94,7 +94,7 @@ export async function getStaffNotifications(
         type: "BOOKING" as const,
         title: "New booking",
         message: `${booking.clientName} requested ${booking.service?.title ?? "a session"} · ${booking.reference}`,
-        href: "/dashboard/bookings",
+        href: `/dashboard/bookings/${booking.id}`,
         createdAt: booking.createdAt,
         unread: isUnread(id, booking.createdAt),
       };

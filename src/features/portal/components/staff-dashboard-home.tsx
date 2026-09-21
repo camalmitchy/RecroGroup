@@ -122,19 +122,21 @@ export function StaffDashboardHome({
             ) : (
               <ul className="divide-y divide-[var(--admin-border)]">
                 {pending.map((row) => (
-                  <li
-                    key={row.id}
-                    className="flex items-center justify-between gap-3 py-2.5"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {row.clientName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {row.reference} · {row.preferredDateLabel}
-                      </p>
-                    </div>
-                    <StatusBadge tone="warning">Confirm</StatusBadge>
+                  <li key={row.id}>
+                    <Link
+                      href={`/dashboard/bookings/${row.id}`}
+                      className="flex items-center justify-between gap-3 py-2.5 hover:text-primary-deep"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {row.clientName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {row.reference} · {row.preferredDateLabel}
+                        </p>
+                      </div>
+                      <StatusBadge tone="warning">Confirm</StatusBadge>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -159,21 +161,23 @@ export function StaffDashboardHome({
             ) : (
               <ul className="divide-y divide-[var(--admin-border)]">
                 {recent.map((row) => (
-                  <li
-                    key={row.id}
-                    className="flex items-center justify-between gap-3 py-2.5"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {row.clientName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {row.reference}
-                      </p>
-                    </div>
-                    <StatusBadge tone={bookingStatusTone(row.status)}>
-                      {row.status.toLowerCase()}
-                    </StatusBadge>
+                  <li key={row.id}>
+                    <Link
+                      href={`/dashboard/bookings/${row.id}`}
+                      className="flex items-center justify-between gap-3 py-2.5 hover:text-primary-deep"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {row.clientName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {row.reference}
+                        </p>
+                      </div>
+                      <StatusBadge tone={bookingStatusTone(row.status)}>
+                        {row.status.toLowerCase()}
+                      </StatusBadge>
+                    </Link>
                   </li>
                 ))}
               </ul>
