@@ -16,7 +16,10 @@ export default async function DashboardPage() {
   const [stats, activity, pendingBookings] = await Promise.all([
     getDashboardStats(),
     getRecentActivity(6),
-    listBookings({ status: "REQUESTED", take: 6 }),
+    listBookings({ status: "REQUESTED", take: 6 }).catch((error) => {
+      console.error("[DashboardPage.listBookings]", error);
+      return { items: [], total: 0 };
+    }),
   ]);
 
   const pending: DashboardBookingRow[] = pendingBookings.items.map(
