@@ -61,6 +61,14 @@ describe("darajaConfig", () => {
     expect(darajaConfig.transactionType).toBe("CustomerPayBillOnline");
   });
 
+  it("uses the shortcode as the STK merchant unless the till is opted in", () => {
+    vi.stubEnv("MPESA_SHORTCODE", "4109876");
+    vi.stubEnv("MPESA_TILL_NUMBER", "747736");
+    expect(darajaConfig.stkPartyB).toBe("4109876");
+    vi.stubEnv("MPESA_STK_USE_TILL", "true");
+    expect(darajaConfig.stkPartyB).toBe("747736");
+  });
+
   it("falls back to the shortcode when no till is set", () => {
     vi.stubEnv("MPESA_SHORTCODE", "4109876");
     vi.stubEnv("MPESA_TILL_NUMBER", "");

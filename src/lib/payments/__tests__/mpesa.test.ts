@@ -69,7 +69,7 @@ afterEach(() => {
 });
 
 describe("STK push party selection", () => {
-  it("signs with the head office shortcode but credits the till for Buy Goods", async () => {
+  it("uses the Daraja shortcode as PartyB so STK hits a registered merchant", async () => {
     stubDarajaEnv({ MPESA_TRANSACTION_TYPE: "CustomerBuyGoodsOnline" });
     const fetchMock = darajaFetchMock();
     vi.stubGlobal("fetch", fetchMock);
@@ -80,8 +80,23 @@ describe("STK push party selection", () => {
     const body = stkBody(fetchMock);
     expect(body.TransactionType).toBe("CustomerBuyGoodsOnline");
     expect(body.BusinessShortCode).toBe(SHORTCODE);
+    expect(body.PartyB).toBe(SHORTCODE);
+  });
+
+  it("credits the till only when MPESA_STK_USE_TILL is enabled", async () => {
+    stubDarajaEnv({
+      MPESA_TRANSACTION_TYPE: "CustomerBuyGoodsOnline",
+      MPESA_STK_USE_TILL: "true",
+    });
+    const fetchMock = darajaFetchMock();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { mpesaProvider } = await freshMpesa();
+    await mpesaProvider.charge(chargeRequest);
+
+    const body = stkBody(fetchMock);
+    expect(body.BusinessShortCode).toBe(SHORTCODE);
     expect(body.PartyB).toBe(TILL);
-    expect(body.BusinessShortCode).not.toBe(body.PartyB);
   });
 
   it("uses the shortcode for both parties on PayBill", async () => {

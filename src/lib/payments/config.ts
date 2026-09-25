@@ -79,6 +79,17 @@ export const darajaConfig = {
       ? "CustomerPayBillOnline"
       : "CustomerBuyGoodsOnline";
   },
+  get stkPartyB() {
+    const useTill = optional("MPESA_STK_USE_TILL")?.toLowerCase() === "true";
+    if (
+      useTill &&
+      this.transactionType === "CustomerBuyGoodsOnline" &&
+      this.tillNumber
+    ) {
+      return this.tillNumber;
+    }
+    return this.shortcode;
+  },
   get callbackUrl() {
     const value = optional("MPESA_CALLBACK_URL");
     return value && isPublicHttpsUrl(value) ? value : undefined;

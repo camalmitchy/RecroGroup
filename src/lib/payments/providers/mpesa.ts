@@ -219,12 +219,15 @@ function requirePhone(input: string | null | undefined) {
 
 function stkParties() {
   const transactionType = darajaConfig.transactionType;
-  // Buy Goods signs with the Head Office shortcode but credits the till, so PartyB differs.
-  const partyB =
-    transactionType === "CustomerBuyGoodsOnline"
-      ? (darajaConfig.tillNumber ?? darajaConfig.shortcode)
-      : darajaConfig.shortcode;
-  return { transactionType, businessShortCode: darajaConfig.shortcode, partyB };
+  const businessShortCode = darajaConfig.shortcode;
+  // Recro's public till (747736) is for walk-in Buy Goods. Lipa Na M-Pesa
+  // Online only accepts the Daraja-registered shortcode as PartyB unless
+  // the till is explicitly opted in with MPESA_STK_USE_TILL=true.
+  return {
+    transactionType,
+    businessShortCode,
+    partyB: darajaConfig.stkPartyB,
+  };
 }
 
 async function charge(request: ChargeRequest): Promise<ChargeResult> {
@@ -280,6 +283,9 @@ function statusFromResultCode(code: number): VerifyResult["status"] {
 function failureReasonFor(code: number, resultDesc: string | null) {
   if (TIMEOUT_RESULT_CODES.has(code)) {
     return resultDesc ?? "The M-Pesa request timed out before it was authorised";
+  }
+  if (resultDesc && /merchant does not exist/i.test(resultDesc)) {
+    return "M-Pesa does not recognise this business number. Use the Head Office shortcode from the Daraja app as MPESA_SHORTCODE, not till 747736.";
   }
   return resultDesc;
 }
