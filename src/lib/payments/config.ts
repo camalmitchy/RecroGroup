@@ -13,9 +13,22 @@ function required(key: string) {
   return value;
 }
 
+function isLoopbackUrl(value: string) {
+  try {
+    const host = new URL(value.includes("://") ? value : `https://${value}`)
+      .hostname;
+    return host === "localhost" || host === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
 export const darajaConfig = {
   get env() {
-    return optional("MPESA_ENV") === "production" ? "production" : "sandbox";
+    const value = optional("MPESA_ENV")?.toLowerCase();
+    return value === "production" || value === "prod" || value === "live"
+      ? "production"
+      : "sandbox";
   },
   get baseUrl() {
     return this.env === "production"
@@ -79,11 +92,18 @@ export const paystackConfig = {
 
 export const paymentsConfig = {
   get appUrl() {
-    return (
-      optional("NEXT_PUBLIC_APP_URL") ??
-      optional("BETTER_AUTH_URL") ??
-      "http://localhost:3000"
-    );
+    const configured =
+      optional("NEXT_PUBLIC_APP_URL") ?? optional("BETTER_AUTH_URL");
+    if (configured && !isLoopbackUrl(configured)) return configured;
+
+    const vercelHost = optional("VERCEL_URL")?.replace(/^https?:\/\//, "");
+    if (vercelHost) return `https://${vercelHost}`;
+
+    if (process.env.VERCEL || process.env.NODE_ENV === "production") {
+      return "https://recro-group.vercel.app";
+    }
+
+    return configured ?? "http://localhost:3000";
   },
   get bookingDepositPercent() {
     const raw = Number(optional("BOOKING_DEPOSIT_PERCENT") ?? "50");

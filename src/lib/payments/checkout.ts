@@ -137,7 +137,14 @@ export async function startCheckout(
     if (!phone) {
       throw new PaymentError("missing_phone", "A phone number is required for M-Pesa");
     }
-    charge.customer.phone = normalizePhone(phone);
+    try {
+      charge.customer.phone = normalizePhone(phone);
+    } catch {
+      throw new PaymentError(
+        "invalid_phone",
+        "Enter a valid Kenyan M-Pesa number, e.g. 0712 345 678",
+      );
+    }
   }
 
   const adapter = getProvider(providerId);
