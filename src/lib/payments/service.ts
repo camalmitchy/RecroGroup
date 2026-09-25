@@ -10,6 +10,7 @@ import type {
 
 import { prisma } from "@/lib/prisma";
 
+import { ensurePaymentsSchema } from "./ensure-schema";
 import type { NormalizedEvent, PaymentTarget, VerifyResult } from "./types";
 import { generateReference } from "./utils";
 
@@ -47,6 +48,8 @@ export type CreatePaymentInput = {
 };
 
 export async function createPendingPayment(input: CreatePaymentInput) {
+  await ensurePaymentsSchema();
+
   if (input.idempotencyKey) {
     const existing = await prisma.payment.findUnique({
       where: { idempotencyKey: input.idempotencyKey },
@@ -66,9 +69,9 @@ export async function createPendingPayment(input: CreatePaymentInput) {
     userId: input.userId ?? null,
     idempotencyKey: input.idempotencyKey ?? null,
     notes: input.notes ?? null,
-    bankReference: input.bankReference ?? null,
-    proofUrl: input.proofUrl ?? null,
     ...targetLink(input.target),
+    ...(input.bankReference ? { bankReference: input.bankReference } : {}),
+    ...(input.proofUrl ? { proofUrl: input.proofUrl } : {}),
   };
 
   try {
