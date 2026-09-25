@@ -4,7 +4,7 @@ import type { PaymentMethod, PaymentPurpose } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
-import { absoluteUrl, darajaConfig, paymentsConfig } from "./config";
+import { absoluteUrl, paymentsConfig, resolveStkCallbackUrl } from "./config";
 import { getProvider, providerForMethod } from "./index";
 import { resolveBookingChargeAmount, resolveCampPrice } from "./pricing";
 import { createPendingPayment, failPayment, markPaymentProcessing } from "./service";
@@ -180,8 +180,7 @@ export async function startCheckout(
       customer: charge.customer,
       callbackUrl:
         input.method === "MPESA"
-          ? (darajaConfig.callbackUrl ??
-            absoluteUrl("/api/payments/webhooks/mpesa"))
+          ? resolveStkCallbackUrl()
           : absoluteUrl(
             `/api/payments/return?reference=${encodeURIComponent(payment.reference)}`,
           ),

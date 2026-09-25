@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { parseC2bConfirmation, parseStkCallback } from "@/lib/payments/providers/mpesa";
+import {
+  describeDarajaFailure,
+  parseC2bConfirmation,
+  parseStkCallback,
+} from "@/lib/payments/providers/mpesa";
 import type { ChargeRequest } from "@/lib/payments/types";
 
 const SHORTCODE = "4109876";
@@ -180,6 +184,29 @@ describe("mpesaProvider.charge", () => {
     await expect(
       mpesaProvider.charge({ ...chargeRequest, customer: { ...chargeRequest.customer, phone: null } }),
     ).rejects.toMatchObject({ code: "invalid_phone" });
+  });
+
+  it("surfaces OAuth error_description from a 400", async () => {
+    stubDarajaEnv();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            error: "invalid_client",
+            error_description: "Client authentication failed",
+          }),
+          { status: 400 },
+        ),
+      ),
+    );
+
+    const { mpesaProvider } = await freshMpesa();
+    await expect(mpesaProvider.charge(chargeRequest)).rejects.toMatchObject({
+      code: "daraja_error",
+      message:
+        "M-Pesa rejected the consumer key or secret. Use the production Daraja app credentials and set MPESA_ENV=production.",
+    });
   });
 
   it("throws when Daraja returns a non-zero response code", async () => {
@@ -483,5 +510,17 @@ describe("parseC2bConfirmation", () => {
 
   it.each([null, {}, { TransID: "" }])("throws on the malformed payload %s", (payload) => {
     expect(() => parseC2bConfirmation(payload)).toThrow(/Missing TransID/);
+  });
+});
+
+describe("describeDarajaFailure", () => {
+  it("explains an empty 400", () => {
+    expect(describeDarajaFailure(400, null)).toMatch(/Head Office shortcode/);
+  });
+
+  it("explains an invalid callback", () => {
+    expect(
+      describeDarajaFailure(400, { errorMessage: "Bad Request - Invalid CallBackURL" }),
+    ).toMatch(/callback URL/);
   });
 });

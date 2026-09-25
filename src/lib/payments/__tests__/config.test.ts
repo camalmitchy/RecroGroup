@@ -5,6 +5,7 @@ import {
   darajaConfig,
   paymentsConfig,
   paystackConfig,
+  resolveStkCallbackUrl,
 } from "@/lib/payments/config";
 
 afterEach(() => {
@@ -25,6 +26,20 @@ describe("darajaConfig", () => {
   it("treats any other value as sandbox", () => {
     vi.stubEnv("MPESA_ENV", "staging");
     expect(darajaConfig.env).toBe("sandbox");
+  });
+
+  it("defaults to production Daraja on the Vercel production environment", () => {
+    vi.stubEnv("MPESA_ENV", "");
+    vi.stubEnv("VERCEL_ENV", "production");
+    expect(darajaConfig.env).toBe("production");
+    expect(darajaConfig.baseUrl).toBe("https://api.safaricom.co.ke");
+  });
+
+  it("strips quotes and non-digits from shortcode values", () => {
+    vi.stubEnv("MPESA_SHORTCODE", "\"4109876\"");
+    vi.stubEnv("MPESA_TILL_NUMBER", "Till 747736");
+    expect(darajaConfig.shortcode).toBe("4109876");
+    expect(darajaConfig.tillNumber).toBe("747736");
   });
 
   it("treats Production, prod and live as production", () => {
@@ -52,8 +67,10 @@ describe("darajaConfig", () => {
     expect(darajaConfig.tillNumber).toBe("4109876");
   });
 
-  it("leaves the callback url undefined when unset", () => {
+  it("leaves the callback url undefined when unset or not public HTTPS", () => {
     vi.stubEnv("MPESA_CALLBACK_URL", "");
+    expect(darajaConfig.callbackUrl).toBeUndefined();
+    vi.stubEnv("MPESA_CALLBACK_URL", "http://localhost:3000/api/payments/webhooks/mpesa");
     expect(darajaConfig.callbackUrl).toBeUndefined();
   });
 
@@ -138,6 +155,16 @@ describe("absoluteUrl", () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://recro.example");
     expect(absoluteUrl("api/payments/return")).toBe(
       "https://recro.example/api/payments/return",
+    );
+  });
+});
+
+describe("resolveStkCallbackUrl", () => {
+  it("ignores a localhost override and uses the public app url", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://recro-group.vercel.app");
+    vi.stubEnv("MPESA_CALLBACK_URL", "http://localhost:3000/api/payments/webhooks/mpesa");
+    expect(resolveStkCallbackUrl("http://127.0.0.1/callback")).toBe(
+      "https://recro-group.vercel.app/api/payments/webhooks/mpesa",
     );
   });
 });
