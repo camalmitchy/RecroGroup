@@ -27,6 +27,15 @@ describe("darajaConfig", () => {
     expect(darajaConfig.env).toBe("sandbox");
   });
 
+  it("treats Production, prod and live as production", () => {
+    vi.stubEnv("MPESA_ENV", "Production");
+    expect(darajaConfig.env).toBe("production");
+    vi.stubEnv("MPESA_ENV", "prod");
+    expect(darajaConfig.env).toBe("production");
+    vi.stubEnv("MPESA_ENV", "live");
+    expect(darajaConfig.env).toBe("production");
+  });
+
   it("defaults to Buy Goods for a till", () => {
     vi.stubEnv("MPESA_TRANSACTION_TYPE", "");
     expect(darajaConfig.transactionType).toBe("CustomerBuyGoodsOnline");
@@ -100,6 +109,13 @@ describe("paymentsConfig", () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://recro.example");
     vi.stubEnv("BETTER_AUTH_URL", "https://auth.example");
     expect(paymentsConfig.appUrl).toBe("https://recro.example");
+  });
+
+  it("does not use localhost on Vercel", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
+    vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3000");
+    vi.stubEnv("VERCEL_URL", "recro-group.vercel.app");
+    expect(paymentsConfig.appUrl).toBe("https://recro-group.vercel.app");
   });
 });
 

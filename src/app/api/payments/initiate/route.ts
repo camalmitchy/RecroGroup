@@ -1,12 +1,14 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { startCheckout } from "@/lib/payments/checkout";
 import { PaymentError } from "@/lib/payments/types";
-import { getPortalSession } from "@/features/portal/lib/session";
+import { getOptionalSession } from "@/server/authz";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const maxDuration = 30;
 
 const schema = z
   .object({
@@ -44,7 +46,6 @@ export async function POST(request: Request) {
   }
 
   const input = parsed.data;
-  const session = await getPortalSession();
 
   const target = input.bookingId
     ? ({ kind: "booking", bookingId: input.bookingId } as const)
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
       : ({ kind: "donation", donationId: input.donationId! } as const);
 
   try {
+    const session = await getOptionalSession();
     const result = await startCheckout({
       target,
       method: input.method,
@@ -84,8 +86,54 @@ export async function POST(request: Request) {
     }
 
     console.error("Failed to start checkout", error);
+
+    if (
+      error instanceof Error &&
+      error.message.includes("Missing required environment variable")
+    ) {
+      return NextResponse.json(
+        { error: error.message, code: "provider_unconfigured" },
+        { status: 503 },
+      );
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return NextResponse.json(
+        {
+          error:
+            error.code === "P2022"
+              ? "The payments database is missing a required column. Run migrations on production."
+              : "Could not save the payment. Please try again.",
+          code: error.code,
+        },
+        { status: 500 },
+      );
+    }
+
+    if (error instanceof Prisma.PrismaClientValidationError) {
+      return NextResponse.json(
+        {
+          error:
+            "The payments database is out of date. Run migrations on production.",
+          code: "schema_mismatch",
+        },
+        { status: 500 },
+      );
+    }
+
+    const raw = error instanceof Error ? error.message : "";
+    const leaksConnection = /postgres|postgresql|DATABASE_URL|password/i.test(
+      raw,
+    );
+
     return NextResponse.json(
-      { error: "Could not start payment. Please try again." },
+      {
+        error:
+          raw && !leaksConnection
+            ? raw
+            : "Could not start payment. Please try again.",
+        code: "checkout_failed",
+      },
       { status: 500 },
     );
   }

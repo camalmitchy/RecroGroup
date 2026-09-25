@@ -136,6 +136,21 @@ describe("startCheckout", () => {
     expect(getProvider).not.toHaveBeenCalled();
   });
 
+  it("rejects an invalid M-Pesa number as a payment error", async () => {
+    await expect(
+      startCheckout({
+        target: { kind: "booking", bookingId: "bk_1" },
+        method: "MPESA",
+        phone: "not-a-phone",
+      }),
+    ).rejects.toMatchObject({
+      name: "PaymentError",
+      code: "invalid_phone",
+    });
+
+    expect(createPendingPayment).not.toHaveBeenCalled();
+  });
+
   it("refuses to charge a fully paid booking", async () => {
     prismaMock.booking.findUnique.mockResolvedValue({
       ...BOOKING,
