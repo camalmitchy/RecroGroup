@@ -2,7 +2,9 @@ import "server-only";
 
 function optional(key: string) {
   const value = process.env[key];
-  return value && value.trim() !== "" ? value.trim() : undefined;
+  if (!value) return undefined;
+  const trimmed = value.trim().replace(/^['"]+|['"]+$/g, "").trim();
+  return trimmed === "" ? undefined : trimmed;
 }
 
 function required(key: string) {
@@ -11,6 +13,13 @@ function required(key: string) {
     throw new Error(`Missing required environment variable: ${key}`);
   }
   return value;
+}
+
+function numericCode(key: string, requiredValue = false) {
+  const raw = requiredValue ? required(key) : optional(key);
+  if (!raw) return undefined;
+  const digits = raw.replace(/\D/g, "");
+  return digits || undefined;
 }
 
 function isLoopbackUrl(value: string) {
@@ -23,12 +32,23 @@ function isLoopbackUrl(value: string) {
   }
 }
 
+export function isPublicHttpsUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !isLoopbackUrl(value);
+  } catch {
+    return false;
+  }
+}
+
 export const darajaConfig = {
   get env() {
     const value = optional("MPESA_ENV")?.toLowerCase();
-    return value === "production" || value === "prod" || value === "live"
-      ? "production"
-      : "sandbox";
+    if (value === "sandbox" || value === "test") return "sandbox";
+    if (value === "production" || value === "prod" || value === "live") {
+      return "production";
+    }
+    return process.env.VERCEL_ENV === "production" ? "production" : "sandbox";
   },
   get baseUrl() {
     return this.env === "production"
@@ -42,13 +62,17 @@ export const darajaConfig = {
     return required("MPESA_CONSUMER_SECRET");
   },
   get shortcode() {
-    return required("MPESA_SHORTCODE");
+    const value = numericCode("MPESA_SHORTCODE", true);
+    if (!value) {
+      throw new Error("Missing required environment variable: MPESA_SHORTCODE");
+    }
+    return value;
   },
   get tillNumber() {
-    return optional("MPESA_TILL_NUMBER") ?? optional("MPESA_SHORTCODE");
+    return numericCode("MPESA_TILL_NUMBER") ?? numericCode("MPESA_SHORTCODE");
   },
   get passkey() {
-    return required("MPESA_PASSKEY");
+    return required("MPESA_PASSKEY").replace(/\s+/g, "");
   },
   get transactionType() {
     return optional("MPESA_TRANSACTION_TYPE") === "CustomerPayBillOnline"
@@ -56,7 +80,8 @@ export const darajaConfig = {
       : "CustomerBuyGoodsOnline";
   },
   get callbackUrl() {
-    return optional("MPESA_CALLBACK_URL");
+    const value = optional("MPESA_CALLBACK_URL");
+    return value && isPublicHttpsUrl(value) ? value : undefined;
   },
   get confirmationUrl() {
     return optional("MPESA_CONFIRMATION_URL");
@@ -118,4 +143,15 @@ export const paymentsConfig = {
 export function absoluteUrl(path: string) {
   const base = paymentsConfig.appUrl.replace(/\/$/, "");
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+export function resolveStkCallbackUrl(override?: string | null) {
+  for (const candidate of [
+    override,
+    darajaConfig.callbackUrl,
+    absoluteUrl("/api/payments/webhooks/mpesa"),
+  ]) {
+    if (candidate && isPublicHttpsUrl(candidate)) return candidate;
+  }
+  return "https://recro-group.vercel.app/api/payments/webhooks/mpesa";
 }

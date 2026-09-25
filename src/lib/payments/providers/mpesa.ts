@@ -54,7 +54,63 @@ function num(value: unknown): number | null {
 }
 
 function pick(source: unknown, key: string): unknown {
-  return isRecord(source) ? source[key] : undefined;
+  if (!isRecord(source)) return undefined;
+  if (key in source) return source[key];
+  const match = Object.keys(source).find(
+    (candidate) => candidate.toLowerCase() === key.toLowerCase(),
+  );
+  return match ? source[match] : undefined;
+}
+
+const DARAJA_ERROR_KEYS = [
+  "errorMessage",
+  "error_description",
+  "ResponseDescription",
+  "CustomerMessage",
+  "errorCode",
+  "error",
+  "message",
+];
+
+export function describeDarajaFailure(status: number, body: unknown): string {
+  let extracted: string | null = null;
+  if (typeof body === "string") {
+    extracted = body.replace(/\s+/g, " ").trim().slice(0, 240) || null;
+  } else {
+    for (const key of DARAJA_ERROR_KEYS) {
+      extracted = str(pick(body, key));
+      if (extracted) break;
+    }
+  }
+
+  const lower = (extracted ?? "").toLowerCase();
+  if (lower.includes("callback")) {
+    return "M-Pesa rejected the callback URL. It must be public HTTPS.";
+  }
+  if (
+    lower.includes("invalid_client") ||
+    lower.includes("invalid consumer") ||
+    lower.includes("authentication") ||
+    lower.includes("invalid access token")
+  ) {
+    return "M-Pesa rejected the consumer key or secret. Use the production Daraja app credentials and set MPESA_ENV=production.";
+  }
+  if (
+    lower.includes("shortcode") ||
+    lower.includes("businessshortcode") ||
+    lower.includes("password") ||
+    lower.includes("passkey")
+  ) {
+    return "M-Pesa rejected the shortcode or passkey. MPESA_SHORTCODE must be the Head Office code the passkey was issued for, and MPESA_TILL_NUMBER should be 747736.";
+  }
+
+  if (extracted) return extracted;
+
+  if (status === 400) {
+    return "M-Pesa rejected the STK request. Confirm MPESA_ENV=production, production key/secret/passkey, Head Office shortcode (not the till), till 747736, and a public HTTPS callback.";
+  }
+
+  return `Daraja request failed with status ${status}`;
 }
 
 function truncate(value: string, max: number) {
@@ -89,12 +145,7 @@ async function darajaFetch(url: string, init: RequestInit): Promise<unknown> {
   const body = await readBody(response);
 
   if (!response.ok) {
-    const message =
-      str(pick(body, "errorMessage")) ??
-      str(pick(body, "ResponseDescription")) ??
-      str(pick(body, "errorCode")) ??
-      `Daraja request failed with status ${response.status}`;
-    throw new PaymentError("daraja_error", message, {
+    throw new PaymentError("daraja_error", describeDarajaFailure(response.status, body), {
       retryable: response.status >= 500 || response.status === 429,
       detail: body,
     });
