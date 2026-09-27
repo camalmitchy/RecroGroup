@@ -218,14 +218,9 @@ function requirePhone(input: string | null | undefined) {
 }
 
 function stkParties() {
-  const transactionType = darajaConfig.transactionType;
-  const businessShortCode = darajaConfig.shortcode;
-  // Recro's public till (747736) is for walk-in Buy Goods. Lipa Na M-Pesa
-  // Online only accepts the Daraja-registered shortcode as PartyB unless
-  // the till is explicitly opted in with MPESA_STK_USE_TILL=true.
   return {
-    transactionType,
-    businessShortCode,
+    transactionType: darajaConfig.transactionType,
+    businessShortCode: darajaConfig.shortcode,
     partyB: darajaConfig.stkPartyB,
   };
 }
@@ -285,7 +280,7 @@ function failureReasonFor(code: number, resultDesc: string | null) {
     return resultDesc ?? "The M-Pesa request timed out before it was authorised";
   }
   if (resultDesc && /merchant does not exist/i.test(resultDesc)) {
-    return "M-Pesa does not recognise this business number. Use the Head Office shortcode from the Daraja app as MPESA_SHORTCODE, not till 747736.";
+    return "M-Pesa does not recognise this merchant for STK. Confirm MPESA_SHORTCODE is the Lipa Na M-Pesa Online shortcode from the production Daraja app, and MPESA_ENV=production.";
   }
   return resultDesc;
 }

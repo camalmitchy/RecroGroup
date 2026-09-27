@@ -74,20 +74,18 @@ export const darajaConfig = {
   get passkey() {
     return required("MPESA_PASSKEY").replace(/\s+/g, "");
   },
+  get useTillForStk() {
+    return optional("MPESA_STK_USE_TILL")?.toLowerCase() === "true";
+  },
   get transactionType() {
-    return optional("MPESA_TRANSACTION_TYPE") === "CustomerPayBillOnline"
-      ? "CustomerPayBillOnline"
-      : "CustomerBuyGoodsOnline";
+    // Buy Goods + Head Office as PartyB is invalid and returns
+    // "Merchant does not exist". STK uses Paybill against the Daraja
+    // shortcode unless the public till is explicitly opted in.
+    if (this.useTillForStk) return "CustomerBuyGoodsOnline";
+    return "CustomerPayBillOnline";
   },
   get stkPartyB() {
-    const useTill = optional("MPESA_STK_USE_TILL")?.toLowerCase() === "true";
-    if (
-      useTill &&
-      this.transactionType === "CustomerBuyGoodsOnline" &&
-      this.tillNumber
-    ) {
-      return this.tillNumber;
-    }
+    if (this.useTillForStk && this.tillNumber) return this.tillNumber;
     return this.shortcode;
   },
   get callbackUrl() {

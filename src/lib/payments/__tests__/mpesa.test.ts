@@ -69,7 +69,7 @@ afterEach(() => {
 });
 
 describe("STK push party selection", () => {
-  it("uses the Daraja shortcode as PartyB so STK hits a registered merchant", async () => {
+  it("sends a Paybill STK to the Head Office shortcode by default", async () => {
     stubDarajaEnv({ MPESA_TRANSACTION_TYPE: "CustomerBuyGoodsOnline" });
     const fetchMock = darajaFetchMock();
     vi.stubGlobal("fetch", fetchMock);
@@ -78,7 +78,7 @@ describe("STK push party selection", () => {
     await mpesaProvider.charge(chargeRequest);
 
     const body = stkBody(fetchMock);
-    expect(body.TransactionType).toBe("CustomerBuyGoodsOnline");
+    expect(body.TransactionType).toBe("CustomerPayBillOnline");
     expect(body.BusinessShortCode).toBe(SHORTCODE);
     expect(body.PartyB).toBe(SHORTCODE);
   });
@@ -95,6 +95,7 @@ describe("STK push party selection", () => {
     await mpesaProvider.charge(chargeRequest);
 
     const body = stkBody(fetchMock);
+    expect(body.TransactionType).toBe("CustomerBuyGoodsOnline");
     expect(body.BusinessShortCode).toBe(SHORTCODE);
     expect(body.PartyB).toBe(TILL);
   });
