@@ -224,9 +224,7 @@ export async function clearAllBookings(): Promise<
   try {
     await requireAdmin();
 
-    const payments = await prisma.payment.deleteMany({
-      where: { bookingId: { not: null } },
-    });
+    const payments = await prisma.payment.deleteMany();
     const bookings = await prisma.booking.deleteMany();
 
     revalidatePath("/admin/bookings");

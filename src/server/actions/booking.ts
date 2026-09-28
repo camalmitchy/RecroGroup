@@ -9,7 +9,7 @@ import { getOptionalSession } from "@/server/authz";
 import type { ActionResult } from "@/server/result";
 import { fail, failure, invalid, ok } from "@/server/result";
 import type { BookingInput } from "@/server/validation/booking";
-import { BOOKABLE_SERVICE_SLUGS, bookingSchema } from "@/server/validation/booking";
+import { PROGRAM_SERVICE_SLUGS, bookingSchema } from "@/server/validation/booking";
 
 export type CreateBookingResult = {
   bookingId: string;
@@ -29,8 +29,8 @@ export async function createBooking(
 
   try {
     if (
-      !BOOKABLE_SERVICE_SLUGS.includes(
-        values.serviceSlug as (typeof BOOKABLE_SERVICE_SLUGS)[number],
+      PROGRAM_SERVICE_SLUGS.includes(
+        values.serviceSlug as (typeof PROGRAM_SERVICE_SLUGS)[number],
       )
     ) {
       return fail("That service is booked through a different form", {

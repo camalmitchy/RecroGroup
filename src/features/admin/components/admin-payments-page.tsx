@@ -9,6 +9,7 @@ import { markPaymentFailed, markPaymentPaid } from "@/server/actions/payments";
 import type { PaymentPanelStats } from "@/server/queries/payments";
 import type { ActionResult } from "@/server/result";
 
+import { ClearProductionDataButton } from "./clear-production-data-button";
 import { AdminShell, Card, DataTable, PageHeader, StatusBadge } from "./admin-shell";
 
 export type AdminPaymentRow = {
@@ -220,15 +221,18 @@ export function AdminPaymentsPage({
             ))}
           </select>
 
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={rows.length === 0}
-            className="ml-auto flex items-center gap-2 rounded-lg bg-primary-deep px-4 py-2 text-sm font-semibold text-white hover:bg-primary-deep/90 disabled:opacity-50"
-          >
-            <Download size={16} />
-            Export CSV
-          </button>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {isAdmin ? <ClearProductionDataButton /> : null}
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={rows.length === 0}
+              className="flex items-center gap-2 rounded-lg bg-primary-deep px-4 py-2 text-sm font-semibold text-white hover:bg-primary-deep/90 disabled:opacity-50"
+            >
+              <Download size={16} />
+              Export CSV
+            </button>
+          </div>
         </div>
 
         <Card className="mt-6">

@@ -10,6 +10,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { ClearProductionDataButton } from "@/features/admin/components/clear-production-data-button";
 import { PortalPageHeader } from "@/features/portal/components/portal-page-header";
 import {
   StatusBadge,
@@ -37,12 +38,19 @@ function humanize(value: string) {
   return value.toLowerCase().replace(/_/g, " ");
 }
 
-export function BookingsPanel({ bookings }: { bookings: BookingRow[] }) {
+export function BookingsPanel({
+  bookings,
+  canClear = false,
+}: {
+  bookings: BookingRow[];
+  canClear?: boolean;
+}) {
   return (
     <div className="space-y-5">
       <PortalPageHeader
         title="Bookings"
-        description="Only bookings with a successful payment are kept here."
+        description="Only bookings with a successful M-Pesa payment are kept here."
+        actions={canClear ? <ClearProductionDataButton /> : null}
       />
 
       <Card>

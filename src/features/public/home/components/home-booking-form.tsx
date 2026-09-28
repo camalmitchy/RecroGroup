@@ -53,9 +53,15 @@ function NativeSelect({
   );
 }
 
-export function HomeBookingForm() {
+export function HomeBookingForm({
+  services = [],
+}: {
+  services?: { value: string; label: string }[];
+}) {
   const router = useRouter();
-  const [service, setService] = useState("individual");
+  const sessionServices =
+    services.length > 0 ? services : [...HOME_BOOKABLE_SERVICES];
+  const [service, setService] = useState(sessionServices[0]?.value ?? "individual");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
@@ -73,9 +79,7 @@ export function HomeBookingForm() {
     [availableDates],
   );
 
-  const needsSchedule = HOME_BOOKABLE_SERVICES.some(
-    (item) => item.value === service,
-  );
+  const needsSchedule = sessionServices.some((item) => item.value === service);
   const selectedDate = availableDates.find((item) => toDateOnly(item) === date);
   const weekdayLabel = selectedDate ? formatWeekday(selectedDate) : null;
   const canContinue = !needsSchedule || (Boolean(date) && Boolean(time));
@@ -106,13 +110,13 @@ export function HomeBookingForm() {
           value={service}
           onChange={(value) => {
             setService(value);
-            if (!HOME_BOOKABLE_SERVICES.some((item) => item.value === value)) {
+            if (!sessionServices.some((item) => item.value === value)) {
               setDate("");
               setTime("");
             }
           }}
         >
-          {HOME_BOOKABLE_SERVICES.map((item) => (
+          {sessionServices.map((item) => (
             <option key={item.value} value={item.value}>
               {item.label}
             </option>

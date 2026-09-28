@@ -10,7 +10,10 @@ import { paymentsConfig } from "@/lib/payments/config";
 import { calculateDeposit } from "@/lib/payments/utils";
 import { prisma } from "@/lib/prisma";
 import { getOptionalSession } from "@/server/authz";
-import { BOOKABLE_SERVICE_SLUGS } from "@/server/validation/booking";
+import {
+  formatServiceDuration,
+  listBookableServices,
+} from "@/server/queries/bookable-services";
 
 export const metadata = {
   title: "Book a Session — Recro Group",
@@ -37,45 +40,20 @@ const PROGRAM_REDIRECTS: Record<string, string> = {
   supervision: "/contact",
 };
 
-function formatDuration(minutes: number | null): string {
-  if (!minutes) return "";
-  if (minutes < 60) return `${minutes} min`;
-  if (minutes % 1440 === 0) {
-    const days = minutes / 1440;
-    return `${days} day${days > 1 ? "s" : ""}`;
-  }
-  const hours = minutes / 60;
-  const label = Number.isInteger(hours) ? `${hours}` : hours.toFixed(1);
-  return `${label} hr${hours > 1 ? "s" : ""}`;
-}
-
 async function loadServices(): Promise<ServiceOption[]> {
-  const slugs = [...BOOKABLE_SERVICE_SLUGS];
-  const services = await prisma.service.findMany({
-    where: {
-      isPublished: true,
-      priceKes: { gt: 0 },
-      OR: [{ category: "Therapy" }, { slug: { in: slugs } }],
-    },
-    select: { slug: true, title: true, priceKes: true, durationMin: true },
-    orderBy: { priceKes: "asc" },
-  });
+  const services = await listBookableServices();
 
-  return services
-    .filter((service) =>
-      slugs.includes(service.slug as (typeof BOOKABLE_SERVICE_SLUGS)[number]),
-    )
-    .map((service) => {
-      const price = service.priceKes ?? 0;
-      return {
-        key: service.slug,
-        title: service.title,
-        duration: formatDuration(service.durationMin),
-        icon: SERVICE_ICONS[service.slug] ?? FALLBACK_ICON,
-        price,
-        depositKes: calculateDeposit(price, paymentsConfig.bookingDepositPercent),
-      };
-    });
+  return services.map((service) => {
+    const price = service.priceKes ?? 0;
+    return {
+      key: service.slug,
+      title: service.title,
+      duration: formatServiceDuration(service.durationMin),
+      icon: SERVICE_ICONS[service.slug] ?? FALLBACK_ICON,
+      price,
+      depositKes: calculateDeposit(price, paymentsConfig.bookingDepositPercent),
+    };
+  });
 }
 
 async function loadClinicians(): Promise<ClinicianOption[]> {

@@ -4,10 +4,11 @@ import {
 } from "@/features/portal/components/bookings-panel";
 import { formatDate } from "@/features/portal/lib/format";
 import { getRequiredSession } from "@/features/portal/lib/portal-guard";
+import { isAdmin } from "@/features/portal/lib/roles";
 import { listBookings } from "@/server/queries/bookings";
 
 export default async function BookingsPage() {
-  await getRequiredSession("/dashboard/bookings");
+  const session = await getRequiredSession("/dashboard/bookings");
 
   const bookings = await listBookings({ hasSuccessfulPayment: true, take: 200 });
 
@@ -26,5 +27,5 @@ export default async function BookingsPage() {
     latestFailureReason: booking.payments[0]?.failureReason ?? null,
   }));
 
-  return <BookingsPanel bookings={rows} />;
+  return <BookingsPanel bookings={rows} canClear={isAdmin(session.role)} />;
 }

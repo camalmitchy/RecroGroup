@@ -41,9 +41,11 @@ const trustIcons = [ShieldCheck, HeartHandshake, Flame] as const;
 export function HomePage({
   resources = [],
   videos = [],
+  bookableServices = [],
 }: {
   resources?: PublicResource[];
   videos?: PublicMediaItem[];
+  bookableServices?: { value: string; label: string }[];
 }) {
   return (
     <>
@@ -251,7 +253,7 @@ export function HomePage({
                 ))}
               </ul>
             </div>
-            <HomeBookingForm />
+            <HomeBookingForm services={bookableServices} />
           </div>
         </div>
       </section>

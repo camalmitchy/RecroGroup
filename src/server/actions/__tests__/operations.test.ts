@@ -199,9 +199,7 @@ describe("clearAllBookings", () => {
     const result = await clearAllBookings();
 
     expect(requireAdmin).toHaveBeenCalled();
-    expect(prismaMock.payment.deleteMany).toHaveBeenCalledWith({
-      where: { bookingId: { not: null } },
-    });
+    expect(prismaMock.payment.deleteMany).toHaveBeenCalledWith();
     expect(prismaMock.booking.deleteMany).toHaveBeenCalledWith();
     expect(result).toEqual({
       ok: true,

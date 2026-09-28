@@ -2,9 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-import { serviceList } from "../data";
+import { serviceList, type ServiceListItem } from "../data";
+import { serviceSlugs } from "../service-details";
 
-export function ServicesPage() {
+export function ServicesPage({ services = serviceList }: { services?: ServiceListItem[] }) {
   return (
     <>
       <section className="relative h-[500px] md:h-[600px] overflow-hidden bg-surface">
@@ -54,7 +55,7 @@ export function ServicesPage() {
 
       <section className="container-page bg-background py-16 lg:py-20">
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {serviceList.map((service) => (
+          {services.map((service) => (
             <article
               key={service.slug}
               className="group relative overflow-hidden rounded-[2rem] border border-border/40 bg-white p-7 transition-all hover:shadow-md"
@@ -101,10 +102,15 @@ export function ServicesPage() {
                 </div>
 
                 <Link
-                  href={`/services/${service.slug}`}
+                  href={
+                    serviceSlugs.includes(service.slug)
+                      ? `/services/${service.slug}`
+                      : `/booking?service=${service.slug}`
+                  }
                   className="inline-flex items-center gap-2 text-xs font-medium tracking-[0.12em] text-muted-foreground/80 uppercase transition-colors hover:text-foreground"
                 >
-                  View Service <ArrowRight size={14} strokeWidth={1.5} />
+                  {serviceSlugs.includes(service.slug) ? "View Service" : "Book session"}{" "}
+                  <ArrowRight size={14} strokeWidth={1.5} />
                 </Link>
               </div>
             </article>

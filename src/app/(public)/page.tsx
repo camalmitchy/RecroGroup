@@ -5,6 +5,7 @@ import {
   listPublishedMedia,
   listPublishedResources,
 } from "@/server/queries/catalog";
+import { listBookableServices } from "@/server/queries/bookable-services";
 
 export const dynamic = "force-dynamic";
 
@@ -20,10 +21,20 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const [resources, videos] = await Promise.all([
+  const [resources, videos, services] = await Promise.all([
     listPublishedResources(),
     listPublishedMedia(),
+    listBookableServices(),
   ]);
 
-  return <HomePage resources={resources} videos={videos} />;
+  return (
+    <HomePage
+      resources={resources}
+      videos={videos}
+      bookableServices={services.map((service) => ({
+        value: service.slug,
+        label: service.title,
+      }))}
+    />
+  );
 }

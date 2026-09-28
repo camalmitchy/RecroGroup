@@ -142,6 +142,7 @@ export async function upsertService(
       : await prisma.service.create({ data });
 
     revalidateCatalog();
+    revalidatePath("/");
     revalidatePath("/services");
     revalidatePath("/booking");
 

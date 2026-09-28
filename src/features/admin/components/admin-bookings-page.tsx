@@ -1,19 +1,15 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Check, Download, Filter, RotateCcw, Trash2, X } from "lucide-react";
+import { Check, Download, Filter, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 
 import type { BookingStatus } from "@prisma/client";
 import { downloadCsv, toCsv } from "@/features/admin/lib/csv";
-import {
-  assignTherapist,
-  clearAllBookings,
-  setBookingStatus,
-} from "@/server/actions/operations";
+import { assignTherapist, setBookingStatus } from "@/server/actions/operations";
 import type { ActionResult } from "@/server/result";
 
+import { ClearProductionDataButton } from "./clear-production-data-button";
 import { AdminShell, Card, DataTable, PageHeader, StatusBadge } from "./admin-shell";
 
 export type AdminBookingRow = {
@@ -99,7 +95,6 @@ export function AdminBookingsPage({
   const [statusFilter, setStatusFilter] = useState("all");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
 
   const rows = useMemo(
     () =>
@@ -164,36 +159,7 @@ export function AdminBookingsPage({
       <div className="p-6 lg:p-8">
         <PageHeader
           title="Bookings"
-          description="Incoming booking requests and lifecycle actions."
-          actions={
-            isAdmin ? (
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => {
-                  const confirmed = window.confirm(
-                    "Delete every booking and the payments attached to them? This cannot be undone.",
-                  );
-                  if (!confirmed) return;
-                  startTransition(async () => {
-                    const result = await clearAllBookings();
-                    if (result.ok) {
-                      toast.success(
-                        `Cleared ${result.data.bookings} bookings and ${result.data.payments} payments`,
-                      );
-                      router.refresh();
-                    } else {
-                      toast.error(result.error);
-                    }
-                  });
-                }}
-                className="flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
-              >
-                <Trash2 size={16} />
-                Clear all bookings
-              </button>
-            ) : null
-          }
+          description="Only bookings with a successful M-Pesa payment are kept here."
         />
 
         <div className="mt-6 flex flex-wrap items-center gap-4">
@@ -229,15 +195,18 @@ export function AdminBookingsPage({
             ))}
           </select>
 
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={rows.length === 0}
-            className="ml-auto flex items-center gap-2 rounded-lg bg-primary-deep px-4 py-2 text-sm font-semibold text-white hover:bg-primary-deep/90 disabled:opacity-50"
-          >
-            <Download size={16} />
-            Export CSV
-          </button>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {isAdmin ? <ClearProductionDataButton /> : null}
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={rows.length === 0}
+              className="flex items-center gap-2 rounded-lg bg-primary-deep px-4 py-2 text-sm font-semibold text-white hover:bg-primary-deep/90 disabled:opacity-50"
+            >
+              <Download size={16} />
+              Export CSV
+            </button>
+          </div>
         </div>
 
         <Card className="mt-6">

@@ -2,11 +2,12 @@ import { z } from "zod";
 
 import { isValidKenyanPhone } from "@/lib/payments/utils";
 
-export const BOOKABLE_SERVICE_SLUGS = [
-  "individual",
-  "couples",
-  "family",
-  "group",
+/** Programs that use their own form, not the session checkout. */
+export const PROGRAM_SERVICE_SLUGS = [
+  "children",
+  "corporate",
+  "consortium",
+  "supervision",
 ] as const;
 
 const startOfToday = () => {
