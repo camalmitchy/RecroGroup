@@ -69,25 +69,8 @@ afterEach(() => {
 });
 
 describe("STK push party selection", () => {
-  it("sends a Paybill STK to the Head Office shortcode by default", async () => {
-    stubDarajaEnv({ MPESA_TRANSACTION_TYPE: "CustomerBuyGoodsOnline" });
-    const fetchMock = darajaFetchMock();
-    vi.stubGlobal("fetch", fetchMock);
-
-    const { mpesaProvider } = await freshMpesa();
-    await mpesaProvider.charge(chargeRequest);
-
-    const body = stkBody(fetchMock);
-    expect(body.TransactionType).toBe("CustomerPayBillOnline");
-    expect(body.BusinessShortCode).toBe(SHORTCODE);
-    expect(body.PartyB).toBe(SHORTCODE);
-  });
-
-  it("credits the till only when MPESA_STK_USE_TILL is enabled", async () => {
-    stubDarajaEnv({
-      MPESA_TRANSACTION_TYPE: "CustomerBuyGoodsOnline",
-      MPESA_STK_USE_TILL: "true",
-    });
+  it("sends a Buy Goods STK to the till under the Head Office", async () => {
+    stubDarajaEnv();
     const fetchMock = darajaFetchMock();
     vi.stubGlobal("fetch", fetchMock);
 
@@ -100,8 +83,40 @@ describe("STK push party selection", () => {
     expect(body.PartyB).toBe(TILL);
   });
 
+  it("uses Paybill when till STK is disabled", async () => {
+    stubDarajaEnv({ MPESA_STK_USE_TILL: "false" });
+    const fetchMock = darajaFetchMock();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { mpesaProvider } = await freshMpesa();
+    await mpesaProvider.charge(chargeRequest);
+
+    const body = stkBody(fetchMock);
+    expect(body.TransactionType).toBe("CustomerPayBillOnline");
+    expect(body.BusinessShortCode).toBe(SHORTCODE);
+    expect(body.PartyB).toBe(SHORTCODE);
+  });
+
+  it("sends a Buy Goods STK to the till when the shortcode is the till", async () => {
+    stubDarajaEnv({
+      MPESA_ENV: "production",
+      MPESA_SHORTCODE: TILL,
+      MPESA_TILL_NUMBER: TILL,
+    });
+    const fetchMock = darajaFetchMock();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { mpesaProvider } = await freshMpesa();
+    await mpesaProvider.charge(chargeRequest);
+
+    const body = stkBody(fetchMock);
+    expect(body.TransactionType).toBe("CustomerBuyGoodsOnline");
+    expect(body.BusinessShortCode).toBe(TILL);
+    expect(body.PartyB).toBe(TILL);
+  });
+
   it("uses the shortcode for both parties on PayBill", async () => {
-    stubDarajaEnv({ MPESA_TRANSACTION_TYPE: "CustomerPayBillOnline" });
+    stubDarajaEnv({ MPESA_STK_USE_TILL: "false" });
     const fetchMock = darajaFetchMock();
     vi.stubGlobal("fetch", fetchMock);
 
@@ -430,6 +445,43 @@ describe("parseStkCallback", () => {
     });
 
     expect(event.result.failureReason).toMatch(/timed out/);
+  });
+
+  it("explains a merchant-does-not-exist callback for a standalone till", () => {
+    stubDarajaEnv({
+      MPESA_SHORTCODE: TILL,
+      MPESA_TILL_NUMBER: TILL,
+    });
+    const event = parseStkCallback({
+      Body: {
+        stkCallback: {
+          CheckoutRequestID: "ws_CO_1",
+          ResultCode: 2001,
+          ResultDesc: "The initiator information is invalid. Merchant does not exist.",
+        },
+      },
+    });
+
+    expect(event.result.failureReason).toMatch(
+      /till 5551212 for Lipa Na M-Pesa Online STK/,
+    );
+  });
+
+  it("explains a merchant-does-not-exist callback when the till sits under a Head Office", () => {
+    stubDarajaEnv();
+    const event = parseStkCallback({
+      Body: {
+        stkCallback: {
+          CheckoutRequestID: "ws_CO_1",
+          ResultCode: 2001,
+          ResultDesc: "The initiator information is invalid. Merchant does not exist.",
+        },
+      },
+    });
+
+    expect(event.result.failureReason).toMatch(
+      /till 5551212 under Head Office 4109876/,
+    );
   });
 
   it("keeps a stable dedupe key across a redelivered callback", () => {

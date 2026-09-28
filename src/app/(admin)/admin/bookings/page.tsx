@@ -31,6 +31,8 @@ export default async function BookingsPage() {
         paymentStatus: booking.paymentStatus,
         amountKes: booking.amountKes,
         amountPaidKes: booking.amountPaidKes,
+        latestPaymentReference: booking.payments[0]?.reference ?? null,
+        latestFailureReason: booking.payments[0]?.failureReason ?? null,
         createdAtLabel: formatDate(booking.createdAt),
     }));
 

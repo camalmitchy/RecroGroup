@@ -91,18 +91,43 @@ export async function createPendingPayment(input: CreatePaymentInput) {
   }
 }
 
+function asJsonObject(value: unknown): Record<string, unknown> {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
+
 export async function markPaymentProcessing(
   paymentId: string,
-  patch: { providerRef?: string | null; expiresAt?: Date | null },
+  patch: {
+    providerRef?: string | null;
+    expiresAt?: Date | null;
+    providerMeta?: Prisma.InputJsonValue | null;
+  },
 ) {
-  return prisma.payment.update({
+  const updated = await prisma.payment.update({
     where: { id: paymentId },
     data: {
       status: "PROCESSING",
       providerRef: patch.providerRef ?? undefined,
+      mpesaCheckoutId: patch.providerRef ?? undefined,
       expiresAt: patch.expiresAt ?? undefined,
+      ...(patch.providerMeta != null ? { providerMeta: patch.providerMeta } : {}),
     },
   });
+
+  if (updated.bookingId) {
+    await prisma.booking.updateMany({
+      where: {
+        id: updated.bookingId,
+        paymentStatus: { in: ["PENDING", "FAILED", "CANCELLED"] },
+      },
+      data: { paymentStatus: "PROCESSING" },
+    });
+  }
+
+  return updated;
 }
 
 export async function recordEvent(event: NormalizedEvent, paymentId?: string | null) {
@@ -174,12 +199,17 @@ export async function settlePayment(paymentId: string, result: VerifyResult) {
         phone: result.phone ?? payment.phone,
         failureReason: result.failureReason ?? null,
         paidAt,
-        providerMeta: (result.raw ?? undefined) as Prisma.InputJsonValue | undefined,
+        providerMeta: {
+          ...asJsonObject(payment.providerMeta),
+          result: result.raw ?? null,
+        } as Prisma.InputJsonValue,
       },
     });
 
     if (result.status === "PAID") {
       await applySettlementToTarget(tx, updated.id);
+    } else if (result.status === "FAILED" || result.status === "CANCELLED") {
+      await applyFailureToTarget(tx, updated);
     }
 
     return { applied: true as const, payment: updated };
@@ -240,6 +270,46 @@ async function applySettlementToTarget(tx: TxClient, paymentId: string) {
   }
 }
 
+async function applyFailureToTarget(
+  tx: TxClient,
+  payment: { bookingId: string | null; status: PaymentStatus },
+) {
+  if (!payment.bookingId) return;
+
+  const booking = await tx.booking.findUnique({
+    where: { id: payment.bookingId },
+  });
+  if (!booking) return;
+
+  const paidTotal = await sumSettled(tx, { bookingId: payment.bookingId });
+  const total = booking.amountKes ?? paidTotal;
+
+  if (paidTotal > 0) {
+    await tx.booking.update({
+      where: { id: booking.id },
+      data: {
+        amountPaidKes: paidTotal,
+        paymentStatus: total > 0 && paidTotal >= total ? "PAID" : "PROCESSING",
+      },
+    });
+    return;
+  }
+
+  const inflight = await tx.payment.count({
+    where: {
+      bookingId: payment.bookingId,
+      status: { in: ["PENDING", "PROCESSING"] },
+    },
+  });
+
+  await tx.booking.update({
+    where: { id: booking.id },
+    data: {
+      paymentStatus: inflight > 0 ? "PROCESSING" : payment.status,
+    },
+  });
+}
+
 async function sumSettled(tx: TxClient, where: Prisma.PaymentWhereInput) {
   const rows = await tx.payment.findMany({
     where: { ...where, status: { in: SETTLED } },
@@ -296,19 +366,50 @@ export async function processEvent(event: NormalizedEvent) {
 }
 
 export async function expireStalePayments(now = new Date()) {
-  const { count } = await prisma.payment.updateMany({
+  const stale = await prisma.payment.findMany({
     where: {
       status: { in: ["PENDING", "PROCESSING"] },
       expiresAt: { lt: now },
     },
+    select: { id: true, bookingId: true },
+  });
+
+  if (stale.length === 0) return 0;
+
+  const { count } = await prisma.payment.updateMany({
+    where: { id: { in: stale.map((payment) => payment.id) } },
     data: { status: "FAILED", failureReason: "Payment request timed out" },
   });
+
+  const bookingIds = [
+    ...new Set(
+      stale
+        .map((payment) => payment.bookingId)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  for (const bookingId of bookingIds) {
+    await prisma.$transaction(async (tx) => {
+      await applyFailureToTarget(tx, { bookingId, status: "FAILED" });
+    });
+  }
+
   return count;
 }
 
 export async function failPayment(paymentId: string, reason: string) {
-  return prisma.payment.updateMany({
+  const result = await prisma.payment.updateMany({
     where: { id: paymentId, status: { in: ["PENDING", "PROCESSING"] } },
     data: { status: "FAILED", failureReason: reason },
   });
+
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+  if (payment?.bookingId) {
+    await prisma.$transaction(async (tx) => {
+      await applyFailureToTarget(tx, payment);
+    });
+  }
+
+  return result;
 }

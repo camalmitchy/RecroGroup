@@ -28,7 +28,9 @@ export type BookingPaymentRow = {
   method: string;
   status: string;
   amountKes: number;
+  phone: string | null;
   mpesaReceipt: string | null;
+  failureReason: string | null;
   createdAtLabel: string;
   paidAtLabel: string | null;
 };
@@ -289,10 +291,16 @@ export function BookingDetail({
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment</CardTitle>
-        </CardHeader>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle>Payment</CardTitle>
+            <Link
+              href="/dashboard/payments"
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              All payments
+            </Link>
+          </CardHeader>
         <CardContent className="space-y-4">
           <dl className="grid gap-4 sm:grid-cols-3">
             <DetailItem label="Total">KES {formatKes(total)}</DetailItem>
@@ -359,8 +367,14 @@ export function BookingDetail({
                     <p className="font-mono text-xs">{payment.reference}</p>
                     <p className="mt-0.5 text-sm text-muted-foreground">
                       {humanize(payment.method)} · {payment.createdAtLabel}
+                      {payment.phone ? ` · ${payment.phone}` : ""}
                       {payment.mpesaReceipt ? ` · ${payment.mpesaReceipt}` : ""}
                     </p>
+                    {payment.failureReason && (
+                      <p className="mt-1 text-xs text-destructive">
+                        {payment.failureReason}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium">

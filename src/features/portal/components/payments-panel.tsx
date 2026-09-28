@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ export type PaymentRow = {
   providerRef: string | null;
   failureReason: string | null;
   phone: string | null;
+  bookingId: string | null;
   bookingReference: string | null;
   bankReference: string | null;
   proofUrl: string | null;
@@ -119,7 +121,7 @@ export function PaymentsPanel({ payments, stats }: PaymentsPanelProps) {
     <div className="space-y-5">
       <PortalPageHeader
         title="Payments"
-        description="M-Pesa, bank transfer and card payment tracking."
+        description="Every M-Pesa STK attempt, bank transfer and card payment for bookings."
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -195,6 +197,7 @@ export function PaymentsPanel({ payments, stats }: PaymentsPanelProps) {
                   <TableHead>Reference</TableHead>
                   <TableHead>Method</TableHead>
                   <TableHead>Purpose</TableHead>
+                  <TableHead>Phone</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Receipt</TableHead>
@@ -225,6 +228,9 @@ export function PaymentsPanel({ payments, stats }: PaymentsPanelProps) {
                       <TableCell className="capitalize">
                         {humanize(row.purpose)}
                       </TableCell>
+                      <TableCell className="text-xs">
+                        {row.phone ?? "—"}
+                      </TableCell>
                       <TableCell>
                         <div className="font-medium">
                           {row.currency} {row.amountKes.toLocaleString()}
@@ -241,7 +247,7 @@ export function PaymentsPanel({ payments, stats }: PaymentsPanelProps) {
                         </StatusBadge>
                         {row.failureReason && (
                           <div
-                            className="mt-1 max-w-[160px] truncate text-xs text-destructive"
+                            className="mt-1 max-w-[220px] text-xs text-destructive"
                             title={row.failureReason}
                           >
                             {row.failureReason}
@@ -280,7 +286,16 @@ export function PaymentsPanel({ payments, stats }: PaymentsPanelProps) {
                         )}
                       </TableCell>
                       <TableCell className="font-mono text-xs">
-                        {row.bookingReference ?? "—"}
+                        {row.bookingId && row.bookingReference ? (
+                          <Link
+                            href={`/dashboard/bookings/${row.bookingId}`}
+                            className="text-primary underline-offset-2 hover:underline"
+                          >
+                            {row.bookingReference}
+                          </Link>
+                        ) : (
+                          (row.bookingReference ?? "—")
+                        )}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {row.createdAtLabel}

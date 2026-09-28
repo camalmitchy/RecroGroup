@@ -39,6 +39,7 @@ export default async function PaymentsPage() {
     providerRef: payment.providerRef,
     failureReason: payment.failureReason,
     phone: payment.phone,
+    bookingId: payment.bookingId,
     bookingReference: payment.booking?.reference ?? null,
     bankReference: payment.bankReference,
     proofUrl: payment.proofUrl,

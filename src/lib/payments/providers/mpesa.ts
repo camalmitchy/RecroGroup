@@ -225,11 +225,31 @@ function stkParties() {
   };
 }
 
+function assertStkMerchant(businessShortCode: string) {
+  if (darajaConfig.env === "production" && businessShortCode === "174379") {
+    throw new PaymentError(
+      "invalid_merchant",
+      "Sandbox shortcode 174379 cannot be used in production. Set MPESA_SHORTCODE to the production Head Office or till code from the Daraja app.",
+    );
+  }
+}
+
 async function charge(request: ChargeRequest): Promise<ChargeResult> {
   const amount = assertPositiveAmount(Math.round(request.amountKes), "M-Pesa amount");
   const phone = requirePhone(request.customer.phone);
   const timestamp = darajaTimestamp(new Date());
   const { transactionType, businessShortCode, partyB } = stkParties();
+  assertStkMerchant(businessShortCode);
+
+  const stkMeta = {
+    env: darajaConfig.env,
+    transactionType,
+    businessShortCode,
+    partyB,
+    callbackUrl: request.callbackUrl,
+  };
+
+  console.info("[mpesa][stk]", stkMeta);
 
   const body = await authorizedPost("/mpesa/stkpush/v1/processrequest", {
     BusinessShortCode: businessShortCode,
@@ -266,6 +286,7 @@ async function charge(request: ChargeRequest): Promise<ChargeResult> {
     customerMessage:
       str(pick(body, "CustomerMessage")) ?? "Check your phone to authorise the M-Pesa payment.",
     raw: body,
+    meta: { stk: stkMeta },
   };
 }
 
@@ -280,7 +301,12 @@ function failureReasonFor(code: number, resultDesc: string | null) {
     return resultDesc ?? "The M-Pesa request timed out before it was authorised";
   }
   if (resultDesc && /merchant does not exist/i.test(resultDesc)) {
-    return "M-Pesa does not recognise this merchant for STK. Confirm MPESA_SHORTCODE is the Lipa Na M-Pesa Online shortcode from the production Daraja app, and MPESA_ENV=production.";
+    const ho = darajaConfig.shortcode;
+    const till = darajaConfig.stkPartyB;
+    if (ho === till) {
+      return `M-Pesa does not recognise till ${till} for Lipa Na M-Pesa Online STK. In the production Daraja app, enable Lipa Na M-Pesa Online on this Buy Goods till and use the passkey issued for ${till}.`;
+    }
+    return `M-Pesa does not recognise till ${till} under Head Office ${ho}. In the Daraja production app, add store ${till} to that Head Office for Lipa Na M-Pesa Online, and use the passkey issued for ${ho}.`;
   }
   return resultDesc;
 }

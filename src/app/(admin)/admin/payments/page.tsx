@@ -34,6 +34,7 @@ export default async function PaymentsPage() {
       payment.donation?.donorName ??
       payment.griefApplication?.parentName ??
       null,
+    bookingId: payment.bookingId,
     bookingReference: payment.booking?.reference ?? null,
     createdAtLabel: formatDate(payment.createdAt),
     paidAtLabel: payment.paidAt ? formatDateTime(payment.paidAt) : null,

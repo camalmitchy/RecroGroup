@@ -12,6 +12,7 @@ const payment = {
   update: vi.fn(),
   updateMany: vi.fn(),
   findMany: vi.fn(),
+  count: vi.fn(),
 };
 
 const booking = {
@@ -204,13 +205,24 @@ describe("settlePayment", () => {
   it("does not credit the target when the payment failed", async () => {
     payment.findUnique.mockResolvedValueOnce(PENDING_PAYMENT);
     payment.update.mockResolvedValueOnce({ ...PENDING_PAYMENT, status: "FAILED" });
+    booking.findUnique.mockResolvedValueOnce({
+      id: "bk_1",
+      amountKes: 5000,
+      status: "REQUESTED",
+    });
+    payment.findMany.mockResolvedValueOnce([]);
+    payment.count.mockResolvedValueOnce(0);
 
     await settlePayment("pay_1", {
       status: "FAILED",
       failureReason: "Request cancelled by user",
     });
 
-    expect(booking.update).not.toHaveBeenCalled();
+    expect(booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ paymentStatus: "FAILED" }),
+      }),
+    );
   });
 });
 

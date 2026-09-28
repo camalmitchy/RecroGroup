@@ -26,6 +26,7 @@ export type AdminPaymentRow = {
   failureReason: string | null;
   phone: string | null;
   payerName: string | null;
+  bookingId: string | null;
   bookingReference: string | null;
   createdAtLabel: string;
   paidAtLabel: string | null;
@@ -173,7 +174,7 @@ export function AdminPaymentsPage({
       <div className="p-6 lg:p-8">
         <PageHeader
           title="Payments"
-          description="M-Pesa, bank transfer and card payment tracking."
+          description="Every M-Pesa STK attempt, bank transfer and card payment for bookings."
         />
 
         <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -243,6 +244,7 @@ export function AdminPaymentsPage({
                 "Reference",
                 "Method",
                 "Purpose",
+                "Phone",
                 "Amount",
                 "Status",
                 "Receipt",
@@ -270,6 +272,9 @@ export function AdminPaymentsPage({
                   <span key="purpose" className="capitalize">
                     {humanize(row.purpose)}
                   </span>,
+                  <span key="phone" className="text-xs">
+                    {row.phone ?? "—"}
+                  </span>,
                   <div key="amount">
                     <div className="font-medium">
                       {row.currency} {row.amountKes.toLocaleString()}
@@ -286,7 +291,7 @@ export function AdminPaymentsPage({
                     </StatusBadge>
                     {row.failureReason && (
                       <div
-                        className="mt-1 max-w-[160px] truncate text-xs text-red-600"
+                        className="mt-1 max-w-[220px] text-xs text-red-600"
                         title={row.failureReason}
                       >
                         {row.failureReason}
@@ -297,7 +302,16 @@ export function AdminPaymentsPage({
                     {row.mpesaReceipt ?? row.providerRef ?? "—"}
                   </span>,
                   <span key="booking" className="font-mono text-xs">
-                    {row.bookingReference ?? "—"}
+                    {row.bookingId && row.bookingReference ? (
+                      <a
+                        href={`/dashboard/bookings/${row.bookingId}`}
+                        className="text-primary-deep underline-offset-2 hover:underline"
+                      >
+                        {row.bookingReference}
+                      </a>
+                    ) : (
+                      (row.bookingReference ?? "—")
+                    )}
                   </span>,
                   <span key="created" className="text-xs text-gray-600">
                     {row.createdAtLabel}

@@ -44,6 +44,19 @@ export async function listBookings(filters: BookingFilters = {}) {
       include: {
         service: { select: { id: true, title: true, slug: true, priceKes: true } },
         therapist: { select: { id: true, fullName: true } },
+        payments: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: {
+            id: true,
+            reference: true,
+            status: true,
+            failureReason: true,
+            amountKes: true,
+            mpesaReceipt: true,
+            phone: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
       take: filters.take ?? 50,

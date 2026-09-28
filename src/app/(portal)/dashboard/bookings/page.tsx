@@ -13,11 +13,17 @@ export default async function BookingsPage() {
 
   const rows: BookingRow[] = bookings.items.map((booking) => ({
     id: booking.id,
+    reference: booking.reference,
     clientName: booking.clientName,
+    clientPhone: booking.clientPhone,
     serviceTitle: booking.service?.title ?? null,
     preferredDateLabel: formatDate(booking.preferredDate),
     status: booking.status,
     paymentStatus: booking.paymentStatus,
+    amountKes: booking.amountKes,
+    amountPaidKes: booking.amountPaidKes,
+    latestPaymentReference: booking.payments[0]?.reference ?? null,
+    latestFailureReason: booking.payments[0]?.failureReason ?? null,
   }));
 
   return <BookingsPanel bookings={rows} />;

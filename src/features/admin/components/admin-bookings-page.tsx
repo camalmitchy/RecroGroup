@@ -26,6 +26,8 @@ export type AdminBookingRow = {
   paymentStatus: string;
   amountKes: number | null;
   amountPaidKes: number;
+  latestPaymentReference: string | null;
+  latestFailureReason: string | null;
   createdAtLabel: string;
 };
 
@@ -280,6 +282,16 @@ export function AdminBookingsPage({
                       <div className="mt-1 text-xs text-gray-500">
                         {row.amountPaidKes.toLocaleString()} /{" "}
                         {row.amountKes.toLocaleString()}
+                      </div>
+                    )}
+                    {row.latestPaymentReference && (
+                      <div className="mt-1 font-mono text-xs text-gray-500">
+                        {row.latestPaymentReference}
+                      </div>
+                    )}
+                    {row.latestFailureReason && (
+                      <div className="mt-1 max-w-[220px] text-xs text-red-600">
+                        {row.latestFailureReason}
                       </div>
                     )}
                   </div>,

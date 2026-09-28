@@ -18,38 +18,63 @@ import {
   bookingStatusTone,
   paymentStatusTone,
 } from "@/features/portal/components/status-badge";
+import { formatKes } from "@/features/portal/lib/format";
 
 export type BookingRow = {
   id: string;
+  reference: string;
   clientName: string;
+  clientPhone: string | null;
   serviceTitle: string | null;
   preferredDateLabel: string;
   status: string;
   paymentStatus: string;
+  amountKes: number | null;
+  amountPaidKes: number;
+  latestPaymentReference: string | null;
+  latestFailureReason: string | null;
 };
 
 type StatusFilter = "all" | "REQUESTED" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+type PaymentFilter = "all" | "PAID" | "FAILED" | "PENDING";
 
 function humanize(value: string) {
   return value.toLowerCase().replace(/_/g, " ");
 }
 
+function matchesPaymentFilter(row: BookingRow, filter: PaymentFilter) {
+  if (filter === "all") return true;
+  if (filter === "PENDING") {
+    return row.paymentStatus === "PENDING" || row.paymentStatus === "PROCESSING";
+  }
+  return row.paymentStatus === filter;
+}
+
 export function BookingsPanel({ bookings }: { bookings: BookingRow[] }) {
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("all");
 
   const visible = useMemo(
-    () => (filter === "all" ? bookings : bookings.filter((row) => row.status === filter)),
-    [bookings, filter],
+    () =>
+      bookings.filter(
+        (row) =>
+          (filter === "all" || row.status === filter) &&
+          matchesPaymentFilter(row, paymentFilter),
+      ),
+    [bookings, filter, paymentFilter],
   );
 
   const count = (status: Exclude<StatusFilter, "all">) =>
     bookings.filter((row) => row.status === status).length;
 
+  const paymentCount = (status: Exclude<PaymentFilter, "all">) =>
+    bookings.filter((row) => matchesPaymentFilter(row, status)).length;
+
   return (
     <div className="space-y-5">
       <PortalPageHeader
         title="Bookings"
-        description="Open a booking to see contact details, payment, and actions."
+        description="Open a booking to see contact details, payment attempts, and actions."
       />
 
       <PortalTabBar
@@ -65,6 +90,18 @@ export function BookingsPanel({ bookings }: { bookings: BookingRow[] }) {
         onChange={setFilter}
       />
 
+      <PortalTabBar
+        className="overflow-x-auto"
+        tabs={[
+          { key: "all", label: "All payments" },
+          { key: "PENDING", label: `Unpaid (${paymentCount("PENDING")})` },
+          { key: "PAID", label: `Paid (${paymentCount("PAID")})` },
+          { key: "FAILED", label: `Failed (${paymentCount("FAILED")})` },
+        ]}
+        active={paymentFilter}
+        onChange={setPaymentFilter}
+      />
+
       <Card>
         <CardContent className="p-0">
           {visible.length === 0 ? (
@@ -76,7 +113,7 @@ export function BookingsPanel({ bookings }: { bookings: BookingRow[] }) {
                 <EmptyDescription>
                   {bookings.length === 0
                     ? "Requests submitted from the public booking form land here."
-                    : "Try another status tab."}
+                    : "Try another status or payment tab."}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -90,23 +127,41 @@ export function BookingsPanel({ bookings }: { bookings: BookingRow[] }) {
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{row.clientName}</p>
+                      <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                        {row.reference}
+                        {row.latestPaymentReference
+                          ? ` · ${row.latestPaymentReference}`
+                          : ""}
+                      </p>
                       <p className="mt-0.5 truncate text-sm text-muted-foreground">
                         {row.serviceTitle ?? "Session"} · {row.preferredDateLabel}
+                        {row.clientPhone ? ` · ${row.clientPhone}` : ""}
                       </p>
+                      {row.latestFailureReason && (
+                        <p className="mt-1 line-clamp-2 text-xs text-destructive">
+                          {row.latestFailureReason}
+                        </p>
+                      )}
                     </div>
-                    <div className="hidden shrink-0 items-center gap-2 sm:flex">
-                      <StatusBadge tone={bookingStatusTone(row.status)}>
-                        {humanize(row.status)}
-                      </StatusBadge>
-                      <StatusBadge tone={paymentStatusTone(row.paymentStatus)}>
-                        {humanize(row.paymentStatus)}
-                      </StatusBadge>
+                    <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
+                      <div className="flex items-center gap-2">
+                        <StatusBadge tone={bookingStatusTone(row.status)}>
+                          {humanize(row.status)}
+                        </StatusBadge>
+                        <StatusBadge tone={paymentStatusTone(row.paymentStatus)}>
+                          {humanize(row.paymentStatus)}
+                        </StatusBadge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        KES {formatKes(row.amountPaidKes)}
+                        {row.amountKes != null ? ` / ${formatKes(row.amountKes)}` : ""}
+                      </p>
                     </div>
                     <StatusBadge
                       className="sm:hidden"
-                      tone={bookingStatusTone(row.status)}
+                      tone={paymentStatusTone(row.paymentStatus)}
                     >
-                      {humanize(row.status)}
+                      {humanize(row.paymentStatus)}
                     </StatusBadge>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   </Link>

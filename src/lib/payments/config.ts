@@ -68,21 +68,27 @@ export const darajaConfig = {
     }
     return value;
   },
+  get configuredTill() {
+    return numericCode("MPESA_TILL_NUMBER");
+  },
   get tillNumber() {
-    return numericCode("MPESA_TILL_NUMBER") ?? numericCode("MPESA_SHORTCODE");
+    return this.configuredTill ?? numericCode("MPESA_SHORTCODE");
   },
   get passkey() {
     return required("MPESA_PASSKEY").replace(/\s+/g, "");
   },
   get useTillForStk() {
-    return optional("MPESA_STK_USE_TILL")?.toLowerCase() === "true";
+    const flag = optional("MPESA_STK_USE_TILL")?.toLowerCase();
+    if (flag === "false") return false;
+    if (flag === "true") return true;
+    // A configured till is always a Buy Goods STK destination, including when
+    // it is also the Lipa Na M-Pesa Online shortcode (standalone till).
+    return Boolean(this.configuredTill);
   },
   get transactionType() {
-    // Buy Goods + Head Office as PartyB is invalid and returns
-    // "Merchant does not exist". STK uses Paybill against the Daraja
-    // shortcode unless the public till is explicitly opted in.
-    if (this.useTillForStk) return "CustomerBuyGoodsOnline";
-    return "CustomerPayBillOnline";
+    return this.useTillForStk
+      ? "CustomerBuyGoodsOnline"
+      : "CustomerPayBillOnline";
   },
   get stkPartyB() {
     if (this.useTillForStk && this.tillNumber) return this.tillNumber;

@@ -42,6 +42,7 @@ export type ChargeResult = {
   redirectUrl?: string | null;
   customerMessage?: string | null;
   raw?: unknown;
+  meta?: Record<string, unknown> | null;
 };
 
 export type VerifyResult = {

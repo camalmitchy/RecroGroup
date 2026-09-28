@@ -205,6 +205,7 @@ export async function startCheckout(
   const updated = await markPaymentProcessing(payment.id, {
     providerRef: result.providerRef ?? null,
     expiresAt: input.method === "MPESA" ? expiresAt : null,
+    providerMeta: result.meta ?? null,
   });
 
   return {
