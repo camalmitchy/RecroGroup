@@ -81,9 +81,10 @@ export const darajaConfig = {
     const flag = optional("MPESA_STK_USE_TILL")?.toLowerCase();
     if (flag === "false") return false;
     if (flag === "true") return true;
-    // A configured till is always a Buy Goods STK destination, including when
-    // it is also the Lipa Na M-Pesa Online shortcode (standalone till).
-    return Boolean(this.configuredTill);
+    // A separate walk-in till is not an STK merchant until Safaricom attaches
+    // it as a store. STK then uses the Lipa Na M-Pesa Online shortcode (HO).
+    // Buy Goods STK is used only when the till *is* that shortcode.
+    return Boolean(this.configuredTill && this.configuredTill === this.shortcode);
   },
   get transactionType() {
     return this.useTillForStk

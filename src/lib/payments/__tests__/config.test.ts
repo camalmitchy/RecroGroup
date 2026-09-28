@@ -51,19 +51,27 @@ describe("darajaConfig", () => {
     expect(darajaConfig.env).toBe("production");
   });
 
-  it("defaults STK to Buy Goods against the till under the Head Office", () => {
-    vi.stubEnv("MPESA_SHORTCODE", "4109876");
+  it("sends Paybill STK to the Head Office when the till is a separate store", () => {
+    vi.stubEnv("MPESA_SHORTCODE", "849056");
     vi.stubEnv("MPESA_TILL_NUMBER", "747736");
-    expect(darajaConfig.transactionType).toBe("CustomerBuyGoodsOnline");
-    expect(darajaConfig.stkPartyB).toBe("747736");
+    expect(darajaConfig.transactionType).toBe("CustomerPayBillOnline");
+    expect(darajaConfig.stkPartyB).toBe("849056");
   });
 
-  it("sends Buy Goods STK even when the shortcode is the till itself", () => {
+  it("sends Buy Goods STK when the shortcode is the till itself", () => {
     vi.stubEnv("MPESA_SHORTCODE", "747736");
     vi.stubEnv("MPESA_TILL_NUMBER", "747736");
     expect(darajaConfig.transactionType).toBe("CustomerBuyGoodsOnline");
     expect(darajaConfig.stkPartyB).toBe("747736");
     expect(darajaConfig.shortcode).toBe("747736");
+  });
+
+  it("sends Buy Goods to the store till only when till STK is enabled", () => {
+    vi.stubEnv("MPESA_SHORTCODE", "849056");
+    vi.stubEnv("MPESA_TILL_NUMBER", "747736");
+    vi.stubEnv("MPESA_STK_USE_TILL", "true");
+    expect(darajaConfig.transactionType).toBe("CustomerBuyGoodsOnline");
+    expect(darajaConfig.stkPartyB).toBe("747736");
   });
 
   it("uses Paybill when till STK is disabled", () => {

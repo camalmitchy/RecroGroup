@@ -69,8 +69,22 @@ afterEach(() => {
 });
 
 describe("STK push party selection", () => {
-  it("sends a Buy Goods STK to the till under the Head Office", async () => {
+  it("sends Paybill STK to the Head Office when the till is a separate store", async () => {
     stubDarajaEnv();
+    const fetchMock = darajaFetchMock();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { mpesaProvider } = await freshMpesa();
+    await mpesaProvider.charge(chargeRequest);
+
+    const body = stkBody(fetchMock);
+    expect(body.TransactionType).toBe("CustomerPayBillOnline");
+    expect(body.BusinessShortCode).toBe(SHORTCODE);
+    expect(body.PartyB).toBe(SHORTCODE);
+  });
+
+  it("sends a Buy Goods STK to the till when till STK is enabled", async () => {
+    stubDarajaEnv({ MPESA_STK_USE_TILL: "true" });
     const fetchMock = darajaFetchMock();
     vi.stubGlobal("fetch", fetchMock);
 
@@ -463,12 +477,12 @@ describe("parseStkCallback", () => {
     });
 
     expect(event.result.failureReason).toMatch(
-      /till 5551212 for Lipa Na M-Pesa Online STK/,
+      /does not recognise 5551212 for Lipa Na M-Pesa Online STK/,
     );
   });
 
-  it("explains a merchant-does-not-exist callback when the till sits under a Head Office", () => {
-    stubDarajaEnv();
+  it("explains a merchant-does-not-exist callback when till STK is enabled", () => {
+    stubDarajaEnv({ MPESA_STK_USE_TILL: "true" });
     const event = parseStkCallback({
       Body: {
         stkCallback: {
