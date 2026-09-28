@@ -1,12 +1,17 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Check, Download, Filter, RotateCcw, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Check, Download, Filter, RotateCcw, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import type { BookingStatus } from "@prisma/client";
 import { downloadCsv, toCsv } from "@/features/admin/lib/csv";
-import { assignTherapist, setBookingStatus } from "@/server/actions/operations";
+import {
+  assignTherapist,
+  clearAllBookings,
+  setBookingStatus,
+} from "@/server/actions/operations";
 import type { ActionResult } from "@/server/result";
 
 import { AdminShell, Card, DataTable, PageHeader, StatusBadge } from "./admin-shell";
@@ -94,6 +99,7 @@ export function AdminBookingsPage({
   const [statusFilter, setStatusFilter] = useState("all");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const rows = useMemo(
     () =>
@@ -159,6 +165,35 @@ export function AdminBookingsPage({
         <PageHeader
           title="Bookings"
           description="Incoming booking requests and lifecycle actions."
+          actions={
+            isAdmin ? (
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={() => {
+                  const confirmed = window.confirm(
+                    "Delete every booking and the payments attached to them? This cannot be undone.",
+                  );
+                  if (!confirmed) return;
+                  startTransition(async () => {
+                    const result = await clearAllBookings();
+                    if (result.ok) {
+                      toast.success(
+                        `Cleared ${result.data.bookings} bookings and ${result.data.payments} payments`,
+                      );
+                      router.refresh();
+                    } else {
+                      toast.error(result.error);
+                    }
+                  });
+                }}
+                className="flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                <Trash2 size={16} />
+                Clear all bookings
+              </button>
+            ) : null
+          }
         />
 
         <div className="mt-6 flex flex-wrap items-center gap-4">

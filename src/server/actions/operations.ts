@@ -10,7 +10,7 @@ import type {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { AuthorizationError, requireStaff } from "@/server/authz";
+import { AuthorizationError, requireAdmin, requireStaff } from "@/server/authz";
 import type { ActionResult } from "@/server/result";
 import { fail, failure, ok } from "@/server/result";
 
@@ -215,5 +215,28 @@ export async function setAppointmentStatus(
   } catch (error) {
     if (error instanceof AuthorizationError) return fail(error.message);
     return failure("setAppointmentStatus", error);
+  }
+}
+
+export async function clearAllBookings(): Promise<
+  ActionResult<{ bookings: number; payments: number }>
+> {
+  try {
+    await requireAdmin();
+
+    const payments = await prisma.payment.deleteMany({
+      where: { bookingId: { not: null } },
+    });
+    const bookings = await prisma.booking.deleteMany();
+
+    revalidatePath("/admin/bookings");
+    revalidatePath("/admin");
+    revalidatePath("/dashboard/bookings");
+    revalidatePath("/dashboard");
+
+    return ok({ bookings: bookings.count, payments: payments.count });
+  } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
+    return failure("clearAllBookings", error);
   }
 }

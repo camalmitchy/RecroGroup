@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const prismaMock = {
   griefApplication: { update: vi.fn() },
   inquiry: { update: vi.fn() },
-  booking: { update: vi.fn(), findUnique: vi.fn(), count: vi.fn() },
+  booking: { update: vi.fn(), findUnique: vi.fn(), count: vi.fn(), deleteMany: vi.fn() },
   therapist: { findUnique: vi.fn() },
-  payment: { findUnique: vi.fn(), update: vi.fn() },
+  payment: { findUnique: vi.fn(), update: vi.fn(), deleteMany: vi.fn() },
   appointment: { update: vi.fn() },
   user: { update: vi.fn() },
 };
@@ -25,6 +25,7 @@ vi.mock("@/server/authz", async () => {
 const { AuthorizationError } = await import("@/server/authz");
 const {
   assignTherapist,
+  clearAllBookings,
   linkPaymentToBooking,
   setGriefApplicationStatus,
   setInquiryStatus,
@@ -187,5 +188,39 @@ describe("linkPaymentToBooking", () => {
     const result = await linkPaymentToBooking("missing", "b1");
 
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("clearAllBookings", () => {
+  it("deletes booking payments first, then every booking", async () => {
+    prismaMock.payment.deleteMany.mockResolvedValueOnce({ count: 3 });
+    prismaMock.booking.deleteMany.mockResolvedValueOnce({ count: 2 });
+
+    const result = await clearAllBookings();
+
+    expect(requireAdmin).toHaveBeenCalled();
+    expect(prismaMock.payment.deleteMany).toHaveBeenCalledWith({
+      where: { bookingId: { not: null } },
+    });
+    expect(prismaMock.booking.deleteMany).toHaveBeenCalledWith();
+    expect(result).toEqual({
+      ok: true,
+      data: { bookings: 2, payments: 3 },
+    });
+  });
+
+  it("refuses anyone who is not an admin", async () => {
+    requireAdmin.mockRejectedValueOnce(
+      new AuthorizationError("Administrator access is required"),
+    );
+
+    const result = await clearAllBookings();
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Administrator access is required",
+    });
+    expect(prismaMock.payment.deleteMany).not.toHaveBeenCalled();
+    expect(prismaMock.booking.deleteMany).not.toHaveBeenCalled();
   });
 });
