@@ -1,5 +1,6 @@
 import "server-only";
 
+import { Prisma } from "@prisma/client";
 import type { PaymentMethod, PaymentPurpose } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
@@ -205,7 +206,7 @@ export async function startCheckout(
   const updated = await markPaymentProcessing(payment.id, {
     providerRef: result.providerRef ?? null,
     expiresAt: input.method === "MPESA" ? expiresAt : null,
-    providerMeta: result.meta ?? null,
+    providerMeta: result.meta ? (result.meta as Prisma.InputJsonValue) : null,
   });
 
   return {
