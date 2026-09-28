@@ -51,11 +51,12 @@ describe("darajaConfig", () => {
     expect(darajaConfig.env).toBe("production");
   });
 
-  it("sends Paybill STK to the Head Office when the till is a separate store", () => {
+  it("sends Buy Goods STK to the till when the till is a separate store", () => {
     vi.stubEnv("MPESA_SHORTCODE", "849056");
     vi.stubEnv("MPESA_TILL_NUMBER", "747736");
-    expect(darajaConfig.transactionType).toBe("CustomerPayBillOnline");
-    expect(darajaConfig.stkPartyB).toBe("849056");
+    expect(darajaConfig.transactionType).toBe("CustomerBuyGoodsOnline");
+    expect(darajaConfig.stkPartyB).toBe("747736");
+    expect(darajaConfig.shortcode).toBe("849056");
   });
 
   it("sends Buy Goods STK when the shortcode is the till itself", () => {
@@ -82,10 +83,12 @@ describe("darajaConfig", () => {
     expect(darajaConfig.stkPartyB).toBe("4109876");
   });
 
-  it("falls back to the shortcode when no till is set", () => {
+  it("falls back to Pay Bill on the shortcode when no till is set", () => {
     vi.stubEnv("MPESA_SHORTCODE", "4109876");
     vi.stubEnv("MPESA_TILL_NUMBER", "");
     expect(darajaConfig.tillNumber).toBe("4109876");
+    expect(darajaConfig.transactionType).toBe("CustomerPayBillOnline");
+    expect(darajaConfig.stkPartyB).toBe("4109876");
   });
 
   it("leaves the callback url undefined when unset or not public HTTPS", () => {

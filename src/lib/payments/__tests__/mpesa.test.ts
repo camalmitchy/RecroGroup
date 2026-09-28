@@ -69,7 +69,7 @@ afterEach(() => {
 });
 
 describe("STK push party selection", () => {
-  it("sends Paybill STK to the Head Office when the till is a separate store", async () => {
+  it("sends a Buy Goods STK to the till and signs it with the Head Office shortcode", async () => {
     stubDarajaEnv();
     const fetchMock = darajaFetchMock();
     vi.stubGlobal("fetch", fetchMock);
@@ -78,9 +78,9 @@ describe("STK push party selection", () => {
     await mpesaProvider.charge(chargeRequest);
 
     const body = stkBody(fetchMock);
-    expect(body.TransactionType).toBe("CustomerPayBillOnline");
+    expect(body.TransactionType).toBe("CustomerBuyGoodsOnline");
     expect(body.BusinessShortCode).toBe(SHORTCODE);
-    expect(body.PartyB).toBe(SHORTCODE);
+    expect(body.PartyB).toBe(TILL);
   });
 
   it("sends a Buy Goods STK to the till when till STK is enabled", async () => {

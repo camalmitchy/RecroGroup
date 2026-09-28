@@ -231,11 +231,6 @@ function stkParties(): StkParties {
   };
 }
 
-function isMerchantRejection(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
-  return /merchant does not exist|invalid merchant/i.test(message);
-}
-
 function assertStkMerchant(businessShortCode: string) {
   if (darajaConfig.env === "production" && businessShortCode === "174379") {
     throw new PaymentError(
@@ -305,24 +300,7 @@ async function sendStkPush(
 async function charge(request: ChargeRequest): Promise<ChargeResult> {
   const amount = assertPositiveAmount(Math.round(request.amountKes), "M-Pesa amount");
   const phone = requirePhone(request.customer.phone);
-  const primary = stkParties();
-
-  try {
-    return await sendStkPush(request, amount, phone, primary);
-  } catch (error) {
-    const canRetryAsHoBuyGoods =
-      !darajaConfig.useTillForStk &&
-      primary.transactionType === "CustomerPayBillOnline" &&
-      isMerchantRejection(error);
-
-    if (!canRetryAsHoBuyGoods) throw error;
-
-    return sendStkPush(request, amount, phone, {
-      transactionType: "CustomerBuyGoodsOnline",
-      businessShortCode: primary.businessShortCode,
-      partyB: primary.businessShortCode,
-    });
-  }
+  return sendStkPush(request, amount, phone, stkParties());
 }
 
 function statusFromResultCode(code: number): VerifyResult["status"] {
@@ -339,7 +317,7 @@ function failureReasonFor(code: number, resultDesc: string | null) {
     const ho = darajaConfig.shortcode;
     const till = darajaConfig.configuredTill;
     if (darajaConfig.useTillForStk && till && till !== ho) {
-      return `M-Pesa does not recognise till ${till} under Head Office ${ho}. Leave MPESA_STK_USE_TILL unset so booking STK goes to ${ho}. To collect on the till, ask Safaricom to attach store ${till} to that Head Office for Lipa Na M-Pesa Online.`;
+      return `M-Pesa does not recognise till ${till} under Head Office ${ho}. Ask Safaricom to attach store ${till} to that Head Office for Lipa Na M-Pesa Online Buy Goods.`;
     }
     return `M-Pesa does not recognise ${ho} for Lipa Na M-Pesa Online STK. Confirm MPESA_SHORTCODE and MPESA_PASSKEY are the production Lipa Na M-Pesa Online shortcode and passkey from the Daraja app (not the walk-in till).`;
   }
