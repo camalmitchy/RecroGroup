@@ -33,6 +33,7 @@ export default async function BookingDetailPage({
     clientPhone: booking.clientPhone,
     preferredDateLabel: formatDate(booking.preferredDate),
     preferredTime: booking.preferredTime,
+    rescheduleReason: booking.rescheduleReason,
     sessionMode: booking.sessionMode,
     notes: booking.notes,
     therapistId: booking.therapistId,

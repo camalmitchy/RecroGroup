@@ -17,6 +17,7 @@ const payment = {
 
 const booking = {
   findUnique: vi.fn(),
+  findMany: vi.fn().mockResolvedValue([]),
   update: vi.fn(),
   delete: vi.fn(),
 };
@@ -28,6 +29,7 @@ const prismaMock = {
   griefApplication: { findUnique: vi.fn(), update: vi.fn() },
   donation: { update: vi.fn() },
   $transaction: vi.fn(),
+  $executeRawUnsafe: vi.fn().mockResolvedValue(0),
 };
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));

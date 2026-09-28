@@ -20,7 +20,9 @@ import {
     Mail,
 } from "lucide-react";
 
-import { createBooking } from "@/server/actions/booking";
+import { createBooking, listSlotAvailability } from "@/server/actions/booking";
+import { sessionEndLabel } from "@/features/public/booking/lib/slots";
+import { RescheduleSlotForm } from "./reschedule-slot-form";
 import {
     TIME_SLOTS,
     bookingEntryStep,
@@ -38,6 +40,7 @@ export type ServiceOption = {
     key: string;
     title: string;
     duration: string;
+    durationMin: number;
     icon: string;
     price: number;
     depositKes: number;
@@ -79,6 +82,8 @@ type StatusResponse = {
     mpesaReceipt: string | null;
     failureReason: string | null;
     paidAt: string | null;
+    needsReschedule?: boolean;
+    rescheduleReason?: string | null;
 };
 
 type BookingRecord = {
@@ -129,6 +134,9 @@ export function BookingPage({
         () => parseDateOnly(dateParam),
     );
     const [selectedTime, setSelectedTime] = useState<string>(timeParam ?? "");
+    const [takenTimes, setTakenTimes] = useState<string[]>([]);
+    const [needsReschedule, setNeedsReschedule] = useState(false);
+    const [rescheduleReason, setRescheduleReason] = useState<string | null>(null);
 
     // Intake step
     const [clientName, setClientName] = useState(defaultClient?.name ?? "");
@@ -181,6 +189,32 @@ export function BookingPage({
         if (match) setSelectedDate(match);
     }, [dateParam, availableDates]);
 
+    useEffect(() => {
+        if (!selectedDate || !selectedService) {
+            setTakenTimes([]);
+            return;
+        }
+        let cancelled = false;
+        listSlotAvailability(toDateOnly(selectedDate), selectedService.durationMin)
+            .then((slots) => {
+                if (!cancelled) {
+                    setTakenTimes(slots.filter((slot) => slot.taken).map((slot) => slot.time));
+                }
+            })
+            .catch(() => {
+                if (!cancelled) setTakenTimes([]);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedDate, selectedService]);
+
+    useEffect(() => {
+        if (selectedTime && takenTimes.includes(selectedTime)) {
+            setSelectedTime("");
+        }
+    }, [selectedTime, takenTimes]);
+
     const [lastServiceParam, setLastServiceParam] = useState(serviceParam);
     if (serviceParam !== lastServiceParam) {
         setLastServiceParam(serviceParam);
@@ -200,7 +234,10 @@ export function BookingPage({
 
     const canProceedFromService = selectedService !== null;
     const canProceedFromTime =
-        selectedDate && selectedTime && (clinicians.length === 0 || Boolean(clinician));
+        selectedDate &&
+        selectedTime &&
+        !takenTimes.includes(selectedTime) &&
+        (clinicians.length === 0 || Boolean(clinician));
     const canProceedFromIntake =
         clientName.trim() && clientEmail.trim() && clientPhone.trim();
 
@@ -294,6 +331,8 @@ export function BookingPage({
                     stopPolling();
                     setBusy(false);
                     setPaidAmountKes(status.settledAmountKes ?? status.amountKes);
+                    setNeedsReschedule(Boolean(status.needsReschedule));
+                    setRescheduleReason(status.rescheduleReason ?? null);
                     setStep("done");
                     return;
                 }
@@ -471,6 +510,8 @@ export function BookingPage({
                         setSelectedTime={setSelectedTime}
                         availableDates={availableDates}
                         timeSlots={TIME_SLOTS}
+                        takenTimes={takenTimes}
+                        durationMin={selectedService?.durationMin ?? 60}
                         onBack={() => setStep("service")}
                         onNext={handleTimeNext}
                     />
@@ -537,6 +578,9 @@ export function BookingPage({
                         commitmentFee={
                             paidAmountKes ?? booking?.depositKes ?? 0
                         }
+                        needsReschedule={needsReschedule}
+                        rescheduleReason={rescheduleReason}
+                        durationMin={selectedService.durationMin}
                     />
                 )}
             </div>
@@ -651,6 +695,8 @@ function TimeStep({
     setSelectedTime,
     availableDates,
     timeSlots,
+    takenTimes,
+    durationMin,
     onBack,
     onNext,
 }: {
@@ -663,6 +709,8 @@ function TimeStep({
     setSelectedTime: (t: string) => void;
     availableDates: Date[];
     timeSlots: string[];
+    takenTimes: string[];
+    durationMin: number;
     onBack: () => void;
     onNext: () => void;
 }) {
@@ -742,16 +790,20 @@ function TimeStep({
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                         {timeSlots.map((time) => {
                             const isSelected = selectedTime === time;
+                            const taken = takenTimes.includes(time);
                             return (
                                 <button
                                     key={time}
+                                    type="button"
+                                    disabled={taken}
                                     onClick={() => setSelectedTime(time)}
-                                    className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition bg-background shadow-sm ${isSelected
+                                    className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition bg-background shadow-sm disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-muted-foreground ${isSelected
                                         ? "border-primary"
                                         : "border-border hover:border-primary/50"
                                         }`}
                                 >
                                     {time}
+                                    {taken ? <span className="mt-0.5 block text-[10px] uppercase tracking-wide">Booked</span> : null}
                                 </button>
                             );
                         })}
@@ -760,10 +812,13 @@ function TimeStep({
                         <p className="mt-4 rounded-2xl border border-border bg-primary-soft/60 px-4 py-3 text-sm leading-relaxed text-foreground">
                             This becomes your permanent slot: every{" "}
                             <strong>
-                                {weekdayLabel} at {selectedTime}
-                            </strong>{" "}
-                            is reserved for you until your sessions finish. Our office
-                            manager will reopen the slot once it is available again.
+                                {weekdayLabel} from {selectedTime}
+                                {sessionEndLabel(selectedTime, durationMin)
+                                    ? ` until ${sessionEndLabel(selectedTime, durationMin)}`
+                                    : ""}
+                            </strong>
+                            . Those hours stay reserved until your sessions finish. A
+                            two-hour session also blocks the next hour.
                         </p>
                     )}
                 </div>
@@ -812,7 +867,7 @@ function TimeStep({
                 </button>
                 <button
                     onClick={onNext}
-                    disabled={!selectedDate || !selectedTime || (clinicians.length > 0 && !clinician)}
+                    disabled={!selectedDate || !selectedTime || takenTimes.includes(selectedTime) || (clinicians.length > 0 && !clinician)}
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Continue <ArrowRight size={16} />
@@ -1260,6 +1315,9 @@ function ConfirmationStep({
     method,
     reference,
     commitmentFee,
+    needsReschedule = false,
+    rescheduleReason = null,
+    durationMin = 60,
 }: {
     clientName: string;
     date: Date;
@@ -1267,6 +1325,9 @@ function ConfirmationStep({
     method: PaymentMethodKey;
     reference: string | null;
     commitmentFee: number;
+    needsReschedule?: boolean;
+    rescheduleReason?: string | null;
+    durationMin?: number;
 }) {
     const weekdayLabel = date.toLocaleDateString("en-US", { weekday: "long" });
     const isManual = method === "bank";
@@ -1277,7 +1338,11 @@ function ConfirmationStep({
                 <Check size={32} />
             </span>
             <h2 className="mt-6 font-serif text-3xl font-semibold">
-                {isManual ? "Booking Received!" : "Booking Confirmed!"}
+                {needsReschedule
+                    ? "Payment received"
+                    : isManual
+                      ? "Booking Received!"
+                      : "Booking Confirmed!"}
             </h2>
             <p className="mt-3 text-muted-foreground max-w-md mx-auto leading-relaxed">
                 {isManual ? (
@@ -1306,13 +1371,24 @@ function ConfirmationStep({
                     <strong className="font-mono text-foreground">{reference}</strong>
                 </p>
             )}
+            {needsReschedule && reference ? (
+                <RescheduleSlotForm
+                    reference={reference}
+                    durationMin={durationMin}
+                    reason={rescheduleReason}
+                />
+            ) : (
             <p className="mt-4 max-w-md mx-auto rounded-2xl bg-surface px-4 py-3 text-sm leading-relaxed text-foreground">
                 Your permanent slot is every{" "}
                 <strong>
-                    {weekdayLabel} at {time}
+                    {weekdayLabel} from {time}
+                    {sessionEndLabel(time, durationMin)
+                        ? ` until ${sessionEndLabel(time, durationMin)}`
+                        : ""}
                 </strong>
-                . It stays reserved for you until your sessions finish.
+                . It stays reserved until your sessions finish.
             </p>
+            )}
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                 <Link href="/" className="btn-primary">
                     Back to Home

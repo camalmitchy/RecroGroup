@@ -6,6 +6,13 @@ import { prisma } from "@/lib/prisma";
 import { resolveServicePrice } from "@/lib/payments/pricing";
 import { generateReference, normalizePhone } from "@/lib/payments/utils";
 import { getOptionalSession } from "@/server/authz";
+import {
+  getSlotAvailability,
+  isSlotAvailable,
+  reconcileBookingSlots,
+} from "@/server/booking-slots";
+import { isTimeSlot } from "@/features/public/booking/lib/schedule";
+import { nairobiDate, sessionMinutes } from "@/features/public/booking/lib/slots";
 import type { ActionResult } from "@/server/result";
 import { fail, failure, invalid, ok } from "@/server/result";
 import type { BookingInput } from "@/server/validation/booking";
@@ -39,6 +46,25 @@ export async function createBooking(
     }
 
     const price = await resolveServicePrice(values.serviceSlug);
+    const service = price.serviceId
+      ? await prisma.service.findUnique({
+          where: { id: price.serviceId },
+          select: { durationMin: true },
+        })
+      : null;
+    const durationMin = sessionMinutes(null, service?.durationMin);
+    const slotFree = await isSlotAvailable({
+      date: values.preferredDate,
+      time: values.preferredTime,
+      durationMin,
+    });
+    if (!slotFree) {
+      return fail(
+        "That day and time is already booked. Choose a different slot. A longer session also blocks the following hours.",
+        { preferredTime: ["Choose a different time"] },
+      );
+    }
+
     const session = await getOptionalSession();
 
     const therapist = values.therapistId
@@ -59,6 +85,7 @@ export async function createBooking(
         clientPhone: normalizePhone(values.clientPhone),
         preferredDate: values.preferredDate,
         preferredTime: values.preferredTime,
+        durationMin,
         sessionMode: values.sessionMode,
         notes: values.notes ?? null,
         amountKes: price.totalKes,
@@ -81,5 +108,82 @@ export async function createBooking(
     });
   } catch (error) {
     return failure("createBooking", error);
+  }
+}
+
+export async function listSlotAvailability(date: string, durationMin: number) {
+  return getSlotAvailability(date, Math.round(durationMin));
+}
+
+export async function reschedulePaidBooking(input: {
+  reference: string;
+  date: string;
+  time: string;
+}): Promise<ActionResult<{ time: string }>> {
+  try {
+    const booking = await prisma.booking.findUnique({
+      where: { reference: input.reference },
+      select: {
+        id: true,
+        rescheduleReason: true,
+        durationMin: true,
+        service: { select: { durationMin: true } },
+        payments: {
+          where: { status: "PAID", method: "MPESA" },
+          select: { id: true },
+          take: 1,
+        },
+      },
+    });
+
+    if (!booking || booking.payments.length === 0) {
+      return fail("That paid booking could not be found");
+    }
+    if (!booking.rescheduleReason) {
+      return fail("This booking already holds its day and time");
+    }
+
+    const date = nairobiDate(input.date);
+    if (!date || !isTimeSlot(input.time)) {
+      return fail("Choose a date and time");
+    }
+
+    const durationMin = sessionMinutes(booking.durationMin, booking.service?.durationMin);
+    const slotFree = await isSlotAvailable({
+      date,
+      time: input.time,
+      durationMin,
+      ignoreBookingId: booking.id,
+    });
+    if (!slotFree) {
+      return fail("That day and time is already booked. Choose a different slot.");
+    }
+
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: {
+        preferredDate: date,
+        preferredTime: input.time,
+        durationMin,
+        rescheduleReason: null,
+      },
+    });
+
+    await reconcileBookingSlots();
+    const fresh = await prisma.booking.findUnique({
+      where: { id: booking.id },
+      select: { rescheduleReason: true },
+    });
+    if (fresh?.rescheduleReason) {
+      return fail(fresh.rescheduleReason);
+    }
+
+    revalidatePath("/dashboard/bookings");
+    revalidatePath("/admin/bookings");
+    revalidatePath("/booking");
+
+    return ok({ time: input.time });
+  } catch (error) {
+    return failure("reschedulePaidBooking", error);
   }
 }

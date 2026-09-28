@@ -277,6 +277,8 @@ model Booking {
   clientPhone   String?
   preferredDate DateTime?     @db.Date
   preferredTime String?
+  durationMin   Int?
+  rescheduleReason String?    @db.Text
   sessionMode   SessionMode?
   notes         String?       @db.Text
   status        BookingStatus @default(REQUESTED)

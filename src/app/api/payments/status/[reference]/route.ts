@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { refreshPaymentStatus } from "@/lib/payments/checkout";
 import { PaymentError } from "@/lib/payments/types";
+import { prisma } from "@/lib/prisma";
+import { ensureSlotColumns } from "@/server/booking-slots";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -14,6 +16,13 @@ export async function GET(
 
   try {
     const payment = await refreshPaymentStatus(reference);
+    await ensureSlotColumns();
+    const booking = payment.bookingId
+      ? await prisma.booking.findUnique({
+          where: { id: payment.bookingId },
+          select: { rescheduleReason: true },
+        })
+      : null;
 
     return NextResponse.json({
       reference: payment.reference,
@@ -24,6 +33,8 @@ export async function GET(
       mpesaReceipt: payment.mpesaReceipt,
       failureReason: payment.failureReason,
       paidAt: payment.paidAt,
+      needsReschedule: Boolean(booking?.rescheduleReason),
+      rescheduleReason: booking?.rescheduleReason ?? null,
     });
   } catch (error) {
     if (error instanceof PaymentError && error.code === "not_found") {

@@ -43,6 +43,8 @@ END $$`,
   `ALTER TABLE "payments" ADD COLUMN IF NOT EXISTS "phone" TEXT`,
   `ALTER TABLE "payments" ADD COLUMN IF NOT EXISTS "mpesaCheckoutId" TEXT`,
   `ALTER TABLE "payments" ADD COLUMN IF NOT EXISTS "mpesaReceipt" TEXT`,
+  `ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "durationMin" INTEGER`,
+  `ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "rescheduleReason" TEXT`,
   `UPDATE "payments"
 SET "provider" = CASE
   WHEN "method" = 'MPESA' THEN 'MPESA_DARAJA'::"PaymentProvider"

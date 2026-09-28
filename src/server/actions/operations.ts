@@ -10,6 +10,7 @@ import type {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { reconcileBookingSlots } from "@/server/booking-slots";
 import { AuthorizationError, requireAdmin, requireStaff } from "@/server/authz";
 import type { ActionResult } from "@/server/result";
 import { fail, failure, ok } from "@/server/result";
@@ -106,6 +107,8 @@ export async function setBookingStatus(
       data: { status },
       select: { id: true, status: true },
     });
+
+    await reconcileBookingSlots();
 
     revalidatePath("/dashboard/bookings");
     revalidatePath(`/dashboard/bookings/${bookingId}`);

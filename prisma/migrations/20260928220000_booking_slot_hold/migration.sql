@@ -1,0 +1,2 @@
+ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "durationMin" INTEGER;
+ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "rescheduleReason" TEXT;

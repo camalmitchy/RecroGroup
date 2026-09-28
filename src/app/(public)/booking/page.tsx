@@ -10,6 +10,7 @@ import { paymentsConfig } from "@/lib/payments/config";
 import { calculateDeposit } from "@/lib/payments/utils";
 import { prisma } from "@/lib/prisma";
 import { getOptionalSession } from "@/server/authz";
+import { sessionMinutes } from "@/features/public/booking/lib/slots";
 import {
   formatServiceDuration,
   listBookableServices,
@@ -49,6 +50,7 @@ async function loadServices(): Promise<ServiceOption[]> {
       key: service.slug,
       title: service.title,
       duration: formatServiceDuration(service.durationMin),
+      durationMin: sessionMinutes(service.durationMin, null),
       icon: SERVICE_ICONS[service.slug] ?? FALLBACK_ICON,
       price,
       depositKes: calculateDeposit(price, paymentsConfig.bookingDepositPercent),

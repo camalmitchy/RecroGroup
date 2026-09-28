@@ -9,6 +9,7 @@ import type {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { ensureSlotColumns, reconcileBookingSlots } from "@/server/booking-slots";
 
 import { ensurePaymentsSchema } from "./ensure-schema";
 import type { NormalizedEvent, PaymentTarget, VerifyResult } from "./types";
@@ -171,6 +172,7 @@ async function resolvePayment(event: NormalizedEvent) {
 }
 
 export async function settlePayment(paymentId: string, result: VerifyResult) {
+  await ensureSlotColumns();
   return prisma.$transaction(async (tx) => {
     const payment = await tx.payment.findUnique({ where: { id: paymentId } });
     if (!payment) return { applied: false as const, reason: "not_found" as const };
@@ -241,6 +243,7 @@ async function applySettlementToTarget(tx: TxClient, paymentId: string) {
         status: booking.status === "REQUESTED" ? "CONFIRMED" : booking.status,
       },
     });
+    await reconcileBookingSlots(tx);
     return;
   }
 

@@ -50,6 +50,7 @@ export type BookingDetailData = {
   clientPhone: string | null;
   preferredDateLabel: string;
   preferredTime: string | null;
+  rescheduleReason: string | null;
   sessionMode: string | null;
   notes: string | null;
   therapistId: string | null;
@@ -253,6 +254,11 @@ export function BookingDetail({
               <DetailItem label="Preferred time">
                 {booking.preferredTime ?? "—"}
               </DetailItem>
+              {booking.rescheduleReason ? (
+                <div className="sm:col-span-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                  {booking.rescheduleReason}
+                </div>
+              ) : null}
               <DetailItem label="Mode">
                 {booking.sessionMode ? humanize(booking.sessionMode) : "—"}
               </DetailItem>
