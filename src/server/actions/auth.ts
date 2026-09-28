@@ -44,7 +44,7 @@ export async function signInWithPassword(
   const email = normalizeEmail(parsed.data.email);
 
   try {
-    const user = await prisma.user.findFirst({
+    const matches = await prisma.user.findMany({
       where: { email: { equals: email, mode: "insensitive" } },
       select: {
         id: true,
@@ -54,6 +54,13 @@ export async function signInWithPassword(
         },
       },
     });
+
+    const user =
+      matches.find((candidate) =>
+        candidate.accounts.some(
+          (account) => account.providerId === "credential" && Boolean(account.password),
+        ),
+      ) ?? matches[0];
 
     if (!user) {
       return fail(
@@ -70,10 +77,37 @@ export async function signInWithPassword(
       const usesGoogle = user.accounts.some(
         (account) => account.providerId === "google",
       );
+      if (usesGoogle) {
+        const headerList = await headers();
+        const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+        const proto =
+          headerList.get("x-forwarded-proto") ??
+          (host?.startsWith("localhost") || host?.startsWith("127.0.0.1")
+            ? "http"
+            : "https");
+        const redirectTo = host
+          ? `${proto}://${host}/reset-password`
+          : "/reset-password";
+
+        try {
+          await auth.api.requestPasswordReset({
+            body: { email: user.email, redirectTo },
+            headers: headerList,
+          });
+        } catch (error) {
+          console.error("[signInWithPassword] password setup email failed", error);
+          return fail(
+            "This account was created with Google and has no password yet. Open Forgot password to set one, then sign in with email and password.",
+          );
+        }
+
+        return fail(
+          "This account was created with Google and has no password yet. We emailed you a link to set one. After that, sign in here with email and password.",
+        );
+      }
+
       return fail(
-        usesGoogle
-          ? "This account uses Google. Click Continue with Google."
-          : "This account has no password. Continue with Google or create a new account.",
+        "This account has no password. Continue with Google or create a new account.",
       );
     }
 

@@ -3,17 +3,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = {
   user: {
-    findFirst: vi.fn(),
+    findMany: vi.fn(),
     update: vi.fn(),
   },
 };
 
 const signInEmail = vi.fn();
 const signUpEmail = vi.fn();
+const requestPasswordReset = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 vi.mock("@/lib/auth", () => ({
-  auth: { api: { signInEmail, signUpEmail } },
+  auth: { api: { signInEmail, signUpEmail, requestPasswordReset } },
 }));
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers()),
@@ -45,7 +46,7 @@ beforeEach(() => {
 
 describe("signInWithPassword", () => {
   it("rejects unknown emails before calling Better Auth", async () => {
-    prismaMock.user.findFirst.mockResolvedValueOnce(null);
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
 
     const result = await signInWithPassword(validSignIn);
 
@@ -57,26 +58,58 @@ describe("signInWithPassword", () => {
     expect(signInEmail).not.toHaveBeenCalled();
   });
 
-  it("tells Google-only accounts to use Google", async () => {
-    prismaMock.user.findFirst.mockResolvedValueOnce({
-      id: "u1",
-      email: "ada@example.com",
-      accounts: [{ providerId: "google", password: null }],
-    });
+  it("emails a password setup link for Google-only accounts", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      {
+        id: "u1",
+        email: "ada@example.com",
+        accounts: [{ providerId: "google", password: null }],
+      },
+    ]);
+    requestPasswordReset.mockResolvedValueOnce({ status: true });
 
     const result = await signInWithPassword(validSignIn);
 
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toMatch(/uses Google/);
+    if (!result.ok) expect(result.error).toMatch(/emailed you a link to set one/);
+    expect(requestPasswordReset).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({ email: "ada@example.com" }),
+      }),
+    );
     expect(signInEmail).not.toHaveBeenCalled();
   });
 
+  it("uses the password account when the same email also has a Google row", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      {
+        id: "google-user",
+        email: "ada@example.com",
+        accounts: [{ providerId: "google", password: null }],
+      },
+      {
+        id: "password-user",
+        email: "Ada@Example.com",
+        accounts: [{ providerId: "credential", password: "hash" }],
+      },
+    ]);
+    signInEmail.mockResolvedValueOnce({ user: { id: "password-user" } });
+
+    const result = await signInWithPassword(validSignIn);
+
+    expect(result.ok).toBe(true);
+    expect(signInEmail).toHaveBeenCalled();
+    expect(requestPasswordReset).not.toHaveBeenCalled();
+  });
+
   it("signs in with the normalized email and heals mixed-case rows", async () => {
-    prismaMock.user.findFirst.mockResolvedValueOnce({
-      id: "u1",
-      email: "Ada@Example.com",
-      accounts: [{ providerId: "credential", password: "hash" }],
-    });
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      {
+        id: "u1",
+        email: "Ada@Example.com",
+        accounts: [{ providerId: "credential", password: "hash" }],
+      },
+    ]);
     prismaMock.user.update.mockResolvedValueOnce({ id: "u1" });
     signInEmail.mockResolvedValueOnce({ user: { id: "u1" } });
 
@@ -99,11 +132,13 @@ describe("signInWithPassword", () => {
   });
 
   it("maps Better Auth unauthorized to a password error", async () => {
-    prismaMock.user.findFirst.mockResolvedValueOnce({
-      id: "u1",
-      email: "ada@example.com",
-      accounts: [{ providerId: "credential", password: "hash" }],
-    });
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      {
+        id: "u1",
+        email: "ada@example.com",
+        accounts: [{ providerId: "credential", password: "hash" }],
+      },
+    ]);
     signInEmail.mockRejectedValueOnce(
       APIError.from("UNAUTHORIZED", {
         code: "INVALID_EMAIL_OR_PASSWORD",

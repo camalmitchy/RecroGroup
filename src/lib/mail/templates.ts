@@ -308,10 +308,10 @@ export function passwordReset(input: {
     heading: "Reset your password",
     greeting: `Hello ${firstName(input.recipientName)},`,
     paragraphs: [
-      "We received a request to reset the password for your Recro account. Use the button below. This link expires soon and can only be used once.",
-      "If you did not ask for a reset, you can ignore this email.",
+      "Use the button below to set a password for your Recro account. If you first signed in with Google, this adds email and password sign-in. The link expires soon and can only be used once.",
+      "If you did not ask for this, you can ignore this email.",
     ],
-    cta: { label: "Reset password", url: input.url },
+    cta: { label: "Set password", url: input.url },
   });
 
   return {
