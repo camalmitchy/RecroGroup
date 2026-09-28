@@ -45,9 +45,27 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     donationPaid,
     revenue,
   ] = await Promise.all([
-    safeCount(prisma.booking.count()),
-    safeCount(prisma.booking.count({ where: { status: "REQUESTED" } })),
-    safeCount(prisma.booking.count({ where: { status: "CONFIRMED" } })),
+    safeCount(
+      prisma.booking.count({
+        where: { payments: { some: { status: "PAID" } } },
+      }),
+    ),
+    safeCount(
+      prisma.booking.count({
+        where: {
+          status: "REQUESTED",
+          payments: { some: { status: "PAID" } },
+        },
+      }),
+    ),
+    safeCount(
+      prisma.booking.count({
+        where: {
+          status: "CONFIRMED",
+          payments: { some: { status: "PAID" } },
+        },
+      }),
+    ),
     safeCount(prisma.payment.count()),
     safeCount(prisma.payment.count({ where: { status: "PENDING" } })),
     safeCount(prisma.payment.count({ where: { status: "PAID" } })),
@@ -93,6 +111,7 @@ export async function getRecentActivity(take = 5) {
   const [bookings, payments, applications, inquiries] = await Promise.all([
     prisma.booking
       .findMany({
+        where: { payments: { some: { status: "PAID" } } },
         orderBy: { createdAt: "desc" },
         take,
         include: { service: { select: { title: true } } },

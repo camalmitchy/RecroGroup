@@ -43,7 +43,7 @@ export function AdminDashboard({
 }: AdminDashboardProps) {
     const kpis = [
         {
-            label: "Total bookings",
+            label: "Paid bookings",
             value: stats.bookings.total,
             to: "/admin/bookings",
             icon: CalendarDays,
@@ -179,7 +179,7 @@ export function AdminDashboard({
                             </Link>
                         </div>
                         {recent.length === 0 ? (
-                            <p className="text-sm text-gray-600">No bookings yet.</p>
+                            <p className="text-sm text-gray-600">No paid bookings yet.</p>
                         ) : (
                             <ul className="divide-y divide-gray-100">
                                 {recent.map((row) => (

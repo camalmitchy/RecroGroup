@@ -302,12 +302,16 @@ async function applyFailureToTarget(
     },
   });
 
-  await tx.booking.update({
-    where: { id: booking.id },
-    data: {
-      paymentStatus: inflight > 0 ? "PROCESSING" : payment.status,
-    },
-  });
+  if (inflight > 0) {
+    await tx.booking.update({
+      where: { id: booking.id },
+      data: { paymentStatus: "PROCESSING" },
+    });
+    return;
+  }
+
+  // Nothing was collected. Drop the booking so only a successful payment is recorded.
+  await tx.booking.delete({ where: { id: booking.id } });
 }
 
 async function sumSettled(tx: TxClient, where: Prisma.PaymentWhereInput) {

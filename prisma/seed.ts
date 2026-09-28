@@ -46,13 +46,6 @@ const SERVICES = [
     category: "Therapy",
   },
   {
-    slug: "testing",
-    title: "Testing",
-    priceKes: 2,
-    durationMin: 50,
-    category: "Therapy",
-  },
-  {
     slug: "children",
     title: "Grief Camp",
     priceKes: 15000,

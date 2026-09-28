@@ -9,7 +9,7 @@ import { listBookings } from "@/server/queries/bookings";
 export default async function BookingsPage() {
   await getRequiredSession("/dashboard/bookings");
 
-  const bookings = await listBookings({ take: 200 });
+  const bookings = await listBookings({ hasSuccessfulPayment: true, take: 200 });
 
   const rows: BookingRow[] = bookings.items.map((booking) => ({
     id: booking.id,

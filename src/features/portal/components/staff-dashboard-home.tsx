@@ -38,7 +38,7 @@ export function StaffDashboardHome({
 }: StaffDashboardHomeProps) {
   const kpis = [
     {
-      label: "Total bookings",
+      label: "Paid bookings",
       value: stats.bookings.total,
       href: "/dashboard/bookings",
       icon: CalendarDays,
@@ -157,7 +157,7 @@ export function StaffDashboardHome({
               </Link>
             </div>
             {recent.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No bookings yet.</p>
+              <p className="text-sm text-muted-foreground">No paid bookings yet.</p>
             ) : (
               <ul className="divide-y divide-[var(--admin-border)]">
                 {recent.map((row) => (

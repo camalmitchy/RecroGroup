@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 export type BookingFilters = {
   status?: BookingStatus;
   paymentStatus?: PaymentStatus;
+  /** Booking has at least one settled M-Pesa or card payment. */
+  hasSuccessfulPayment?: boolean;
   serviceId?: string;
   therapistId?: string;
   search?: string;
@@ -19,6 +21,9 @@ function bookingWhere(filters: BookingFilters): Prisma.BookingWhereInput {
 
   if (filters.status) where.status = filters.status;
   if (filters.paymentStatus) where.paymentStatus = filters.paymentStatus;
+  if (filters.hasSuccessfulPayment) {
+    where.payments = { some: { status: "PAID" } };
+  }
   if (filters.serviceId) where.serviceId = filters.serviceId;
   if (filters.therapistId) where.therapistId = filters.therapistId;
 

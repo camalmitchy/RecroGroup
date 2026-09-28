@@ -12,7 +12,7 @@ export default async function BookingsPage() {
     const session = await requireAdminArea();
 
     const [bookings, therapists] = await Promise.all([
-        listBookings({ take: 200 }),
+        listBookings({ hasSuccessfulPayment: true, take: 200 }),
         listTherapists(),
     ]);
 

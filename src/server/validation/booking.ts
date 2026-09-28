@@ -7,7 +7,6 @@ export const BOOKABLE_SERVICE_SLUGS = [
   "couples",
   "family",
   "group",
-  "testing",
 ] as const;
 
 const startOfToday = () => {

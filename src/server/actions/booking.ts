@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
-import { notifyBookingCreated } from "@/lib/mail/notifications";
 import { resolveServicePrice } from "@/lib/payments/pricing";
 import { generateReference, normalizePhone } from "@/lib/payments/utils";
 import { getOptionalSession } from "@/server/authz";
@@ -69,17 +68,6 @@ export async function createBooking(
       select: { id: true, reference: true },
     });
 
-    await notifyBookingCreated({
-      recipientName: values.clientName,
-      recipientEmail: values.clientEmail,
-      reference: booking.reference,
-      serviceTitle: price.title,
-      scheduledFor: combineDateAndTime(values.preferredDate, values.preferredTime),
-      amountKes: price.totalKes,
-      depositKes: price.depositKes,
-      balanceKes: price.balanceKes,
-    });
-
     revalidatePath("/dashboard/bookings");
     revalidatePath("/dashboard/notifications");
     revalidatePath("/dashboard");
@@ -94,18 +82,4 @@ export async function createBooking(
   } catch (error) {
     return failure("createBooking", error);
   }
-}
-
-function combineDateAndTime(date: Date, time: string) {
-  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(time.trim());
-  const scheduled = new Date(date);
-  if (!match) return scheduled;
-
-  let hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  const meridiem = match[3].toUpperCase();
-  if (meridiem === "PM" && hours < 12) hours += 12;
-  if (meridiem === "AM" && hours === 12) hours = 0;
-  scheduled.setHours(hours, minutes, 0, 0);
-  return scheduled;
 }

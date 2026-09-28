@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
@@ -12,7 +11,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { PortalPageHeader } from "@/features/portal/components/portal-page-header";
-import { PortalTabBar } from "@/features/portal/components/portal-tab-bar";
 import {
   StatusBadge,
   bookingStatusTone,
@@ -35,68 +33,32 @@ export type BookingRow = {
   latestFailureReason: string | null;
 };
 
-type PaymentFilter = "all" | "PAID" | "FAILED" | "PENDING";
-
 function humanize(value: string) {
   return value.toLowerCase().replace(/_/g, " ");
 }
 
-function matchesPaymentFilter(row: BookingRow, filter: PaymentFilter) {
-  if (filter === "all") return true;
-  if (filter === "PENDING") {
-    return row.paymentStatus === "PENDING" || row.paymentStatus === "PROCESSING";
-  }
-  return row.paymentStatus === filter;
-}
-
 export function BookingsPanel({ bookings }: { bookings: BookingRow[] }) {
-  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("all");
-
-  const visible = useMemo(
-    () => bookings.filter((row) => matchesPaymentFilter(row, paymentFilter)),
-    [bookings, paymentFilter],
-  );
-
-  const paymentCount = (status: Exclude<PaymentFilter, "all">) =>
-    bookings.filter((row) => matchesPaymentFilter(row, status)).length;
-
   return (
     <div className="space-y-5">
       <PortalPageHeader
         title="Bookings"
-        description="Open a booking to see contact details, payment attempts, and actions."
-      />
-
-      <PortalTabBar
-        className="overflow-x-auto"
-        tabs={[
-          { key: "all", label: `All (${bookings.length})` },
-          { key: "PENDING", label: `Unpaid (${paymentCount("PENDING")})` },
-          { key: "PAID", label: `Paid (${paymentCount("PAID")})` },
-          { key: "FAILED", label: `Failed (${paymentCount("FAILED")})` },
-        ]}
-        active={paymentFilter}
-        onChange={setPaymentFilter}
+        description="Only bookings with a successful payment are kept here."
       />
 
       <Card>
         <CardContent className="p-0">
-          {visible.length === 0 ? (
+          {bookings.length === 0 ? (
             <Empty className="py-12">
               <EmptyHeader>
-                <EmptyTitle>
-                  {bookings.length === 0 ? "No bookings yet" : "No bookings in this view"}
-                </EmptyTitle>
+                <EmptyTitle>No paid bookings yet</EmptyTitle>
                 <EmptyDescription>
-                  {bookings.length === 0
-                    ? "Requests submitted from the public booking form land here."
-                    : "Try another payment tab."}
+                  A booking appears here after the M-Pesa payment succeeds.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
             <ul className="divide-y divide-border">
-              {visible.map((row) => (
+              {bookings.map((row) => (
                 <li key={row.id}>
                   <Link
                     href={`/dashboard/bookings/${row.id}`}

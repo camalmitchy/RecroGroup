@@ -18,6 +18,7 @@ const payment = {
 const booking = {
   findUnique: vi.fn(),
   update: vi.fn(),
+  delete: vi.fn(),
 };
 
 const prismaMock = {
@@ -218,11 +219,8 @@ describe("settlePayment", () => {
       failureReason: "Request cancelled by user",
     });
 
-    expect(booking.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ paymentStatus: "FAILED" }),
-      }),
-    );
+    expect(booking.delete).toHaveBeenCalledWith({ where: { id: "bk_1" } });
+    expect(booking.update).not.toHaveBeenCalled();
   });
 });
 

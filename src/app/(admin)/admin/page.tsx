@@ -16,7 +16,11 @@ export default async function AdminPage() {
     const [stats, activity, pendingBookings] = await Promise.all([
         getDashboardStats(),
         getRecentActivity(6),
-        listBookings({ status: "REQUESTED", take: 6 }),
+        listBookings({
+            status: "REQUESTED",
+            hasSuccessfulPayment: true,
+            take: 6,
+        }),
     ]);
 
     const pending: AdminDashboardBooking[] = pendingBookings.items.map(
