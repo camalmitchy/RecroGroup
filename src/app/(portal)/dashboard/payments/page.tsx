@@ -41,6 +41,9 @@ export default async function PaymentsPage() {
     phone: payment.phone,
     bookingId: payment.bookingId,
     bookingReference: payment.booking?.reference ?? null,
+    donorName: payment.donation?.donorName ?? null,
+    donationReference: payment.donation?.reference ?? null,
+    donorAnonymous: payment.donation?.isAnonymous ?? false,
     bankReference: payment.bankReference,
     proofUrl: payment.proofUrl,
     match:

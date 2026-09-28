@@ -18,7 +18,6 @@ import { PaymentStatusPanel } from "@/features/public/shared/payment-status-pane
 import { usePaymentCheckout } from "@/features/public/shared/use-payment-checkout";
 
 const PRESET_AMOUNTS = [2500, 5000, 11000, 15000, 45000];
-const MIN_DONATION_KES = 100;
 
 function parseKesAmount(raw: string) {
     return parseInt(raw.replace(/\D/g, ""), 10) || 0;
@@ -49,7 +48,7 @@ export function SponsorChildPage() {
     const amountRef = useRef<number | null>(null);
 
     const effectiveAmount = customAmount ? parseKesAmount(customAmount) : amount;
-    const amountValid = effectiveAmount >= MIN_DONATION_KES;
+    const amountValid = effectiveAmount >= 1;
     const busy = checkout.busy || submitting;
 
     const validate = useCallback(() => {
@@ -60,7 +59,7 @@ export function SponsorChildPage() {
             next.email = "Enter a valid email address";
         }
         if (!amountValid) {
-            next.amount = `Minimum sponsorship is Ksh ${MIN_DONATION_KES.toLocaleString()}`;
+            next.amount = "Enter an amount";
         }
         if (!/^(7|1)\d{8}$/.test(mpesaPhone)) {
             next.mpesaPhone = "Enter a valid 9-digit M-Pesa number (without +254)";
@@ -241,7 +240,7 @@ export function SponsorChildPage() {
                                     setCustomAmount(e.target.value.replace(/\D/g, ""))
                                 }
                                 inputMode="numeric"
-                                placeholder="e.g. 7500"
+                                placeholder="Any amount"
                                 disabled={busy}
                                 className={`mt-2 w-full rounded-2xl border bg-card px-5 py-3.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 ${
                                     errors.amount

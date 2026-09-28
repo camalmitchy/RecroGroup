@@ -35,6 +35,9 @@ function paymentWhere(filters: PaymentFilters): Prisma.PaymentWhereInput {
       { booking: { clientName: { contains: search, mode: "insensitive" } } },
       { booking: { clientEmail: { contains: search, mode: "insensitive" } } },
       { booking: { reference: { contains: search, mode: "insensitive" } } },
+      { donation: { donorName: { contains: search, mode: "insensitive" } } },
+      { donation: { donorEmail: { contains: search, mode: "insensitive" } } },
+      { donation: { reference: { contains: search, mode: "insensitive" } } },
     ];
   }
 
@@ -50,7 +53,14 @@ export async function listPayments(filters: PaymentFilters = {}) {
       include: {
         booking: { include: { service: true } },
         griefApplication: { select: { id: true, reference: true, parentName: true } },
-        donation: { select: { id: true, reference: true, donorName: true } },
+        donation: {
+          select: {
+            id: true,
+            reference: true,
+            donorName: true,
+            isAnonymous: true,
+          },
+        },
         user: { select: { id: true, name: true, email: true } },
       },
       orderBy: { createdAt: "desc" },

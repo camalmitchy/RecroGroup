@@ -35,7 +35,6 @@ export type BookingRow = {
   latestFailureReason: string | null;
 };
 
-type StatusFilter = "all" | "REQUESTED" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
 type PaymentFilter = "all" | "PAID" | "FAILED" | "PENDING";
 
 function humanize(value: string) {
@@ -51,21 +50,12 @@ function matchesPaymentFilter(row: BookingRow, filter: PaymentFilter) {
 }
 
 export function BookingsPanel({ bookings }: { bookings: BookingRow[] }) {
-  const [filter, setFilter] = useState<StatusFilter>("all");
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("all");
 
   const visible = useMemo(
-    () =>
-      bookings.filter(
-        (row) =>
-          (filter === "all" || row.status === filter) &&
-          matchesPaymentFilter(row, paymentFilter),
-      ),
-    [bookings, filter, paymentFilter],
+    () => bookings.filter((row) => matchesPaymentFilter(row, paymentFilter)),
+    [bookings, paymentFilter],
   );
-
-  const count = (status: Exclude<StatusFilter, "all">) =>
-    bookings.filter((row) => row.status === status).length;
 
   const paymentCount = (status: Exclude<PaymentFilter, "all">) =>
     bookings.filter((row) => matchesPaymentFilter(row, status)).length;
@@ -81,19 +71,6 @@ export function BookingsPanel({ bookings }: { bookings: BookingRow[] }) {
         className="overflow-x-auto"
         tabs={[
           { key: "all", label: `All (${bookings.length})` },
-          { key: "REQUESTED", label: `Requested (${count("REQUESTED")})` },
-          { key: "CONFIRMED", label: `Confirmed (${count("CONFIRMED")})` },
-          { key: "COMPLETED", label: `Completed (${count("COMPLETED")})` },
-          { key: "CANCELLED", label: `Cancelled (${count("CANCELLED")})` },
-        ]}
-        active={filter}
-        onChange={setFilter}
-      />
-
-      <PortalTabBar
-        className="overflow-x-auto"
-        tabs={[
-          { key: "all", label: "All payments" },
           { key: "PENDING", label: `Unpaid (${paymentCount("PENDING")})` },
           { key: "PAID", label: `Paid (${paymentCount("PAID")})` },
           { key: "FAILED", label: `Failed (${paymentCount("FAILED")})` },
@@ -113,7 +90,7 @@ export function BookingsPanel({ bookings }: { bookings: BookingRow[] }) {
                 <EmptyDescription>
                   {bookings.length === 0
                     ? "Requests submitted from the public booking form land here."
-                    : "Try another status or payment tab."}
+                    : "Try another payment tab."}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

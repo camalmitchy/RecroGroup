@@ -15,11 +15,7 @@ export {
 } from "./grief-camp";
 export type { GriefApplicationInput, GriefApplicationValues } from "./grief-camp";
 
-export {
-  donationSchema,
-  MAX_DONATION_KES,
-  MIN_DONATION_KES,
-} from "./donation";
+export { donationSchema, MAX_DONATION_KES } from "./donation";
 export type { DonationInput, DonationValues } from "./donation";
 
 export { inquirySchema } from "./inquiry";

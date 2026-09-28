@@ -51,6 +51,9 @@ export type PaymentRow = {
   phone: string | null;
   bookingId: string | null;
   bookingReference: string | null;
+  donorName: string | null;
+  donationReference: string | null;
+  donorAnonymous: boolean;
   bankReference: string | null;
   proofUrl: string | null;
   match: MatchReport | null;
@@ -75,6 +78,11 @@ const STATUSES = [
 
 function humanize(value: string) {
   return value.toLowerCase().replace(/_/g, " ");
+}
+
+function purposeLabel(purpose: string) {
+  if (purpose === "DONATION") return "Sponsor a child";
+  return humanize(purpose);
 }
 
 export function PaymentsPanel({ payments, stats }: PaymentsPanelProps) {
@@ -121,7 +129,7 @@ export function PaymentsPanel({ payments, stats }: PaymentsPanelProps) {
     <div className="space-y-5">
       <PortalPageHeader
         title="Payments"
-        description="Every M-Pesa STK attempt, bank transfer and card payment for bookings."
+        description="M-Pesa payments for bookings and sponsor-a-child gifts."
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -201,7 +209,7 @@ export function PaymentsPanel({ payments, stats }: PaymentsPanelProps) {
                   <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Receipt</TableHead>
-                  <TableHead>Booking</TableHead>
+                  <TableHead>For</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Paid</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -225,9 +233,7 @@ export function PaymentsPanel({ payments, stats }: PaymentsPanelProps) {
                           {humanize(row.provider)}
                         </div>
                       </TableCell>
-                      <TableCell className="capitalize">
-                        {humanize(row.purpose)}
-                      </TableCell>
+                      <TableCell>{purposeLabel(row.purpose)}</TableCell>
                       <TableCell className="text-xs">
                         {row.phone ?? "—"}
                       </TableCell>
@@ -285,16 +291,30 @@ export function PaymentsPanel({ payments, stats }: PaymentsPanelProps) {
                           </ul>
                         )}
                       </TableCell>
-                      <TableCell className="font-mono text-xs">
+                      <TableCell className="text-xs">
                         {row.bookingId && row.bookingReference ? (
                           <Link
                             href={`/dashboard/bookings/${row.bookingId}`}
-                            className="text-primary underline-offset-2 hover:underline"
+                            className="font-mono text-primary underline-offset-2 hover:underline"
                           >
                             {row.bookingReference}
                           </Link>
+                        ) : row.donorName ? (
+                          <div>
+                            <div className="font-medium">{row.donorName}</div>
+                            {row.donationReference && (
+                              <div className="font-mono text-muted-foreground">
+                                {row.donationReference}
+                              </div>
+                            )}
+                            {row.donorAnonymous && (
+                              <div className="text-muted-foreground">
+                                Anonymous publicly
+                              </div>
+                            )}
+                          </div>
                         ) : (
-                          (row.bookingReference ?? "—")
+                          "—"
                         )}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">

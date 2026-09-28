@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bookingSchema } from "@/server/validation/booking";
 import {
   MAX_DONATION_KES,
-  MIN_DONATION_KES,
   donationSchema,
 } from "@/server/validation/donation";
 import { inquirySchema } from "@/server/validation/inquiry";
@@ -109,12 +108,18 @@ describe("donationSchema", () => {
     expect(donationSchema.safeParse(validDonation).success).toBe(true);
   });
 
-  it("rejects an amount below the minimum", () => {
+  it("rejects a zero amount", () => {
     const result = donationSchema.safeParse({
       ...validDonation,
-      amountKes: MIN_DONATION_KES - 1,
+      amountKes: 0,
     });
     expect(result.success).toBe(false);
+  });
+
+  it("accepts any positive whole-shilling amount", () => {
+    expect(
+      donationSchema.safeParse({ ...validDonation, amountKes: 1 }).success,
+    ).toBe(true);
   });
 
   it("rejects an amount above the maximum", () => {
@@ -125,11 +130,7 @@ describe("donationSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts the exact boundary amounts", () => {
-    expect(
-      donationSchema.safeParse({ ...validDonation, amountKes: MIN_DONATION_KES })
-        .success,
-    ).toBe(true);
+  it("accepts the maximum amount", () => {
     expect(
       donationSchema.safeParse({ ...validDonation, amountKes: MAX_DONATION_KES })
         .success,
