@@ -94,9 +94,11 @@ export function ServiceDetailPage({ service }: { service: ServiceDetail }) {
                 >
                   {cta.heroLabel}
                 </Link>
-                <Link href="/contact" className="btn-secondary rounded-full px-7">
-                  Ask a question
-                </Link>
+                {service.key === "supervision" ? null : (
+                  <Link href="/contact" className="btn-secondary rounded-full px-7">
+                    Ask a question
+                  </Link>
+                )}
               </div>
             </div>
 

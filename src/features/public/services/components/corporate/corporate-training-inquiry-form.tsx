@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ArrowRight, CheckCircle, Calendar, Users, MessageSquare } from "lucide-react";
+import { ArrowRight, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -159,43 +159,6 @@ export function CorporateTrainingInquiryForm() {
                     <p className="mt-4 text-lg text-muted-foreground">
                         Tell us about your training needs and we&apos;ll create a customized program for your organization
                     </p>
-                </div>
-
-                {/* Info Cards */}
-                <div className="mb-8 grid gap-4 md:grid-cols-3">
-                    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft">
-                            <MessageSquare className="h-5 w-5 text-primary-deep" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                Step 1
-                            </p>
-                            <p className="text-sm font-medium text-foreground">Share your needs</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft">
-                            <Calendar className="h-5 w-5 text-primary-deep" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                Step 2
-                            </p>
-                            <p className="text-sm font-medium text-foreground">We&apos;ll contact you</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft">
-                            <Users className="h-5 w-5 text-primary-deep" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                Step 3
-                            </p>
-                            <p className="text-sm font-medium text-foreground">Customized solution</p>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Form */}
