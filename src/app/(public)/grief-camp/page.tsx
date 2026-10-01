@@ -18,3 +18,6 @@ export default async function Page() {
 
   return <GriefCampPage flyerUrl={flyerUrl} />;
 }
+
+// Force dynamic rendering to avoid database calls during build
+export const dynamic = 'force-dynamic';
