@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { GriefCampPage } from "@/features/public/grief-camp/components/grief-camp-page";
+import { getGriefCampFlyerUrl } from "@/server/queries/settings";
 
 export const metadata: Metadata = {
   title: "Grief Camp 2026 | Recro Group",
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
-  return <GriefCampPage />;
+export default async function Page() {
+  const flyerUrl = await getGriefCampFlyerUrl();
+
+  return <GriefCampPage flyerUrl={flyerUrl} />;
 }

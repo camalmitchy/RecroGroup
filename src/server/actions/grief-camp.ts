@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 
+import { recordGoogleSheetRow } from "@/lib/google-sheets";
 import { prisma } from "@/lib/prisma";
 import { resolveCampPrice } from "@/lib/payments/pricing";
 import { generateReference, normalizePhone } from "@/lib/payments/utils";
@@ -82,11 +83,21 @@ export async function submitGriefApplication(
         formData,
         amountKes: price.totalKes,
       },
-      select: { id: true, reference: true },
+      select: { id: true, reference: true, parentPhone: true },
     });
 
     revalidatePath("/dashboard/programs");
     revalidatePath("/dashboard");
+
+    await recordGoogleSheetRow({
+      tab: "Grief camp",
+      submittedAt: new Date().toISOString(),
+      name: values.parentQuestionnaire.parentName,
+      email: values.parentQuestionnaire.parentEmail,
+      phone: application.parentPhone ?? "",
+      subject: `${application.reference} — ${values.registration.childName}`,
+      message: JSON.stringify(formData),
+    });
 
     return ok({
       applicationId: application.id,

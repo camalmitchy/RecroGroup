@@ -8,7 +8,7 @@ import {
   journeyChecklist,
 } from "../data";
 
-export function GriefCampPage() {
+export function GriefCampPage({ flyerUrl }: { flyerUrl: string | null }) {
   const concerns = [
     "Loss of a parent or sibling",
     "Sudden or traumatic loss",
@@ -499,14 +499,22 @@ export function GriefCampPage() {
             <p className="text-sm text-muted-foreground mb-4">
               Download the full camp flyer for more details
             </p>
-            <Link
-              href="/downloads/grief-camp-2027-flyer.pdf"
-              download
-              className="inline-flex items-center gap-2 rounded-full bg-primary-deep px-8 py-3 text-sm font-semibold text-white transition hover:bg-primary-deep/90"
-            >
-              <Download className="size-4" />
-              Download 2027 Camp Flyer
-            </Link>
+            {flyerUrl ? (
+              <a
+                href={flyerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-primary-deep px-8 py-3 text-sm font-semibold text-white transition hover:bg-primary-deep/90"
+              >
+                <Download className="size-4" />
+                Download 2027 Camp Flyer
+              </a>
+            ) : (
+              <div className="inline-flex items-center gap-2 rounded-full bg-muted px-8 py-3 text-sm font-semibold text-muted-foreground">
+                <Download className="size-4" />
+                Flyer coming soon
+              </div>
+            )}
             <p className="mt-4 text-xs text-muted-foreground">
               *Dates are tentative and subject to confirmation
             </p>

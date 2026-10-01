@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { recordGoogleSheetRow, sheetTabForInquiry } from "@/lib/google-sheets";
 import { notifyInquiryReceived } from "@/lib/mail/notifications";
 import { prisma } from "@/lib/prisma";
 import type { ActionResult } from "@/server/result";
@@ -42,6 +43,22 @@ export async function submitInquiry(
       type: values.type,
       message: values.message,
     });
+
+    const tab = sheetTabForInquiry({
+      type: values.type,
+      subject: values.subject,
+    });
+    if (tab) {
+      await recordGoogleSheetRow({
+        tab,
+        submittedAt: new Date().toISOString(),
+        name: values.name,
+        email: values.email,
+        phone: values.phone ?? "",
+        subject: values.subject ?? "",
+        message: values.message,
+      });
+    }
 
     revalidatePath("/dashboard/inquiries");
     revalidatePath("/dashboard");

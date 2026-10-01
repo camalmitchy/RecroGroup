@@ -2,14 +2,17 @@ import {
   GriefCampPanel,
   type GriefApplicationRow,
 } from "@/features/portal/components/grief-camp-panel";
+import { FlyerUpload } from "@/features/portal/components/flyer-upload";
 import { formatDate } from "@/features/portal/lib/format";
 import { getRequiredSession } from "@/features/portal/lib/portal-guard";
 import { listGriefApplications } from "@/server/queries/grief-camp";
+import { getGriefCampFlyerUrl } from "@/server/queries/settings";
 
 export default async function ProgramsPage() {
   await getRequiredSession("/dashboard/programs");
 
   const applications = await listGriefApplications({ take: 200 });
+  const flyerUrl = await getGriefCampFlyerUrl();
 
   const rows: GriefApplicationRow[] = applications.items.map((application) => ({
     id: application.id,
@@ -27,5 +30,10 @@ export default async function ProgramsPage() {
     createdAtLabel: formatDate(application.createdAt),
   }));
 
-  return <GriefCampPanel applications={rows} />;
+  return (
+    <div className="space-y-8">
+      <FlyerUpload currentUrl={flyerUrl} />
+      <GriefCampPanel applications={rows} />
+    </div>
+  );
 }
