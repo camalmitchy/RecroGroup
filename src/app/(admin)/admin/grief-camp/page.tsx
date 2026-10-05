@@ -5,10 +5,14 @@ import {
 import { requireAdminArea } from "@/features/admin/lib/admin-guard";
 import { formatDate } from "@/features/portal/lib/format";
 import { listGriefApplications } from "@/server/queries/grief-camp";
+import { getGriefCampFlyerUrl } from "@/server/queries/settings";
 
 export default async function GriefCampPage() {
     const session = await requireAdminArea();
-    const applications = await listGriefApplications({ take: 200 });
+    const [applications, flyerUrl] = await Promise.all([
+        listGriefApplications({ take: 200 }),
+        getGriefCampFlyerUrl(),
+    ]);
 
     const rows: AdminGriefApplicationRow[] = applications.items.map((application) => ({
         id: application.id,
@@ -31,6 +35,7 @@ export default async function GriefCampPage() {
             applications={rows}
             total={applications.total}
             isAdmin={session.role === "admin"}
+            flyerUrl={flyerUrl}
         />
     );
 }

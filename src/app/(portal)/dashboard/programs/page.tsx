@@ -9,10 +9,12 @@ import { listGriefApplications } from "@/server/queries/grief-camp";
 import { getGriefCampFlyerUrl } from "@/server/queries/settings";
 
 export default async function ProgramsPage() {
-  await getRequiredSession("/dashboard/programs");
+  const session = await getRequiredSession("/dashboard/programs");
 
-  const applications = await listGriefApplications({ take: 200 });
-  const flyerUrl = await getGriefCampFlyerUrl();
+  const [applications, flyerUrl] = await Promise.all([
+    listGriefApplications({ take: 200 }),
+    getGriefCampFlyerUrl(),
+  ]);
 
   const rows: GriefApplicationRow[] = applications.items.map((application) => ({
     id: application.id,
@@ -32,7 +34,7 @@ export default async function ProgramsPage() {
 
   return (
     <div className="space-y-8">
-      <FlyerUpload currentUrl={flyerUrl} />
+      <FlyerUpload currentUrl={flyerUrl} canManage={session.role === "admin"} />
       <GriefCampPanel applications={rows} />
     </div>
   );

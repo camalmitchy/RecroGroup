@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import {
   notifyDonationReceived,
+  notifyPaidBooking,
   notifyPaymentFailed,
   notifyPaymentSucceeded,
 } from "@/lib/mail/notifications";
@@ -17,11 +18,24 @@ const PURPOSE_LABELS: Record<string, string> = {
   OTHER: "Payment",
 };
 
+const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Africa/Nairobi",
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+function formatBookingDate(value: Date | null | undefined) {
+  if (!value) return null;
+  return dateFormatter.format(value);
+}
+
 async function recipientFor(paymentId: string) {
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
     include: {
-      booking: true,
+      booking: { include: { service: { select: { title: true } } } },
       griefApplication: true,
       donation: true,
       user: true,
@@ -52,13 +66,32 @@ export async function sendPaymentReceipt(paymentId: string) {
   if (!resolved?.email) return;
 
   const { payment, name, email } = resolved;
+  const amountKes = payment.settledAmountKes ?? payment.amountKes;
 
   if (payment.donationId) {
     await notifyDonationReceived({
       recipientName: name,
       recipientEmail: email,
       reference: payment.reference,
-      amountKes: payment.settledAmountKes ?? payment.amountKes,
+      amountKes,
+    });
+    return;
+  }
+
+  if (payment.booking) {
+    const total = payment.booking.amountKes ?? amountKes;
+    const paid = payment.booking.amountPaidKes || amountKes;
+    await notifyPaidBooking({
+      recipientName: name,
+      recipientEmail: email,
+      clientPhone: payment.booking.clientPhone,
+      reference: payment.booking.reference,
+      serviceTitle: payment.booking.service?.title ?? "Therapy session",
+      preferredDateLabel: formatBookingDate(payment.booking.preferredDate),
+      preferredTime: payment.booking.preferredTime,
+      amountKes: total,
+      depositKes: paid,
+      balanceKes: Math.max(0, total - paid),
     });
     return;
   }
@@ -67,7 +100,7 @@ export async function sendPaymentReceipt(paymentId: string) {
     recipientName: name,
     recipientEmail: email,
     reference: payment.reference,
-    amountKes: payment.settledAmountKes ?? payment.amountKes,
+    amountKes,
     method: payment.method,
     purposeLabel: PURPOSE_LABELS[payment.purpose] ?? "Payment",
     paidAt: payment.paidAt ?? new Date(),

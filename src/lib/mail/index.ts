@@ -1,5 +1,6 @@
 import "server-only";
 
+import { bootstrapAdminEmails } from "@/lib/staff-bootstrap";
 import { consoleMailDriver } from "./drivers/console";
 import { createResendDriver } from "./drivers/resend";
 import type { EmailMessage, MailDriver, SendResult } from "./types";
@@ -39,7 +40,17 @@ export const mailConfig = {
     return optional("MAIL_REPLY_TO");
   },
   get staffAddress() {
-    return optional("MAIL_STAFF_ADDRESS");
+    return this.staffAddresses[0];
+  },
+  get staffAddresses(): string[] {
+    const configured = optional("MAIL_STAFF_ADDRESS");
+    if (configured) {
+      return configured
+        .split(/[,;\s]+/)
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean);
+    }
+    return bootstrapAdminEmails();
   },
 };
 

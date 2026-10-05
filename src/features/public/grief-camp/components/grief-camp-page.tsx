@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Check, ArrowRight, Heart, Home, Flame, Users, Download, Calendar } from "lucide-react";
 
+import { isFlyerPdfUrl } from "@/lib/uploads/flyer-types";
+
 import {
   camperPricing,
   parentPricing,
@@ -496,19 +498,40 @@ export function GriefCampPage({ flyerUrl }: { flyerUrl: string | null }) {
 
           {/* Download Flyer Section */}
           <div className="mt-10 text-center">
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="mb-4 text-sm text-muted-foreground">
               Download the full camp flyer for more details
             </p>
             {flyerUrl ? (
-              <a
-                href={flyerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-primary-deep px-8 py-3 text-sm font-semibold text-white transition hover:bg-primary-deep/90"
-              >
-                <Download className="size-4" />
-                Download 2027 Camp Flyer
-              </a>
+              <div className="space-y-4">
+                {!isFlyerPdfUrl(flyerUrl) ? (
+                  <div className="mx-auto max-w-xl overflow-hidden rounded-2xl border border-border bg-white">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={flyerUrl}
+                      alt="Grief camp flyer"
+                      className="h-auto w-full object-contain"
+                    />
+                  </div>
+                ) : null}
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <a
+                    href={flyerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full border-2 border-border bg-transparent px-8 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
+                  >
+                    View flyer
+                  </a>
+                  <a
+                    href={flyerUrl}
+                    download
+                    className="inline-flex items-center gap-2 rounded-full bg-primary-deep px-8 py-3 text-sm font-semibold text-white transition hover:bg-primary-deep/90"
+                  >
+                    <Download className="size-4" />
+                    Download flyer
+                  </a>
+                </div>
+              </div>
             ) : (
               <div className="inline-flex items-center gap-2 rounded-full bg-muted px-8 py-3 text-sm font-semibold text-muted-foreground">
                 <Download className="size-4" />

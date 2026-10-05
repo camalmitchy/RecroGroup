@@ -8,6 +8,7 @@ import {
   griefCampApplicationReceived,
   paymentFailed,
   paymentReceipt,
+  staffBookingAlert,
   staffInquiryAlert,
   staffPaymentAlert,
 } from "./templates";
@@ -35,16 +36,20 @@ export async function notifyPaymentSucceeded(input: {
   await dispatch("paymentSucceeded", async () => {
     await sendEmail(paymentReceipt(input));
 
-    const staffAddress = mailConfig.staffAddress;
-    if (input.notifyStaff !== false && staffAddress) {
-      await sendEmail(
-        staffPaymentAlert({
-          recipientEmail: staffAddress,
-          reference: input.reference,
-          amountKes: input.amountKes,
-          purposeLabel: input.purposeLabel,
-          customerName: input.recipientName,
-        }),
+    const staffAddresses = mailConfig.staffAddresses;
+    if (input.notifyStaff !== false) {
+      await Promise.all(
+        staffAddresses.map((recipientEmail) =>
+          sendEmail(
+            staffPaymentAlert({
+              recipientEmail,
+              reference: input.reference,
+              amountKes: input.amountKes,
+              purposeLabel: input.purposeLabel,
+              customerName: input.recipientName,
+            }),
+          ),
+        ),
       );
     }
   });
@@ -60,17 +65,46 @@ export async function notifyPaymentFailed(input: {
   await dispatch("paymentFailed", () => sendEmail(paymentFailed(input)));
 }
 
-export async function notifyBookingCreated(input: {
+export async function notifyPaidBooking(input: {
   recipientName: string;
   recipientEmail: string;
+  clientPhone?: string | null;
   reference: string;
   serviceTitle: string;
-  scheduledFor: Date | null;
+  preferredDateLabel?: string | null;
+  preferredTime?: string | null;
   amountKes: number;
   depositKes: number;
   balanceKes: number;
 }): Promise<void> {
-  await dispatch("bookingCreated", () => sendEmail(bookingConfirmation(input)));
+  await dispatch("paidBooking", async () => {
+    await sendEmail(
+      bookingConfirmation({
+        ...input,
+        scheduledFor: null,
+        paid: true,
+      }),
+    );
+
+    await Promise.all(
+      mailConfig.staffAddresses.map((recipientEmail) =>
+        sendEmail(
+          staffBookingAlert({
+            recipientEmail,
+            reference: input.reference,
+            clientName: input.recipientName,
+            clientEmail: input.recipientEmail,
+            clientPhone: input.clientPhone,
+            serviceTitle: input.serviceTitle,
+            preferredDateLabel: input.preferredDateLabel,
+            preferredTime: input.preferredTime,
+            amountPaidKes: input.depositKes,
+            amountKes: input.amountKes,
+          }),
+        ),
+      ),
+    );
+  });
 }
 
 export async function notifyBookingBalanceDue(input: {
@@ -104,9 +138,12 @@ export async function notifyInquiryReceived(input: {
   message: string;
 }): Promise<void> {
   await dispatch("inquiryReceived", async () => {
-    const staffAddress = mailConfig.staffAddress;
-    if (!staffAddress) return;
-    await sendEmail(staffInquiryAlert({ recipientEmail: staffAddress, ...input }));
+    const staffAddresses = mailConfig.staffAddresses;
+    await Promise.all(
+      staffAddresses.map((recipientEmail) =>
+        sendEmail(staffInquiryAlert({ recipientEmail, ...input })),
+      ),
+    );
   });
 }
 

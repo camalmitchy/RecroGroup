@@ -163,30 +163,48 @@ export function bookingConfirmation(input: {
   reference: string;
   serviceTitle: string;
   scheduledFor: Date | null;
+  preferredDateLabel?: string | null;
+  preferredTime?: string | null;
   amountKes: number;
   depositKes: number;
   balanceKes: number;
+  paid?: boolean;
 }): EmailMessage {
   const details: DetailRow[] = [
     { label: "Reference", value: input.reference },
     { label: "Service", value: input.serviceTitle },
   ];
 
-  if (input.scheduledFor) {
+  if (input.preferredDateLabel) {
+    details.push({ label: "Date", value: input.preferredDateLabel });
+  }
+  if (input.preferredTime) {
+    details.push({ label: "Time", value: input.preferredTime });
+  } else if (input.scheduledFor) {
     details.push({ label: "Session", value: formatDateTime(input.scheduledFor) });
   }
 
   details.push(
     { label: "Total", value: formatKes(input.amountKes) },
-    { label: "Commitment fee", value: formatKes(input.depositKes) },
+    { label: "Paid now", value: formatKes(input.depositKes) },
     { label: "Balance at session", value: formatKes(input.balanceKes) },
   );
 
-  const paragraphs = [
-    input.scheduledFor
-      ? `We have received your booking request for ${input.serviceTitle} on ${formatDateTime(input.scheduledFor)}. Pay the commitment fee to secure this slot.`
-      : `We have received your booking request for ${input.serviceTitle}. Pay the commitment fee to secure your slot.`,
-  ];
+  const slot =
+    input.preferredDateLabel && input.preferredTime
+      ? `${input.preferredDateLabel} at ${input.preferredTime}`
+      : input.preferredTime ?? null;
+
+  const paragraphs = input.paid
+    ? [
+        `Your M-Pesa payment is confirmed. Your ${input.serviceTitle} session is booked${slot ? ` for ${slot}` : ""}.`,
+        "This day and time stays reserved for you until your sessions finish.",
+      ]
+    : [
+        input.scheduledFor
+          ? `We have received your booking request for ${input.serviceTitle} on ${formatDateTime(input.scheduledFor)}. Pay the commitment fee to secure this slot.`
+          : `We have received your booking request for ${input.serviceTitle}. Pay the commitment fee to secure your slot.`,
+      ];
 
   if (input.balanceKes > 0) {
     paragraphs.push(
@@ -195,16 +213,19 @@ export function bookingConfirmation(input: {
   }
 
   const { html, text } = layout({
-    heading: "We received your booking",
+    heading: input.paid ? "Your booking is confirmed" : "We received your booking",
     greeting: `Hello ${firstName(input.recipientName)},`,
     paragraphs,
     details,
-    closing: "If you need to move or cancel your session, reply to this email and we will make the change.",
+    closing:
+      "If you need to move or cancel your session, reply to this email and we will make the change.",
   });
 
   return {
     to: { email: input.recipientEmail, name: input.recipientName },
-    subject: `Booking request ${input.reference}`,
+    subject: input.paid
+      ? `Booking confirmed ${input.reference}`
+      : `Booking request ${input.reference}`,
     html,
     text,
   };
@@ -355,6 +376,52 @@ export function staffInquiryAlert(input: {
     subject: input.subject
       ? `Inquiry: ${input.subject}`
       : `New ${input.type.toLowerCase()} inquiry from ${input.name}`,
+    html,
+    text,
+  };
+}
+
+export function staffBookingAlert(input: {
+  recipientEmail: string;
+  reference: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone?: string | null;
+  serviceTitle: string;
+  preferredDateLabel?: string | null;
+  preferredTime?: string | null;
+  amountPaidKes: number;
+  amountKes: number;
+}): EmailMessage {
+  const details: DetailRow[] = [
+    { label: "Reference", value: input.reference },
+    { label: "Client", value: input.clientName },
+    { label: "Email", value: input.clientEmail },
+  ];
+  if (input.clientPhone) details.push({ label: "Phone", value: input.clientPhone });
+  details.push({ label: "Service", value: input.serviceTitle });
+  if (input.preferredDateLabel) {
+    details.push({ label: "Date", value: input.preferredDateLabel });
+  }
+  if (input.preferredTime) {
+    details.push({ label: "Time", value: input.preferredTime });
+  }
+  details.push(
+    { label: "Paid", value: formatKes(input.amountPaidKes) },
+    { label: "Session total", value: formatKes(input.amountKes) },
+  );
+
+  const { html, text } = layout({
+    heading: "New paid booking",
+    paragraphs: [
+      `${input.clientName} has paid for ${input.serviceTitle}. The slot is confirmed.`,
+    ],
+    details,
+  });
+
+  return {
+    to: input.recipientEmail,
+    subject: `Paid booking ${input.reference} — ${input.clientName}`,
     html,
     text,
   };

@@ -1,107 +1,112 @@
 import "server-only";
 
-import { put } from "@vercel/blob";
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { getRequiredSession } from "@/features/portal/lib/portal-guard";
+import { isAdmin } from "@/features/portal/lib/roles";
 import { prisma } from "@/lib/prisma";
+import {
+  FLYER_SETTING_KEY,
+  removeStoredFlyer,
+  uploadGriefCampFlyer,
+} from "@/lib/uploads/flyer";
+
+function revalidateFlyerSurfaces() {
+  revalidatePath("/grief-camp");
+  revalidatePath("/admin/grief-camp");
+  revalidatePath("/dashboard/programs");
+}
+
+async function currentFlyerUrl() {
+  const setting = await prisma.siteSetting.findUnique({
+    where: { key: FLYER_SETTING_KEY },
+    select: { value: true },
+  });
+  const value = setting?.value?.trim();
+  return value ? value : null;
+}
 
 export async function POST(request: Request) {
   try {
-    // Check authentication and admin role
     const session = await getRequiredSession();
-
-    if (session.role !== "admin") {
+    if (!isAdmin(session.role)) {
       return NextResponse.json(
-        { error: "Unauthorized - Admin access required" },
-        { status: 403 }
+        { error: "Administrator access is required to upload a flyer" },
+        { status: 403 },
       );
     }
 
     const formData = await request.formData();
-    const file = formData.get("file") as File;
-
-    if (!file) {
-      return NextResponse.json(
-        { error: "No file provided" },
-        { status: 400 }
-      );
+    const file = formData.get("file");
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Validate file type (images and PDFs only)
-    const allowedTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/webp",
-      "application/pdf",
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Invalid file type. Only images (JPEG, PNG, WebP) and PDF files are allowed." },
-        { status: 400 }
-      );
+    const existing = await currentFlyerUrl();
+    const uploaded = await uploadGriefCampFlyer(file, existing);
+    if (!uploaded.ok) {
+      return NextResponse.json({ error: uploaded.error }, { status: 400 });
     }
 
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: "File size exceeds 10MB limit" },
-        { status: 400 }
-      );
-    }
-
-    // Generate a unique filename
-    const timestamp = Date.now();
-    const extension = file.name.split(".").pop();
-    const filename = `grief-camp-flyer-${timestamp}.${extension}`;
-
-    // Upload to Vercel Blob
-    const blob = await put(filename, file, {
-      access: "public",
-      addRandomSuffix: false,
-    });
-
-    // Update the site setting with the new URL
     await prisma.siteSetting.upsert({
-      where: { key: "grief_camp_flyer_url" },
-      update: { value: blob.url },
-      create: {
-        key: "grief_camp_flyer_url",
-        value: blob.url,
-      },
+      where: { key: FLYER_SETTING_KEY },
+      update: { value: uploaded.url },
+      create: { key: FLYER_SETTING_KEY, value: uploaded.url },
     });
+
+    revalidateFlyerSurfaces();
 
     return NextResponse.json({
       success: true,
-      url: blob.url,
-      filename: filename,
+      url: uploaded.url,
     });
   } catch (error) {
     console.error("Error uploading flyer:", error);
     return NextResponse.json(
       { error: "Failed to upload file" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function GET() {
   try {
-    const setting = await prisma.siteSetting.findUnique({
-      where: { key: "grief_camp_flyer_url" },
-    });
-
-    return NextResponse.json({
-      url: setting?.value || null,
-    });
+    return NextResponse.json({ url: await currentFlyerUrl() });
   } catch (error) {
     console.error("Error fetching flyer URL:", error);
     return NextResponse.json(
       { error: "Failed to fetch flyer URL" },
-      { status: 500 }
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE() {
+  try {
+    const session = await getRequiredSession();
+    if (!isAdmin(session.role)) {
+      return NextResponse.json(
+        { error: "Administrator access is required to remove a flyer" },
+        { status: 403 },
+      );
+    }
+
+    const existing = await currentFlyerUrl();
+    await removeStoredFlyer(existing);
+    await prisma.siteSetting.deleteMany({ where: { key: FLYER_SETTING_KEY } });
+
+    revalidateFlyerSurfaces();
+
+    return NextResponse.json({
+      success: true,
+      message: "Flyer removed successfully",
+    });
+  } catch (error) {
+    console.error("Error removing flyer:", error);
+    return NextResponse.json(
+      { error: "Failed to remove flyer" },
+      { status: 500 },
     );
   }
 }

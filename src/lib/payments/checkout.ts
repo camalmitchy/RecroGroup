@@ -244,5 +244,13 @@ export async function refreshPaymentStatus(reference: string) {
 
   const { settlePayment } = await import("./service");
   const outcome = await settlePayment(payment.id, result);
+  if (outcome.applied && result.status === "PAID") {
+    const { sendPaymentReceipt } = await import("./receipts");
+    await sendPaymentReceipt(payment.id);
+  }
+  if (outcome.applied && result.status === "FAILED") {
+    const { sendPaymentFailureNotice } = await import("./receipts");
+    await sendPaymentFailureNotice(payment.id);
+  }
   return outcome.payment ?? payment;
 }

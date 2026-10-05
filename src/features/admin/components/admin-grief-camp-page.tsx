@@ -8,6 +8,7 @@ import type { GriefApplicationStatus } from "@prisma/client";
 import { downloadCsv, toCsv } from "@/features/admin/lib/csv";
 import { setGriefApplicationStatus } from "@/server/actions/operations";
 
+import { FlyerUpload } from "@/features/portal/components/flyer-upload";
 import { AdminShell, Card, DataTable, PageHeader, StatusBadge } from "./admin-shell";
 
 export type AdminGriefApplicationRow = {
@@ -30,6 +31,7 @@ type AdminGriefCampPageProps = {
   applications: AdminGriefApplicationRow[];
   total: number;
   isAdmin: boolean;
+  flyerUrl: string | null;
 };
 
 const STATUSES: GriefApplicationStatus[] = [
@@ -78,6 +80,7 @@ export function AdminGriefCampPage({
   applications,
   total,
   isAdmin,
+  flyerUrl,
 }: AdminGriefCampPageProps) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -137,6 +140,10 @@ export function AdminGriefCampPage({
           title="Grief Camp Applications"
           description="Parent/guardian applications for the children's grief camp."
         />
+
+        <div className="mt-6">
+          <FlyerUpload currentUrl={flyerUrl} canManage={isAdmin} />
+        </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">

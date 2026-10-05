@@ -7,7 +7,8 @@ export async function getGriefCampFlyerUrl(): Promise<string | null> {
     where: { key: "grief_camp_flyer_url" },
   });
 
-  return setting?.value || null;
+  const value = setting?.value?.trim();
+  return value ? value : null;
 }
 
 export async function getSiteSetting(key: string): Promise<string | null> {
