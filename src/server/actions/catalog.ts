@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
+import { setStaffRoleRevoked } from "@/lib/staff-bootstrap";
 import {
   extractYoutubeId,
   slugify,
@@ -444,8 +445,12 @@ export async function setUserRole(
     const user = await prisma.user.update({
       where: { id: userId },
       data: { role },
-      select: { id: true, role: true },
+      select: { id: true, role: true, email: true },
     });
+
+    if (user.email) {
+      await setStaffRoleRevoked(user.email, role === "customer");
+    }
 
     revalidatePath("/dashboard/settings");
     revalidatePath("/dashboard/people");

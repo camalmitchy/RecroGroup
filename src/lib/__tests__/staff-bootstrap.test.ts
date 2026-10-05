@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = {
   user: { update: vi.fn() },
+  siteSetting: { findUnique: vi.fn(), upsert: vi.fn() },
 };
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
@@ -74,6 +75,21 @@ describe("syncBootstrapStaffRole", () => {
     });
 
     expect(role).toBe("admin");
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it("does not restore a role that was explicitly removed", async () => {
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({
+      value: JSON.stringify(["minanicalm@gmail.com"]),
+    });
+
+    const role = await syncBootstrapStaffRole({
+      id: "u1",
+      email: "minanicalm@gmail.com",
+      role: "customer",
+    });
+
+    expect(role).toBe("customer");
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 

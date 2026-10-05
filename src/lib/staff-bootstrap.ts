@@ -46,6 +46,48 @@ export function bootstrapRoleForEmail(email: string): AppRole | null {
   return null;
 }
 
+const REVOKED_STAFF_KEY = "revoked_staff_emails";
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+export async function listRevokedStaffEmails(): Promise<string[]> {
+  const row = await prisma.siteSetting.findUnique({
+    where: { key: REVOKED_STAFF_KEY },
+    select: { value: true },
+  });
+  if (!row?.value) return [];
+
+  try {
+    const parsed = JSON.parse(row.value) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item): item is string => typeof item === "string")
+      .map(normalizeEmail)
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+/** Remember an explicit removal so sign-in does not restore a staff role. */
+export async function setStaffRoleRevoked(email: string, revoked: boolean) {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return;
+
+  const emails = new Set(await listRevokedStaffEmails());
+  if (revoked) emails.add(normalized);
+  else emails.delete(normalized);
+
+  const value = JSON.stringify([...emails]);
+  await prisma.siteSetting.upsert({
+    where: { key: REVOKED_STAFF_KEY },
+    create: { key: REVOKED_STAFF_KEY, value },
+    update: { value },
+  });
+}
+
 export async function syncBootstrapStaffRole(user: {
   id: string;
   email: string;
@@ -56,6 +98,9 @@ export async function syncBootstrapStaffRole(user: {
 
   if (!desired || current === desired) return current;
   if (current === "admin") return current;
+  if ((await listRevokedStaffEmails()).includes(normalizeEmail(user.email))) {
+    return current;
+  }
 
   await prisma.user.update({
     where: { id: user.id },

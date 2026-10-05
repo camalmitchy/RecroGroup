@@ -9,7 +9,6 @@ import {
   Inbox,
   LayoutDashboard,
   Settings,
-  Users,
 } from "lucide-react";
 
 export type PortalNavItem = {
@@ -69,14 +68,7 @@ export const PORTAL_NAV: PortalNavItem[] = [
     label: "Content",
     icon: FileText,
     roles: ["admin"],
-    group: "Management",
-  },
-  {
-    href: "/dashboard/people",
-    label: "Customers",
-    icon: Users,
-    roles: ["admin"],
-    group: "Management",
+    group: "Engagement",
   },
   {
     href: "/dashboard/settings",

@@ -674,8 +674,10 @@ function EmptyServicesState() {
                 slot, or check back shortly.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                <a href="mailto:hello@recrogroup.org" className="btn-primary">
-                    Email hello@recrogroup.org
+                <a href="mailto:info@recrogroup.org
+" className="btn-primary">
+                    Email info@recrogroup.org
+
                 </a>
                 <Link href="/contact" className="btn-secondary">
                     Contact us
@@ -842,10 +844,12 @@ function TimeStep({
                         </p>
                         <div className="mt-3 flex flex-wrap gap-3">
                             <a
-                                href="mailto:hello@recrogroup.org"
+                                href="mailto:info@recrogroup.org
+"
                                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-deep"
                             >
-                                <Mail size={14} /> hello@recrogroup.org
+                                <Mail size={14} /> info@recrogroup.org
+
                             </a>
                             <Link
                                 href="/contact"

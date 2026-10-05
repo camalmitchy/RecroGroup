@@ -272,15 +272,24 @@ function TeamRolesPanel({
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const staffOnly = useMemo(
+    () =>
+      staff.filter((row) => {
+        const role = parseAppRole(row.role);
+        return role === "admin" || role === "receptionist";
+      }),
+    [staff],
+  );
+
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return staff;
-    return staff.filter(
+    if (!needle) return staffOnly;
+    return staffOnly.filter(
       (row) =>
         row.name.toLowerCase().includes(needle) ||
         row.email.toLowerCase().includes(needle),
     );
-  }, [staff, query]);
+  }, [staffOnly, query]);
 
   const changeRole = (
     userId: string,
@@ -303,11 +312,11 @@ function TeamRolesPanel({
     <div className="space-y-4">
       <Card>
         <CardContent className="space-y-2 p-5">
-          <h3 className="text-sm font-semibold">Users and roles</h3>
+          <h3 className="text-sm font-semibold">Team and roles</h3>
           <p className="text-xs text-muted-foreground">
-            Everyone who has signed up appears here. Admin has full portal
-            control. Receptionist can manage bookings, payments, programs and
-            messages. Customer stays on the public site.
+            Only admins and receptionists are listed. Remove a role to take
+            away staff access. That person stays a customer and is not given
+            the role again unless you grant it by email below.
           </p>
         </CardContent>
       </Card>
@@ -322,12 +331,12 @@ function TeamRolesPanel({
           />
         </CardContent>
         <CardContent className="p-0">
-          {staff.length === 0 ? (
+          {staffOnly.length === 0 ? (
             <Empty className="py-12">
               <EmptyHeader>
-                <EmptyTitle>No accounts yet</EmptyTitle>
+                <EmptyTitle>No staff yet</EmptyTitle>
                 <EmptyDescription>
-                  People appear here after they sign up or sign in.
+                  Grant admin or receptionist access by email below.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -348,7 +357,9 @@ function TeamRolesPanel({
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Joined</TableHead>
-                  <TableHead className="text-right">Assign role</TableHead>
+                  <TableHead className="text-right">
+                    <span className="sr-only">Remove role</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -385,27 +396,29 @@ function TeamRolesPanel({
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end">
-                          <NativeSelect
-                            size="sm"
-                            aria-label={`Role for ${row.name}`}
-                            value={role}
-                            disabled={busy || isSelf}
-                            onChange={(event) => {
-                              const next = event.target.value as typeof role;
-                              if (next === role) return;
-                              changeRole(
-                                row.id,
-                                next,
-                                `${row.name} is now ${ROLE_LABELS[next]}`,
-                              );
-                            }}
-                          >
-                            {ASSIGNABLE_ROLES.map((option) => (
-                              <NativeSelectOption key={option} value={option}>
-                                {ROLE_LABELS[option]}
-                              </NativeSelectOption>
-                            ))}
-                          </NativeSelect>
+                          {isSelf ? (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              disabled={busy}
+                              onClick={() => {
+                                const confirmed = window.confirm(
+                                  `Remove ${row.name}'s ${ROLE_LABELS[role]} role? They will not get staff access again unless you grant it by email.`,
+                                );
+                                if (!confirmed) return;
+                                changeRole(
+                                  row.id,
+                                  "customer",
+                                  `${row.name} no longer has a staff role`,
+                                );
+                              }}
+                            >
+                              {busy ? "Removing..." : "Remove role"}
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -476,8 +489,8 @@ function GrantAccessCard() {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          The person must already have an account. Search the table above, or
-          enter their email here to set a role.
+          The person must already have an account. Enter their email to give
+          them an admin or receptionist role.
         </p>
       </CardContent>
     </Card>
@@ -490,8 +503,8 @@ function OrgInfoPanel() {
     { label: "M-Pesa Till (Buy Goods)", value: "747736" },
     { label: "SBM Bank KES", value: "0182074946001" },
     { label: "SBM Bank USD", value: "0182074946003" },
-    { label: "Support email", value: "hello@recrogroup.org" },
-    { label: "Phone", value: "+254 700 000 000" },
+    { label: "Support email", value: "info@recrogroup.org" },
+    { label: "Phone", value: "0717-78-78-07 / 0733-78-78-07" },
   ];
 
   return (

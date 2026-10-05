@@ -151,10 +151,12 @@ export function TimeStep({
                         </p>
                         <div className="mt-3 flex flex-wrap gap-3">
                             <a
-                                href="mailto:hello@recrogroup.org"
+                                href="mailto:info@recrogroup.org
+"
                                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-deep"
                             >
-                                <Mail size={14} /> hello@recrogroup.org
+                                <Mail size={14} /> info@recrogroup.org
+
                             </a>
                             <Link
                                 href="/contact"

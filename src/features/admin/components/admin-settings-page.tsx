@@ -730,8 +730,8 @@ function OrgPanel() {
         <ReadOnlyField label="M-Pesa Till (Buy Goods)" value="747736" />
         <ReadOnlyField label="SBM Bank KES" value="0182074946001" />
         <ReadOnlyField label="SBM Bank USD" value="0182074946003" />
-        <ReadOnlyField label="Support email" value="hello@recrogroup.org" />
-        <ReadOnlyField label="Phone" value="+254 700 000 000" />
+        <ReadOnlyField label="Support email" value="info@recrogroup.org" />
+        <ReadOnlyField label="Phone" value="0717-78-78-07 / 0733-78-78-07" />
       </div>
       <p className="text-xs text-gray-600">
         To change these, ask a developer to update the site config.

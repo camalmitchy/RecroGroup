@@ -8,7 +8,7 @@ import { formatDate } from "@/features/portal/lib/format";
 import { getRequiredSession } from "@/features/portal/lib/portal-guard";
 import {
   listServices,
-  listUsers,
+  listStaff,
   listTherapists,
 } from "@/server/queries/catalog";
 
@@ -18,7 +18,7 @@ export default async function SettingsPage() {
   const [services, therapists, users] = await Promise.all([
     listServices(),
     listTherapists(),
-    listUsers(),
+    listStaff(),
   ]);
 
   const serviceRows: ServiceRow[] = services.map((service) => ({
