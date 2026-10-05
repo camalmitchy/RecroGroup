@@ -86,8 +86,7 @@ async function seedTherapists() {
     bio: "Founder of Recro Group. Medical family therapy, marriage and family work.",
     specialties: ["Medical family therapy", "Marriage & family"],
     photoUrl: "/assets/founder-portrait.jpg",
-    email: "info@recrogroup.org
-",
+    email: "info@recrogroup.org",
     isActive: true,
   };
 
