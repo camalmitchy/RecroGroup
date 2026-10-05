@@ -1,6 +1,6 @@
 import "server-only";
 
-import { put } from "@vercel/blob";
+import { putPublicBlob, vercelBlobConfigured } from "./blob-storage";
 
 export const MAX_PROOF_BYTES = 8 * 1024 * 1024;
 
@@ -61,12 +61,17 @@ export async function uploadProof(
     };
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return { ok: false, error: "File uploads are not configured on this environment" };
+  if (!vercelBlobConfigured()) {
+    return {
+      ok: false,
+      error:
+        "File uploads need a Vercel Blob store. Create one under Vercel Storage, link it to this project, then redeploy.",
+    };
   }
 
-  const blob = await put(`payment-proofs/${reference}.${actual}`, Buffer.from(buffer), {
-    access: "public",
+  const blob = await putPublicBlob({
+    pathname: `payment-proofs/${reference}.${actual}`,
+    body: Buffer.from(buffer),
     contentType: file.type,
     addRandomSuffix: true,
   });

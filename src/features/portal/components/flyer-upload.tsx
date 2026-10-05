@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   describeAllowedFlyerTypes,
   flyerAcceptAttribute,
+  customerFlyerUrl,
   isFlyerPdfUrl,
 } from "@/lib/uploads/flyer-types";
 
@@ -116,7 +117,7 @@ export function FlyerUpload({ currentUrl, canManage = false }: FlyerUploadProps)
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <a
-                href={flyerUrl}
+                href={customerFlyerUrl(flyerUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg bg-primary-deep px-4 py-2 text-sm font-semibold text-white hover:bg-primary-deep/90"
@@ -142,7 +143,7 @@ export function FlyerUpload({ currentUrl, canManage = false }: FlyerUploadProps)
             <div className="overflow-hidden rounded-xl border border-border">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={flyerUrl}
+                src={customerFlyerUrl(flyerUrl)}
                 alt="Grief camp flyer"
                 className="h-auto max-h-96 w-full bg-white object-contain"
               />

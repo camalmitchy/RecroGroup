@@ -230,6 +230,10 @@ export async function refreshPaymentStatus(reference: string) {
     payment.status === "REFUNDED" ||
     payment.provider === "MANUAL"
   ) {
+    if (payment.status === "PAID") {
+      const { sendPaymentReceipt } = await import("./receipts");
+      await sendPaymentReceipt(payment.id);
+    }
     return payment;
   }
 

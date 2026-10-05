@@ -3,6 +3,9 @@ import "server-only";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 import { getRequiredSession } from "@/features/portal/lib/portal-guard";
 import { isAdmin } from "@/features/portal/lib/roles";
 import { prisma } from "@/lib/prisma";

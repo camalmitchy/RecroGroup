@@ -19,6 +19,10 @@ function isSupported(value: string): value is SupportedDriver {
 }
 
 function resolveDriver(): SupportedDriver {
+  const hasResend = Boolean(optional("RESEND_API_KEY"));
+  // A leftover MAIL_DRIVER=console must not swallow live booking emails.
+  if (process.env.VERCEL && hasResend) return "resend";
+
   const requested = optional("MAIL_DRIVER")?.toLowerCase();
   if (requested && isSupported(requested)) return requested;
   if (requested) {
@@ -26,7 +30,12 @@ function resolveDriver(): SupportedDriver {
       `[mail] Unknown MAIL_DRIVER "${requested}", falling back. Supported: ${SUPPORTED_DRIVERS.join(", ")}`,
     );
   }
-  return optional("RESEND_API_KEY") ? "resend" : "console";
+  return hasResend ? "resend" : "console";
+}
+
+/** True only when a message will leave this server and reach an inbox. */
+export function mailDelivers() {
+  return resolveDriver() === "resend";
 }
 
 export const mailConfig = {

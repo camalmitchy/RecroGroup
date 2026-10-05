@@ -3,7 +3,7 @@ import "server-only";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { del, put } from "@vercel/blob";
+import { deletePublicBlob, putPublicBlob, vercelBlobConfigured } from "./blob-storage";
 
 import {
   FLYER_CONTENT_TYPE,
@@ -36,11 +36,7 @@ export async function removeStoredFlyer(url: string | null | undefined) {
   if (!url) return;
 
   if (url.includes("blob.vercel-storage.com") || url.includes(".public.blob.")) {
-    try {
-      await del(url);
-    } catch (error) {
-      console.error("[flyer] could not delete blob", error);
-    }
+    await deletePublicBlob(url);
     return;
   }
 
@@ -71,14 +67,22 @@ export async function uploadGriefCampFlyer(
   const contentType = FLYER_CONTENT_TYPE[ext];
   await removeStoredFlyer(previousUrl);
 
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(blobPath(ext), Buffer.from(buffer), {
-      access: "public",
-      contentType,
-      addRandomSuffix: false,
-      allowOverwrite: true,
-    });
-    return { ok: true, url: blob.url, contentType, bytes: file.size };
+  if (vercelBlobConfigured()) {
+    try {
+      const blob = await putPublicBlob({
+        pathname: blobPath(ext),
+        body: Buffer.from(buffer),
+        contentType,
+        addRandomSuffix: false,
+        allowOverwrite: true,
+      });
+      return { ok: true, url: blob.url, contentType, bytes: file.size };
+    } catch (error) {
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : "Could not store the flyer",
+      };
+    }
   }
 
   if (process.env.NODE_ENV === "development") {
@@ -91,6 +95,6 @@ export async function uploadGriefCampFlyer(
   return {
     ok: false,
     error:
-      "File uploads are not configured on this environment. Add BLOB_READ_WRITE_TOKEN in Vercel.",
+      "File uploads need a Vercel Blob store. Create one under Vercel Storage, link it to this project, then redeploy.",
   };
 }

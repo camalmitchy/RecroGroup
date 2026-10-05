@@ -78,3 +78,9 @@ export function isFlyerPdfUrl(url: string | null | undefined) {
   if (!url) return false;
   return url.split("?")[0].toLowerCase().endsWith(".pdf");
 }
+
+/** Customer-facing URL. Blob files are served by our app so a private store still works. */
+export function customerFlyerUrl(storedUrl: string, download = false) {
+  if (storedUrl.startsWith("/")) return storedUrl;
+  return download ? "/api/grief-camp-flyer?download=1" : "/api/grief-camp-flyer";
+}

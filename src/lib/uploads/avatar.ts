@@ -3,7 +3,7 @@ import "server-only";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { put } from "@vercel/blob";
+import { putPublicBlob, vercelBlobConfigured } from "./blob-storage";
 
 export const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
@@ -59,9 +59,10 @@ export async function uploadAvatar(
 
   const filename = `${userId}-${Date.now()}.${actual}`;
 
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(`avatars/${filename}`, Buffer.from(buffer), {
-      access: "public",
+  if (vercelBlobConfigured()) {
+    const blob = await putPublicBlob({
+      pathname: `avatars/${filename}`,
+      body: Buffer.from(buffer),
       contentType: file.type,
       addRandomSuffix: true,
     });

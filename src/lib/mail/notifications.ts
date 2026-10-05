@@ -1,6 +1,6 @@
 import "server-only";
 
-import { mailConfig, sendEmail } from "./index";
+import { mailConfig, mailDelivers, sendEmail } from "./index";
 import {
   bookingBalanceReminder,
   bookingConfirmation,
@@ -76,15 +76,23 @@ export async function notifyPaidBooking(input: {
   amountKes: number;
   depositKes: number;
   balanceKes: number;
-}): Promise<void> {
+}): Promise<boolean> {
+  if (!mailDelivers()) {
+    console.warn(
+      `[mail] Paid booking ${input.reference} was not emailed. Set RESEND_API_KEY on Vercel so the client and admin receive it.`,
+    );
+  }
+
+  let clientAccepted = false;
   await dispatch("paidBooking", async () => {
-    await sendEmail(
+    const client = await sendEmail(
       bookingConfirmation({
         ...input,
         scheduledFor: null,
         paid: true,
       }),
     );
+    clientAccepted = Boolean(client?.accepted);
 
     await Promise.all(
       mailConfig.staffAddresses.map((recipientEmail) =>
@@ -105,6 +113,8 @@ export async function notifyPaidBooking(input: {
       ),
     );
   });
+
+  return mailDelivers() && clientAccepted;
 }
 
 export async function notifyBookingBalanceDue(input: {

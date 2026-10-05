@@ -5,11 +5,13 @@ import {
 } from "@/features/admin/components/admin-bookings-page";
 import { requireAdminArea } from "@/features/admin/lib/admin-guard";
 import { formatDate } from "@/features/portal/lib/format";
+import { deliverUnsentBookingReceipts } from "@/lib/payments/receipts";
 import { listBookings } from "@/server/queries/bookings";
 import { listTherapists } from "@/server/queries/catalog";
 
 export default async function BookingsPage() {
     const session = await requireAdminArea();
+    await deliverUnsentBookingReceipts();
 
     const [bookings, therapists] = await Promise.all([
         listBookings({ hasSuccessfulPayment: true, take: 200 }),

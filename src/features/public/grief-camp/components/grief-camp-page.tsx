@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Check, ArrowRight, Heart, Home, Flame, Users, Download, Calendar } from "lucide-react";
 
-import { isFlyerPdfUrl } from "@/lib/uploads/flyer-types";
+import { customerFlyerUrl, isFlyerPdfUrl } from "@/lib/uploads/flyer-types";
 
 import {
   camperPricing,
@@ -507,7 +507,7 @@ export function GriefCampPage({ flyerUrl }: { flyerUrl: string | null }) {
                   <div className="mx-auto max-w-xl overflow-hidden rounded-2xl border border-border bg-white">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={flyerUrl}
+                      src={customerFlyerUrl(flyerUrl)}
                       alt="Grief camp flyer"
                       className="h-auto w-full object-contain"
                     />
@@ -515,7 +515,7 @@ export function GriefCampPage({ flyerUrl }: { flyerUrl: string | null }) {
                 ) : null}
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   <a
-                    href={flyerUrl}
+                    href={customerFlyerUrl(flyerUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-full border-2 border-border bg-transparent px-8 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
@@ -523,7 +523,7 @@ export function GriefCampPage({ flyerUrl }: { flyerUrl: string | null }) {
                     View flyer
                   </a>
                   <a
-                    href={flyerUrl}
+                    href={customerFlyerUrl(flyerUrl, true)}
                     download
                     className="inline-flex items-center gap-2 rounded-full bg-primary-deep px-8 py-3 text-sm font-semibold text-white transition hover:bg-primary-deep/90"
                   >

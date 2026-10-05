@@ -1,5 +1,8 @@
 import "server-only";
 
+import type { Prisma } from "@prisma/client";
+
+import { mailDelivers } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
 import {
   notifyDonationReceived,
@@ -29,6 +32,17 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 function formatBookingDate(value: Date | null | undefined) {
   if (!value) return null;
   return dateFormatter.format(value);
+}
+
+function readMeta(value: Prisma.JsonValue | null): Prisma.JsonObject {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value;
+  }
+  return {};
+}
+
+function receiptAlreadySent(value: Prisma.JsonValue | null) {
+  return typeof readMeta(value).receiptEmailSentAt === "string";
 }
 
 async function recipientFor(paymentId: string) {
@@ -64,9 +78,12 @@ async function recipientFor(paymentId: string) {
 export async function sendPaymentReceipt(paymentId: string) {
   const resolved = await recipientFor(paymentId);
   if (!resolved?.email) return;
+  if (resolved.payment.status !== "PAID") return;
+  if (receiptAlreadySent(resolved.payment.providerMeta)) return;
 
   const { payment, name, email } = resolved;
   const amountKes = payment.settledAmountKes ?? payment.amountKes;
+  let delivered = false;
 
   if (payment.donationId) {
     await notifyDonationReceived({
@@ -75,13 +92,11 @@ export async function sendPaymentReceipt(paymentId: string) {
       reference: payment.reference,
       amountKes,
     });
-    return;
-  }
-
-  if (payment.booking) {
+    delivered = mailDelivers();
+  } else if (payment.booking) {
     const total = payment.booking.amountKes ?? amountKes;
     const paid = payment.booking.amountPaidKes || amountKes;
-    await notifyPaidBooking({
+    delivered = await notifyPaidBooking({
       recipientName: name,
       recipientEmail: email,
       clientPhone: payment.booking.clientPhone,
@@ -93,18 +108,47 @@ export async function sendPaymentReceipt(paymentId: string) {
       depositKes: paid,
       balanceKes: Math.max(0, total - paid),
     });
-    return;
+  } else {
+    await notifyPaymentSucceeded({
+      recipientName: name,
+      recipientEmail: email,
+      reference: payment.reference,
+      amountKes,
+      method: payment.method,
+      purposeLabel: PURPOSE_LABELS[payment.purpose] ?? "Payment",
+      paidAt: payment.paidAt ?? new Date(),
+    });
+    delivered = mailDelivers();
   }
 
-  await notifyPaymentSucceeded({
-    recipientName: name,
-    recipientEmail: email,
-    reference: payment.reference,
-    amountKes,
-    method: payment.method,
-    purposeLabel: PURPOSE_LABELS[payment.purpose] ?? "Payment",
-    paidAt: payment.paidAt ?? new Date(),
+  if (!delivered) return;
+
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      providerMeta: {
+        ...readMeta(payment.providerMeta),
+        receiptEmailSentAt: new Date().toISOString(),
+      },
+    },
   });
+}
+
+/** Sends confirmations for paid bookings whose email never left the server. */
+export async function deliverUnsentBookingReceipts() {
+  if (!mailDelivers()) return;
+
+  const payments = await prisma.payment.findMany({
+    where: { status: "PAID", bookingId: { not: null } },
+    orderBy: { paidAt: "desc" },
+    take: 15,
+    select: { id: true, providerMeta: true },
+  });
+
+  for (const payment of payments) {
+    if (receiptAlreadySent(payment.providerMeta)) continue;
+    await sendPaymentReceipt(payment.id);
+  }
 }
 
 export async function sendPaymentFailureNotice(paymentId: string) {
