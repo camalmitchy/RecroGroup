@@ -21,6 +21,15 @@ export function sessionMinutes(
   return value > 0 ? value : DEFAULT_SESSION_MINUTES;
 }
 
+/** Recurring clinic time, such as "Every Tuesday at 10:00 AM". */
+export function permanentSlotLabel(date: Date, time: string): string {
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Nairobi",
+    weekday: "long",
+  }).format(date);
+  return `Every ${weekday} at ${time}`;
+}
+
 /** Weekday in Nairobi, where clinic sessions are booked. Sunday is 0. */
 export function nairobiWeekday(date: Date): number {
   const short = new Intl.DateTimeFormat("en-US", {

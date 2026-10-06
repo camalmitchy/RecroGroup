@@ -5,8 +5,7 @@ import {
 } from "@/features/portal/lib/roles";
 
 /** Staff granted locally; production is a separate DB so these must be reapplied. */
-const DEFAULT_ADMIN_EMAILS = ["info@recrogroup.org
-"];
+const DEFAULT_ADMIN_EMAILS = ["info@recro-group.org"];
 const DEFAULT_RECEPTIONIST_EMAILS = ["carolinehawi91@gmail.com"];
 
 export function parseEmailList(value: string | undefined) {

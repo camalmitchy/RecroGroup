@@ -4,6 +4,7 @@ import {
     type AdminTherapistOption,
 } from "@/features/admin/components/admin-bookings-page";
 import { requireAdminArea } from "@/features/admin/lib/admin-guard";
+import { permanentSlotLabel } from "@/features/public/booking/lib/slots";
 import { formatDate } from "@/features/portal/lib/format";
 import { deliverUnsentBookingReceipts } from "@/lib/payments/receipts";
 import { listBookings } from "@/server/queries/bookings";
@@ -29,6 +30,10 @@ export default async function BookingsPage() {
         therapistName: booking.therapist?.fullName ?? null,
         preferredDateLabel: formatDate(booking.preferredDate),
         preferredTime: booking.preferredTime,
+        slotLabel:
+            booking.preferredDate && booking.preferredTime
+                ? permanentSlotLabel(booking.preferredDate, booking.preferredTime)
+                : null,
         status: booking.status,
         paymentStatus: booking.paymentStatus,
         amountKes: booking.amountKes,

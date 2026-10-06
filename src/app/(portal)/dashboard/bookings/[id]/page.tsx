@@ -5,6 +5,7 @@ import {
   type BookingDetailData,
   type TherapistOption,
 } from "@/features/portal/components/booking-detail";
+import { permanentSlotLabel } from "@/features/public/booking/lib/slots";
 import { formatDate, formatDateTime } from "@/features/portal/lib/format";
 import { getRequiredSession } from "@/features/portal/lib/portal-guard";
 import { getBookingById } from "@/server/queries/bookings";
@@ -33,6 +34,10 @@ export default async function BookingDetailPage({
     clientPhone: booking.clientPhone,
     preferredDateLabel: formatDate(booking.preferredDate),
     preferredTime: booking.preferredTime,
+    slotLabel:
+      booking.preferredDate && booking.preferredTime
+        ? permanentSlotLabel(booking.preferredDate, booking.preferredTime)
+        : null,
     rescheduleReason: booking.rescheduleReason,
     sessionMode: booking.sessionMode,
     notes: booking.notes,

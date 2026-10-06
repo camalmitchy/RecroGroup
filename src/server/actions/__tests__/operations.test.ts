@@ -12,11 +12,18 @@ const prismaMock = {
   user: { update: vi.fn() },
 };
 
-const requireStaff = vi.fn();
-const requireAdmin = vi.fn();
+const { requireStaff, requireAdmin, reconcileBookingSlots } = vi.hoisted(() => ({
+  requireStaff: vi.fn(),
+  requireAdmin: vi.fn(),
+  reconcileBookingSlots: vi.fn(),
+}));
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+
+vi.mock("@/server/booking-slots", () => ({
+  reconcileBookingSlots,
+}));
 
 vi.mock("@/server/authz", async () => {
   const actual =
@@ -30,6 +37,7 @@ const {
   clearAllBookings,
   clearOldBookings,
   linkPaymentToBooking,
+  releaseBookingSlot,
   setGriefApplicationStatus,
   setInquiryStatus,
 } = await import("@/server/actions/operations");
@@ -46,6 +54,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   requireStaff.mockResolvedValue(STAFF);
   requireAdmin.mockResolvedValue({ ...STAFF, role: "admin" });
+  reconcileBookingSlots.mockResolvedValue([]);
 });
 
 describe("setGriefApplicationStatus", () => {
@@ -140,6 +149,43 @@ describe("assignTherapist", () => {
 
     expect(result.ok).toBe(true);
     expect(prismaMock.therapist.findUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe("releaseBookingSlot", () => {
+  it("finishes the booking so the weekly time can be booked again", async () => {
+    prismaMock.booking.findUnique.mockResolvedValueOnce({
+      id: "b1",
+      status: "CONFIRMED",
+      preferredDate: new Date("2026-09-29T00:00:00.000Z"),
+      preferredTime: "10:00 AM",
+    });
+
+    const result = await releaseBookingSlot("b1");
+
+    expect(result).toEqual({
+      ok: true,
+      data: { id: "b1", slotLabel: "Every Tuesday at 10:00 AM" },
+    });
+    expect(prismaMock.booking.update).toHaveBeenCalledWith({
+      where: { id: "b1" },
+      data: { status: "COMPLETED" },
+    });
+    expect(reconcileBookingSlots).toHaveBeenCalled();
+  });
+
+  it("leaves a finished booking unchanged", async () => {
+    prismaMock.booking.findUnique.mockResolvedValueOnce({
+      id: "b1",
+      status: "COMPLETED",
+      preferredDate: new Date("2026-09-29T00:00:00.000Z"),
+      preferredTime: "10:00 AM",
+    });
+
+    const result = await releaseBookingSlot("b1");
+
+    expect(result.ok).toBe(false);
+    expect(prismaMock.booking.update).not.toHaveBeenCalled();
   });
 });
 

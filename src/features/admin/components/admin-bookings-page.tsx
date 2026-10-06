@@ -6,7 +6,11 @@ import { toast } from "sonner";
 
 import type { BookingStatus } from "@prisma/client";
 import { downloadCsv, toCsv } from "@/features/admin/lib/csv";
-import { assignTherapist, setBookingStatus } from "@/server/actions/operations";
+import {
+  assignTherapist,
+  releaseBookingSlot,
+  setBookingStatus,
+} from "@/server/actions/operations";
 import type { ActionResult } from "@/server/result";
 
 import { ClearProductionDataButton } from "./clear-production-data-button";
@@ -23,6 +27,7 @@ export type AdminBookingRow = {
   therapistName: string | null;
   preferredDateLabel: string;
   preferredTime: string | null;
+  slotLabel: string | null;
   status: BookingStatus;
   paymentStatus: string;
   amountKes: number | null;
@@ -248,7 +253,7 @@ export function AdminBookingsPage({
                   <div key="preferred">
                     <div className="text-xs">{row.preferredDateLabel}</div>
                     <div className="text-xs text-gray-500">
-                      {row.preferredTime ?? "—"}
+                      {row.slotLabel ?? row.preferredTime ?? "—"}
                     </div>
                   </div>,
                   <select
@@ -317,23 +322,31 @@ export function AdminBookingsPage({
                         <Check size={16} />
                       </button>
                     )}
-                    {row.status === "CONFIRMED" && (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() =>
-                          run(
-                            row.id,
-                            () => setBookingStatus(row.id, "COMPLETED"),
-                            "Booking completed",
-                          )
-                        }
-                        className="rounded-md bg-green-100 p-2 text-green-700 hover:bg-green-200 disabled:opacity-50"
-                        title="Mark completed"
-                      >
-                        <Check size={16} />
-                      </button>
-                    )}
+                    {(row.status === "REQUESTED" || row.status === "CONFIRMED") &&
+                      row.preferredTime && (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => {
+                            const label = row.slotLabel ?? row.preferredTime;
+                            if (
+                              !window.confirm(
+                                `Free ${label}? New clients will be able to book this time.`,
+                              )
+                            ) {
+                              return;
+                            }
+                            run(
+                              row.id,
+                              () => releaseBookingSlot(row.id),
+                              `${label} is free for new bookings`,
+                            );
+                          }}
+                          className="rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-800 hover:bg-green-200 disabled:opacity-50"
+                        >
+                          Free time
+                        </button>
+                      )}
                     {row.status !== "CANCELLED" && row.status !== "COMPLETED" && (
                       <button
                         type="button"

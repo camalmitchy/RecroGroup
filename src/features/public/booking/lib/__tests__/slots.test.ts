@@ -5,6 +5,7 @@ import {
   isStartTaken,
   nairobiWeekday,
   parseSlotMinutes,
+  permanentSlotLabel,
   rangesOverlap,
   sessionEndLabel,
   slotWinners,
@@ -62,6 +63,12 @@ describe("session windows", () => {
 
   it("reads Tuesday in Nairobi from a date-only instant", () => {
     expect(nairobiWeekday(new Date("2026-09-29T00:00:00.000Z"))).toBe(2);
+  });
+
+  it("names the recurring weekday and time", () => {
+    expect(
+      permanentSlotLabel(new Date("2026-09-29T00:00:00.000Z"), "10:00 AM"),
+    ).toBe("Every Tuesday at 10:00 AM");
   });
 });
 

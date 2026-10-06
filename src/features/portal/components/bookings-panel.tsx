@@ -1,8 +1,11 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
@@ -18,6 +21,7 @@ import {
   paymentStatusTone,
 } from "@/features/portal/components/status-badge";
 import { formatKes } from "@/features/portal/lib/format";
+import { releaseBookingSlot } from "@/server/actions/operations";
 
 export type BookingRow = {
   id: string;
@@ -26,6 +30,8 @@ export type BookingRow = {
   clientPhone: string | null;
   serviceTitle: string | null;
   preferredDateLabel: string;
+  preferredTime: string | null;
+  slotLabel: string | null;
   status: string;
   paymentStatus: string;
   amountKes: number | null;
@@ -45,6 +51,27 @@ export function BookingsPanel({
   bookings: BookingRow[];
   canClear?: boolean;
 }) {
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const freeTime = (row: BookingRow) => {
+    const label = row.slotLabel ?? row.preferredTime ?? "this time";
+    if (
+      !window.confirm(
+        `Free ${label}? New clients will be able to book this time.`,
+      )
+    ) {
+      return;
+    }
+    setPendingId(row.id);
+    startTransition(async () => {
+      const result = await releaseBookingSlot(row.id);
+      setPendingId(null);
+      if (result.ok) toast.success(`${result.data.slotLabel} is free for new bookings`);
+      else toast.error(result.error);
+    });
+  };
+
   return (
     <div className="space-y-5">
       <PortalPageHeader
@@ -66,11 +93,18 @@ export function BookingsPanel({
             </Empty>
           ) : (
             <ul className="divide-y divide-border">
-              {bookings.map((row) => (
-                <li key={row.id}>
+              {bookings.map((row) => {
+                const holdsSlot =
+                  row.status !== "CANCELLED" &&
+                  row.status !== "COMPLETED" &&
+                  Boolean(row.preferredTime);
+                const busy = isPending && pendingId === row.id;
+
+                return (
+                <li key={row.id} className="flex items-center gap-3 px-5 py-4">
                   <Link
                     href={`/dashboard/bookings/${row.id}`}
-                    className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
+                    className="flex min-w-0 flex-1 items-center gap-4 rounded-md transition-colors hover:bg-muted/40"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{row.clientName}</p>
@@ -81,7 +115,9 @@ export function BookingsPanel({
                           : ""}
                       </p>
                       <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                        {row.serviceTitle ?? "Session"} · {row.preferredDateLabel}
+                        {row.serviceTitle ?? "Session"}
+                        {" · "}
+                        {row.slotLabel ?? row.preferredDateLabel}
                         {row.clientPhone ? ` · ${row.clientPhone}` : ""}
                       </p>
                       {row.latestFailureReason && (
@@ -112,8 +148,24 @@ export function BookingsPanel({
                     </StatusBadge>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   </Link>
+                  {holdsSlot ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={busy}
+                      onClick={() => freeTime(row)}
+                    >
+                      {busy ? "Freeing…" : "Free time"}
+                    </Button>
+                  ) : row.status === "COMPLETED" && row.preferredTime ? (
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      Time free
+                    </span>
+                  ) : null}
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </CardContent>

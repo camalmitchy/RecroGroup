@@ -11,6 +11,7 @@ import type {
 
 import { prisma } from "@/lib/prisma";
 import { ensurePaymentsSchema } from "@/lib/payments/ensure-schema";
+import { permanentSlotLabel } from "@/features/public/booking/lib/slots";
 import { reconcileBookingSlots } from "@/server/booking-slots";
 import { AuthorizationError, requireAdmin, requireStaff } from "@/server/authz";
 import type { ActionResult } from "@/server/result";
@@ -119,6 +120,51 @@ export async function setBookingStatus(
   } catch (error) {
     if (error instanceof AuthorizationError) return fail(error.message);
     return failure("setBookingStatus", error);
+  }
+}
+
+/** Ends a client's recurring hold so that weekday and time can be booked again. */
+export async function releaseBookingSlot(
+  bookingId: string,
+): Promise<ActionResult<{ id: string; slotLabel: string }>> {
+  try {
+    await requireStaff();
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: {
+        id: true,
+        status: true,
+        preferredDate: true,
+        preferredTime: true,
+      },
+    });
+
+    if (!booking) return fail("Booking not found");
+    if (booking.status === "COMPLETED" || booking.status === "CANCELLED") {
+      return fail("This time is already free");
+    }
+    if (!booking.preferredTime) return fail("This booking has no reserved time");
+
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: "COMPLETED" },
+    });
+    await reconcileBookingSlots();
+
+    revalidatePath("/dashboard/bookings");
+    revalidatePath(`/dashboard/bookings/${bookingId}`);
+    revalidatePath("/admin/bookings");
+    revalidatePath("/booking");
+
+    const slotLabel = booking.preferredDate
+      ? permanentSlotLabel(booking.preferredDate, booking.preferredTime)
+      : booking.preferredTime;
+
+    return ok({ id: booking.id, slotLabel });
+  } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
+    return failure("releaseBookingSlot", error);
   }
 }
 

@@ -2,6 +2,7 @@ import {
   BookingsPanel,
   type BookingRow,
 } from "@/features/portal/components/bookings-panel";
+import { permanentSlotLabel } from "@/features/public/booking/lib/slots";
 import { formatDate } from "@/features/portal/lib/format";
 import { getRequiredSession } from "@/features/portal/lib/portal-guard";
 import { isAdmin } from "@/features/portal/lib/roles";
@@ -19,6 +20,11 @@ export default async function BookingsPage() {
     clientPhone: booking.clientPhone,
     serviceTitle: booking.service?.title ?? null,
     preferredDateLabel: formatDate(booking.preferredDate),
+    preferredTime: booking.preferredTime,
+    slotLabel:
+      booking.preferredDate && booking.preferredTime
+        ? permanentSlotLabel(booking.preferredDate, booking.preferredTime)
+        : null,
     status: booking.status,
     paymentStatus: booking.paymentStatus,
     amountKes: booking.amountKes,

@@ -18,7 +18,11 @@ import {
   paymentStatusTone,
 } from "@/features/portal/components/status-badge";
 import { formatKes } from "@/features/portal/lib/format";
-import { assignTherapist, setBookingStatus } from "@/server/actions/operations";
+import {
+  assignTherapist,
+  releaseBookingSlot,
+  setBookingStatus,
+} from "@/server/actions/operations";
 import { requestBookingBalance } from "@/server/actions/payments";
 import type { ActionResult } from "@/server/result";
 
@@ -50,6 +54,7 @@ export type BookingDetailData = {
   clientPhone: string | null;
   preferredDateLabel: string;
   preferredTime: string | null;
+  slotLabel: string | null;
   rescheduleReason: string | null;
   sessionMode: string | null;
   notes: string | null;
@@ -103,6 +108,11 @@ export function BookingDetail({
 
   const total = booking.amountKes ?? 0;
   const outstanding = Math.max(0, total - booking.amountPaidKes);
+  const holdsSlot =
+    booking.status !== "CANCELLED" &&
+    booking.status !== "COMPLETED" &&
+    Boolean(booking.preferredTime);
+  const slotLabel = booking.slotLabel ?? booking.preferredTime;
 
   const run = (
     key: string,
@@ -161,7 +171,29 @@ export function BookingDetail({
             {pendingAction === "confirm" ? "Confirming…" : "Confirm booking"}
           </Button>
         )}
-        {booking.status === "CONFIRMED" && (
+        {holdsSlot && (
+          <Button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              if (
+                !window.confirm(
+                  `Free ${slotLabel}? New clients will be able to book this time.`,
+                )
+              ) {
+                return;
+              }
+              run(
+                "release",
+                () => releaseBookingSlot(booking.id),
+                `${slotLabel} is free for new bookings`,
+              );
+            }}
+          >
+            {pendingAction === "release" ? "Freeing…" : "Free this time"}
+          </Button>
+        )}
+        {booking.status === "CONFIRMED" && !booking.preferredTime && (
           <Button
             type="button"
             disabled={busy}
@@ -209,6 +241,18 @@ export function BookingDetail({
           </Button>
         )}
       </div>
+
+      {holdsSlot && slotLabel ? (
+        <p className="text-sm text-muted-foreground">
+          {slotLabel} stays reserved until the sessions are finished. Free this
+          time when they are over.
+        </p>
+      ) : null}
+      {booking.status === "COMPLETED" && booking.preferredTime ? (
+        <p className="text-sm text-muted-foreground">
+          {slotLabel} is open for new bookings.
+        </p>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
