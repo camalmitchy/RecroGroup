@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,6 +21,7 @@ import {
 import { formatKes } from "@/features/portal/lib/format";
 import {
   assignTherapist,
+  deleteBooking,
   releaseBookingSlot,
   setBookingStatus,
 } from "@/server/actions/operations";
@@ -99,10 +101,13 @@ function DetailItem({
 export function BookingDetail({
   booking,
   therapists,
+  canDelete = false,
 }: {
   booking: BookingDetailData;
   therapists: TherapistOption[];
+  canDelete?: boolean;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
@@ -238,6 +243,32 @@ export function BookingDetail({
             }
           >
             {pendingAction === "reopen" ? "Reopening…" : "Reopen"}
+          </Button>
+        )}
+        {canDelete && (
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={busy}
+            onClick={() => {
+              const confirmed = window.confirm(
+                `Delete booking ${booking.reference} for ${booking.clientName}? This removes the booking and its payments, and frees the reserved time.`,
+              );
+              if (!confirmed) return;
+              setPendingAction("delete");
+              startTransition(async () => {
+                const result = await deleteBooking(booking.id);
+                setPendingAction(null);
+                if (result.ok) {
+                  toast.success("Booking deleted");
+                  router.push("/dashboard/bookings");
+                } else {
+                  toast.error(result.error);
+                }
+              });
+            }}
+          >
+            {pendingAction === "delete" ? "Deleting…" : "Delete booking"}
           </Button>
         )}
       </div>

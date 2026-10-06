@@ -8,6 +8,7 @@ import {
 import { permanentSlotLabel } from "@/features/public/booking/lib/slots";
 import { formatDate, formatDateTime } from "@/features/portal/lib/format";
 import { getRequiredSession } from "@/features/portal/lib/portal-guard";
+import { isAdmin } from "@/features/portal/lib/roles";
 import { getBookingById } from "@/server/queries/bookings";
 import { listTherapists } from "@/server/queries/catalog";
 
@@ -16,7 +17,7 @@ export default async function BookingDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await getRequiredSession("/dashboard/bookings");
+  const session = await getRequiredSession("/dashboard/bookings");
   const { id } = await params;
 
   const [booking, therapists] = await Promise.all([
@@ -76,5 +77,11 @@ export default async function BookingDetailPage({
       fullName: therapist.fullName,
     }));
 
-  return <BookingDetail booking={detail} therapists={therapistOptions} />;
+  return (
+    <BookingDetail
+      booking={detail}
+      therapists={therapistOptions}
+      canDelete={isAdmin(session.role)}
+    />
+  );
 }

@@ -3,7 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const prismaMock = {
   griefApplication: { update: vi.fn() },
   inquiry: { update: vi.fn() },
-  booking: { update: vi.fn(), findUnique: vi.fn(), count: vi.fn(), deleteMany: vi.fn() },
+  booking: {
+    update: vi.fn(),
+    findUnique: vi.fn(),
+    count: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+  },
   therapist: { findUnique: vi.fn() },
   payment: { findUnique: vi.fn(), update: vi.fn(), deleteMany: vi.fn() },
   paymentEvent: { deleteMany: vi.fn() },
@@ -36,6 +42,7 @@ const {
   assignTherapist,
   clearAllBookings,
   clearOldBookings,
+  deleteBooking,
   linkPaymentToBooking,
   releaseBookingSlot,
   setGriefApplicationStatus,
@@ -269,6 +276,57 @@ describe("clearAllBookings", () => {
     });
     expect(prismaMock.payment.deleteMany).not.toHaveBeenCalled();
     expect(prismaMock.booking.deleteMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("deleteBooking", () => {
+  it("deletes one booking, its payments, and the rows those deletes need", async () => {
+    prismaMock.booking.findUnique.mockResolvedValueOnce({ id: "b1" });
+    prismaMock.paymentEvent.deleteMany.mockResolvedValueOnce({ count: 1 });
+    prismaMock.appointment.deleteMany.mockResolvedValueOnce({ count: 1 });
+    prismaMock.payment.deleteMany.mockResolvedValueOnce({ count: 1 });
+    prismaMock.booking.delete.mockResolvedValueOnce({ id: "b1" });
+
+    const result = await deleteBooking("b1");
+
+    expect(requireAdmin).toHaveBeenCalled();
+    expect(prismaMock.paymentEvent.deleteMany).toHaveBeenCalledWith({
+      where: { payment: { bookingId: "b1" } },
+    });
+    expect(prismaMock.appointment.deleteMany).toHaveBeenCalledWith({
+      where: { bookingId: "b1" },
+    });
+    expect(prismaMock.payment.deleteMany).toHaveBeenCalledWith({
+      where: { bookingId: "b1" },
+    });
+    expect(prismaMock.booking.delete).toHaveBeenCalledWith({
+      where: { id: "b1" },
+    });
+    expect(reconcileBookingSlots).toHaveBeenCalled();
+    expect(result).toEqual({ ok: true, data: { id: "b1" } });
+  });
+
+  it("refuses anyone who is not an admin", async () => {
+    requireAdmin.mockRejectedValueOnce(
+      new AuthorizationError("Administrator access is required"),
+    );
+
+    const result = await deleteBooking("b1");
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Administrator access is required",
+    });
+    expect(prismaMock.booking.delete).not.toHaveBeenCalled();
+  });
+
+  it("reports a missing booking", async () => {
+    prismaMock.booking.findUnique.mockResolvedValueOnce(null);
+
+    const result = await deleteBooking("missing");
+
+    expect(result).toEqual({ ok: false, error: "Booking not found" });
+    expect(prismaMock.booking.delete).not.toHaveBeenCalled();
   });
 });
 

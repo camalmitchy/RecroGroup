@@ -368,3 +368,36 @@ export async function clearOldBookings(
     return failure("clearOldBookings", error);
   }
 }
+
+/** Removes one booking, its payments, and the rows those deletes depend on. */
+export async function deleteBooking(
+  bookingId: string,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireAdmin();
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { id: true },
+    });
+    if (!booking) return fail("Booking not found");
+
+    await ensurePaymentsSchema();
+    await prisma.paymentEvent.deleteMany({
+      where: { payment: { bookingId } },
+    });
+    await prisma.appointment.deleteMany({ where: { bookingId } });
+    await prisma.payment.deleteMany({ where: { bookingId } });
+    await prisma.booking.delete({ where: { id: bookingId } });
+    await reconcileBookingSlots();
+
+    revalidateBookingSurfaces();
+    revalidatePath(`/dashboard/bookings/${bookingId}`);
+    revalidatePath("/booking");
+
+    return ok({ id: bookingId });
+  } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
+    return failure("deleteBooking", error);
+  }
+}
