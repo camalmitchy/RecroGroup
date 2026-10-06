@@ -69,8 +69,13 @@ export function parseInquiryMessage(message: string): ParsedInquirySection[] {
 
     const startSection = (heading: string) => {
         pushField();
-        current = { heading: titleCaseHeading(heading), fields: [] };
-        sections.push(current);
+        const section: ParsedInquirySection = {
+            heading: titleCaseHeading(heading),
+            fields: [],
+        };
+        sections.push(section);
+        current = section;
+        return section;
     };
 
     for (const raw of message.replace(/\r\n/g, "\n").split("\n")) {
@@ -95,8 +100,8 @@ export function parseInquiryMessage(message: string): ParsedInquirySection[] {
             continue;
         }
 
-        if (!current) startSection("Message");
-        current.fields.push({ label: "Note", value: line });
+        const section = current ?? startSection("Message");
+        section.fields.push({ label: "Note", value: line });
     }
 
     pushField();
