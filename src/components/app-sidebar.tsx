@@ -25,6 +25,18 @@ type AppSidebarProps = {
   session?: PortalSession;
 };
 
+function isNavActive(pathname: string, href: string, hrefs: string[]) {
+  if (href === "/dashboard") return pathname === "/dashboard";
+  const matches = pathname === href || pathname.startsWith(`${href}/`);
+  if (!matches) return false;
+  return !hrefs.some(
+    (other) =>
+      other !== href &&
+      other.startsWith(`${href}/`) &&
+      (pathname === other || pathname.startsWith(`${other}/`)),
+  );
+}
+
 export function AppSidebar({ role }: AppSidebarProps) {
   const pathname = usePathname();
   const items = getNavForRole(role);
@@ -65,10 +77,11 @@ export function AppSidebar({ role }: AppSidebarProps) {
                 {items
                   .filter((item) => item.group === group)
                   .map((item) => {
-                    const isActive =
-                      item.href === "/dashboard"
-                        ? pathname === "/dashboard"
-                        : pathname.startsWith(item.href);
+                    const isActive = isNavActive(
+                      pathname,
+                      item.href,
+                      items.map((entry) => entry.href),
+                    );
                     const Icon = item.icon;
 
                     return (

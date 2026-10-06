@@ -8,7 +8,9 @@ import {
   HeartHandshake,
   Inbox,
   LayoutDashboard,
+  Megaphone,
   Settings,
+  Users,
 } from "lucide-react";
 
 export type PortalNavItem = {
@@ -46,6 +48,20 @@ export const PORTAL_NAV: PortalNavItem[] = [
     href: "/dashboard/programs",
     label: "Grief Camp",
     icon: HeartHandshake,
+    roles: ["admin", "receptionist"],
+    group: "Programs",
+  },
+  {
+    href: "/dashboard/programs/consortium",
+    label: "Consortium",
+    icon: Users,
+    roles: ["admin", "receptionist"],
+    group: "Programs",
+  },
+  {
+    href: "/dashboard/programs/corporate",
+    label: "Corporate speaking",
+    icon: Megaphone,
     roles: ["admin", "receptionist"],
     group: "Programs",
   },

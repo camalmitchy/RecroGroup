@@ -9,7 +9,7 @@ import { listInquiries } from "@/server/queries/inquiries";
 export default async function InquiriesPage() {
   await getRequiredSession("/dashboard/inquiries");
 
-  const inquiries = await listInquiries({ take: 200 });
+  const inquiries = await listInquiries({ take: 200, excludePrograms: true });
 
   const inquiryRows: InquiryRow[] = inquiries.items.map((inquiry) => ({
     id: inquiry.id,

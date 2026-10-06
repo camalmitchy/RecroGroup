@@ -7,9 +7,20 @@ import { prisma } from "@/lib/prisma";
 export type InquiryFilters = {
   type?: InquiryType;
   status?: InquiryStatus;
+  /** Program application forms, kept off the general messages list. */
+  program?: "consortium" | "corporate";
+  excludePrograms?: boolean;
   search?: string;
   take?: number;
   skip?: number;
+};
+
+const PROGRAM_INQUIRIES: Prisma.InquiryWhereInput = {
+  OR: [
+    { subject: { contains: "consortium", mode: "insensitive" } },
+    { type: "CORPORATE" },
+    { subject: { contains: "corporate", mode: "insensitive" } },
+  ],
 };
 
 function inquiryWhere(filters: InquiryFilters): Prisma.InquiryWhereInput {
@@ -17,6 +28,16 @@ function inquiryWhere(filters: InquiryFilters): Prisma.InquiryWhereInput {
 
   if (filters.type) where.type = filters.type;
   if (filters.status) where.status = filters.status;
+  if (filters.program === "consortium") {
+    where.subject = { contains: "consortium", mode: "insensitive" };
+  }
+  if (filters.program === "corporate") {
+    where.OR = [
+      { type: "CORPORATE" },
+      { subject: { contains: "corporate", mode: "insensitive" } },
+    ];
+  }
+  if (filters.excludePrograms) where.NOT = PROGRAM_INQUIRIES;
 
   const search = filters.search?.trim();
   if (search) {

@@ -30,6 +30,7 @@ export default async function ProgramsPage() {
     paymentStatus: application.paymentStatus,
     status: application.status,
     createdAtLabel: formatDate(application.createdAt),
+    formData: application.formData,
   }));
 
   return (

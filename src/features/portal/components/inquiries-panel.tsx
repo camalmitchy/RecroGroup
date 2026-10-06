@@ -58,7 +58,21 @@ function preview(message: string) {
   return text.length > 140 ? `${text.slice(0, 137)}…` : text;
 }
 
-export function InquiriesPanel({ inquiries }: { inquiries: InquiryRow[] }) {
+export function InquiriesPanel({
+  inquiries,
+  title = "Messages",
+  description,
+  emptyTitle = "No form submissions yet",
+  emptyDescription = "Contact form submissions appear here.",
+  showTypeFilters = true,
+}: {
+  inquiries: InquiryRow[];
+  title?: string;
+  description?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  showTypeFilters?: boolean;
+}) {
   const [typeFilter, setTypeFilter] = useState<"all" | "CONTACT" | "CORPORATE">("all");
   const [openId, setOpenId] = useState<string | null>(null);
   const [statuses, setStatuses] = useState<Record<string, string>>({});
@@ -79,20 +93,21 @@ export function InquiriesPanel({ inquiries }: { inquiries: InquiryRow[] }) {
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        title="Messages"
+        title={title}
         description={
-          newCount > 0
+          description ??
+          (newCount > 0
             ? `${newCount} new form ${newCount === 1 ? "submission" : "submissions"} waiting to be read.`
-            : "Form submissions from the public site."
+            : "Form submissions from the public site.")
         }
       />
 
+      {showTypeFilters ? (
       <div className="flex flex-wrap gap-2">
         {(
           [
             ["all", "All"],
             ["CONTACT", "Contact"],
-            ["CORPORATE", "Corporate"],
           ] as const
         ).map(([key, label]) => {
           const count =
@@ -117,6 +132,7 @@ export function InquiriesPanel({ inquiries }: { inquiries: InquiryRow[] }) {
           );
         })}
       </div>
+      ) : null}
 
       {rows.length === 0 ? (
         <Card>
@@ -124,11 +140,9 @@ export function InquiriesPanel({ inquiries }: { inquiries: InquiryRow[] }) {
             <Empty className="py-12">
               <EmptyHeader>
                 <EmptyTitle>
-                  {inquiries.length === 0 ? "No form submissions yet" : "Nothing in this group"}
+                  {inquiries.length === 0 ? emptyTitle : "Nothing in this group"}
                 </EmptyTitle>
-                <EmptyDescription>
-                  Contact, corporate, consortium, and camp form answers appear here.
-                </EmptyDescription>
+                <EmptyDescription>{emptyDescription}</EmptyDescription>
               </EmptyHeader>
             </Empty>
           </CardContent>
