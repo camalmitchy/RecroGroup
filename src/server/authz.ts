@@ -30,7 +30,7 @@ export async function requireStaff(): Promise<PortalSession> {
 export async function requireAdmin(): Promise<PortalSession> {
   const session = await requireSession();
   if (!isAdmin(session.role)) {
-    throw new AuthorizationError("Administrator access is required");
+    throw new AuthorizationError("Director access is required");
   }
   return session;
 }

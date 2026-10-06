@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const session = await getRequiredSession();
     if (!isAdmin(session.role)) {
       return NextResponse.json(
-        { error: "Administrator access is required to upload a flyer" },
+        { error: "Director access is required to upload a flyer" },
         { status: 403 },
       );
     }
@@ -90,7 +90,7 @@ export async function DELETE() {
     const session = await getRequiredSession();
     if (!isAdmin(session.role)) {
       return NextResponse.json(
-        { error: "Administrator access is required to remove a flyer" },
+        { error: "Director access is required to remove a flyer" },
         { status: 403 },
       );
     }

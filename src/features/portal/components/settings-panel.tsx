@@ -253,7 +253,7 @@ export function SettingsPanel({
   );
 }
 
-const ASSIGNABLE_ROLES = ["customer", "receptionist", "admin"] as const;
+const ASSIGNABLE_ROLES = ["receptionist", "admin"] as const;
 
 function roleTone(role: string) {
   if (role === "admin") return "success" as const;
@@ -314,7 +314,7 @@ function TeamRolesPanel({
         <CardContent className="space-y-2 p-5">
           <h3 className="text-sm font-semibold">Team and roles</h3>
           <p className="text-xs text-muted-foreground">
-            Only admins and receptionists are listed. Remove a role to take
+            Only Directors and Admins are listed. Remove a role to take
             away staff access. That person stays a customer and is not given
             the role again unless you grant it by email below.
           </p>
@@ -336,7 +336,7 @@ function TeamRolesPanel({
               <EmptyHeader>
                 <EmptyTitle>No staff yet</EmptyTitle>
                 <EmptyDescription>
-                  Grant admin or receptionist access by email below.
+                  Grant Director or Admin access by email below.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -437,7 +437,7 @@ function TeamRolesPanel({
 
 function GrantAccessCard() {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "receptionist" | "customer">(
+  const [role, setRole] = useState<(typeof ASSIGNABLE_ROLES)[number]>(
     "receptionist",
   );
   const [isPending, startTransition] = useTransition();
@@ -490,7 +490,7 @@ function GrantAccessCard() {
         </div>
         <p className="text-xs text-muted-foreground">
           The person must already have an account. Enter their email to give
-          them an admin or receptionist role.
+          them a Director or Admin role.
         </p>
       </CardContent>
     </Card>

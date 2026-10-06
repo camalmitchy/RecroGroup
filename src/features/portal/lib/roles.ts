@@ -3,8 +3,8 @@ export const APP_ROLES = ["admin", "customer", "receptionist"] as const;
 export type AppRole = (typeof APP_ROLES)[number];
 
 export const ROLE_LABELS: Record<AppRole, string> = {
-  admin: "Admin",
-  receptionist: "Receptionist",
+  admin: "Director",
+  receptionist: "Admin",
   customer: "Customer",
 };
 

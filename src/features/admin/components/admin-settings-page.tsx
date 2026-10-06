@@ -17,6 +17,7 @@ import {
   upsertService,
   upsertTherapist,
 } from "@/server/actions/catalog";
+import { parseAppRole, ROLE_LABELS } from "@/features/portal/lib/roles";
 import type { ActionResult } from "@/server/result";
 
 import { AdminConfirmButton } from "./admin-confirm-button";
@@ -152,7 +153,9 @@ function TeamPanel({
       setPendingId(null);
       if (result.ok) {
         toast.success(
-          role === "customer" ? "Staff access revoked" : `Role set to ${role}`,
+          role === "customer"
+            ? "Staff access revoked"
+            : `Role set to ${ROLE_LABELS[role]}`,
         );
       } else {
         toast.error(result.error);
@@ -165,7 +168,7 @@ function TeamPanel({
       <Card className="p-5">
         <h3 className="text-sm font-semibold">Staff access</h3>
         <p className="mt-1 text-xs text-gray-600">
-          Admin has full control; receptionist can work bookings, payments and
+          Director has full control; Admin can work bookings, payments and
           inquiries but not settings. New members must create an account first —
           they appear here once promoted.
         </p>
@@ -195,7 +198,7 @@ function TeamPanel({
                 </span>,
                 <div key="role" className="flex items-center gap-2">
                   <StatusBadge tone={member.role === "admin" ? "info" : "muted"}>
-                    {member.role}
+                    {ROLE_LABELS[parseAppRole(member.role)]}
                   </StatusBadge>
                   {member.banned && (
                     <StatusBadge tone="danger">banned</StatusBadge>
@@ -219,7 +222,7 @@ function TeamPanel({
                           onClick={() => changeRole(member.id, "admin")}
                           className="text-primary-deep hover:underline disabled:opacity-50"
                         >
-                          Make admin
+                          Make director
                         </button>
                       )}
                       {member.role !== "receptionist" && (
@@ -229,7 +232,7 @@ function TeamPanel({
                           onClick={() => changeRole(member.id, "receptionist")}
                           className="text-primary-deep hover:underline disabled:opacity-50"
                         >
-                          Make receptionist
+                          Make admin
                         </button>
                       )}
                       <AdminConfirmButton

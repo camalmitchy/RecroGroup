@@ -91,7 +91,7 @@ export function AdminShell({
                         <div>
                             <p className="text-sm font-semibold">Recro Admin</p>
                             <p className="text-xs text-muted-foreground">
-                                {isAdmin ? "Admin" : "Staff"}
+                                {isAdmin ? "Director" : "Admin"}
                             </p>
                         </div>
                     </div>
