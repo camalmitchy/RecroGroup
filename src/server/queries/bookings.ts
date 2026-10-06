@@ -3,6 +3,7 @@ import "server-only";
 import type { BookingStatus, PaymentStatus, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { ensureSlotColumns } from "@/server/booking-slots";
 
 export type BookingFilters = {
   status?: BookingStatus;
@@ -41,6 +42,7 @@ function bookingWhere(filters: BookingFilters): Prisma.BookingWhereInput {
 }
 
 export async function listBookings(filters: BookingFilters = {}) {
+  await ensureSlotColumns();
   const where = bookingWhere(filters);
 
   const [items, total] = await Promise.all([
@@ -74,6 +76,7 @@ export async function listBookings(filters: BookingFilters = {}) {
 }
 
 export async function getBookingById(id: string) {
+  await ensureSlotColumns();
   return prisma.booking.findUnique({
     where: { id },
     include: {
@@ -87,6 +90,7 @@ export async function getBookingById(id: string) {
 }
 
 export async function getBookingByReference(reference: string) {
+  await ensureSlotColumns();
   return prisma.booking.findUnique({
     where: { reference },
     include: { service: true, payments: { orderBy: { createdAt: "desc" } } },

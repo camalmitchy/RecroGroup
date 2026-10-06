@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import { ensureSlotColumns } from "@/server/booking-slots";
 
 export async function getCustomerProfile(userId: string) {
   const user = await prisma.user.findUnique({
@@ -21,6 +22,7 @@ export async function getCustomerProfile(userId: string) {
 
   if (!user) return null;
 
+  await ensureSlotColumns();
   const bookings = await prisma.booking.findMany({
     where: {
       OR: [{ userId }, { clientEmail: user.email }],

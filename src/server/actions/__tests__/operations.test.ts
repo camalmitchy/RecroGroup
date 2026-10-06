@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = {
   griefApplication: { update: vi.fn() },
@@ -6,7 +6,9 @@ const prismaMock = {
   booking: { update: vi.fn(), findUnique: vi.fn(), count: vi.fn(), deleteMany: vi.fn() },
   therapist: { findUnique: vi.fn() },
   payment: { findUnique: vi.fn(), update: vi.fn(), deleteMany: vi.fn() },
-  appointment: { update: vi.fn() },
+  paymentEvent: { deleteMany: vi.fn() },
+  appointment: { update: vi.fn(), deleteMany: vi.fn() },
+  $executeRawUnsafe: vi.fn().mockResolvedValue(1),
   user: { update: vi.fn() },
 };
 
@@ -26,6 +28,7 @@ const { AuthorizationError } = await import("@/server/authz");
 const {
   assignTherapist,
   clearAllBookings,
+  clearOldBookings,
   linkPaymentToBooking,
   setGriefApplicationStatus,
   setInquiryStatus,
@@ -220,5 +223,104 @@ describe("clearAllBookings", () => {
     });
     expect(prismaMock.payment.deleteMany).not.toHaveBeenCalled();
     expect(prismaMock.booking.deleteMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("clearOldBookings", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-06T04:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("deletes old bookings, their payments, and the rows those deletes need", async () => {
+    prismaMock.paymentEvent.deleteMany.mockResolvedValueOnce({ count: 2 });
+    prismaMock.appointment.deleteMany.mockResolvedValueOnce({ count: 1 });
+    prismaMock.payment.deleteMany.mockResolvedValueOnce({ count: 1 });
+    prismaMock.booking.deleteMany.mockResolvedValueOnce({ count: 1 });
+
+    const result = await clearOldBookings("week");
+
+    const cutoff = new Date("2026-09-29T04:00:00.000Z");
+    const purposes = ["BOOKING_DEPOSIT", "BOOKING_BALANCE", "BOOKING_FULL"];
+    expect(prismaMock.paymentEvent.deleteMany).toHaveBeenCalledWith({
+      where: {
+        payment: {
+          OR: [
+            { purpose: { in: purposes }, createdAt: { lt: cutoff } },
+            { booking: { createdAt: { lt: cutoff } } },
+          ],
+        },
+      },
+    });
+    expect(prismaMock.appointment.deleteMany).toHaveBeenCalled();
+    expect(prismaMock.payment.deleteMany).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { purpose: { in: purposes }, createdAt: { lt: cutoff } },
+          { booking: { createdAt: { lt: cutoff } } },
+        ],
+      },
+    });
+    expect(prismaMock.booking.deleteMany).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { createdAt: { lt: cutoff } },
+          {
+            payments: {
+              some: { createdAt: { lt: cutoff }, purpose: { in: purposes } },
+            },
+          },
+        ],
+      },
+    });
+    expect(result).toEqual({
+      ok: true,
+      data: { bookings: 1, payments: 1 },
+    });
+  });
+
+  it("deletes bookings and booking payments older than 30 days", async () => {
+    prismaMock.payment.deleteMany.mockResolvedValueOnce({ count: 4 });
+    prismaMock.booking.deleteMany.mockResolvedValueOnce({ count: 2 });
+
+    const result = await clearOldBookings("month");
+    const cutoff = new Date("2026-09-06T04:00:00.000Z");
+
+    expect(prismaMock.payment.deleteMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
+            expect.objectContaining({ createdAt: { lt: cutoff } }),
+            { booking: { createdAt: { lt: cutoff } } },
+          ]),
+        }),
+      }),
+    );
+    expect(prismaMock.booking.deleteMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([{ createdAt: { lt: cutoff } }]),
+        }),
+      }),
+    );
+    expect(result).toEqual({
+      ok: true,
+      data: { bookings: 2, payments: 4 },
+    });
+  });
+
+  it("refuses anyone who is not an admin", async () => {
+    requireAdmin.mockRejectedValueOnce(
+      new AuthorizationError("Administrator access is required"),
+    );
+
+    const result = await clearOldBookings("week");
+
+    expect(result.ok).toBe(false);
+    expect(prismaMock.payment.deleteMany).not.toHaveBeenCalled();
   });
 });

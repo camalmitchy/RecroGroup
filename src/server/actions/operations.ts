@@ -10,6 +10,7 @@ import type {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { ensurePaymentsSchema } from "@/lib/payments/ensure-schema";
 import { reconcileBookingSlots } from "@/server/booking-slots";
 import { AuthorizationError, requireAdmin, requireStaff } from "@/server/authz";
 import type { ActionResult } from "@/server/result";
@@ -221,6 +222,28 @@ export async function setAppointmentStatus(
   }
 }
 
+const BOOKING_PAYMENT_PURPOSES = [
+  "BOOKING_DEPOSIT",
+  "BOOKING_BALANCE",
+  "BOOKING_FULL",
+] as const;
+
+const CLEAR_WINDOW_MS = {
+  week: 7 * 24 * 60 * 60 * 1000,
+  month: 30 * 24 * 60 * 60 * 1000,
+} as const;
+
+export type BookingClearWindow = keyof typeof CLEAR_WINDOW_MS;
+
+function revalidateBookingSurfaces() {
+  revalidatePath("/admin/bookings");
+  revalidatePath("/admin/payments");
+  revalidatePath("/admin");
+  revalidatePath("/dashboard/bookings");
+  revalidatePath("/dashboard/payments");
+  revalidatePath("/dashboard");
+}
+
 export async function clearAllBookings(): Promise<
   ActionResult<{ bookings: number; payments: number }>
 > {
@@ -230,14 +253,72 @@ export async function clearAllBookings(): Promise<
     const payments = await prisma.payment.deleteMany();
     const bookings = await prisma.booking.deleteMany();
 
-    revalidatePath("/admin/bookings");
-    revalidatePath("/admin");
-    revalidatePath("/dashboard/bookings");
-    revalidatePath("/dashboard");
+    revalidateBookingSurfaces();
 
     return ok({ bookings: bookings.count, payments: payments.count });
   } catch (error) {
     if (error instanceof AuthorizationError) return fail(error.message);
     return failure("clearAllBookings", error);
+  }
+}
+
+function agedBookingWhere(cutoff: Date) {
+  return {
+    OR: [
+      { createdAt: { lt: cutoff } },
+      {
+        payments: {
+          some: {
+            createdAt: { lt: cutoff },
+            purpose: { in: [...BOOKING_PAYMENT_PURPOSES] },
+          },
+        },
+      },
+    ],
+  };
+}
+
+function agedPaymentWhere(cutoff: Date) {
+  return {
+    OR: [
+      {
+        purpose: { in: [...BOOKING_PAYMENT_PURPOSES] },
+        createdAt: { lt: cutoff },
+      },
+      { booking: { createdAt: { lt: cutoff } } },
+    ],
+  };
+}
+
+/** Deletes old bookings, their payments, and the rows those deletes depend on. */
+export async function clearOldBookings(
+  window: BookingClearWindow,
+): Promise<ActionResult<{ bookings: number; payments: number }>> {
+  try {
+    await requireAdmin();
+
+    const span = CLEAR_WINDOW_MS[window];
+    if (!span) return fail("Choose the last 1 week or the last 1 month");
+
+    const cutoff = new Date(Date.now() - span);
+    const bookingsWhere = agedBookingWhere(cutoff);
+    const paymentsWhere = agedPaymentWhere(cutoff);
+
+    await ensurePaymentsSchema();
+    await prisma.paymentEvent.deleteMany({
+      where: { payment: paymentsWhere },
+    });
+    await prisma.appointment.deleteMany({
+      where: { booking: bookingsWhere },
+    });
+    const payments = await prisma.payment.deleteMany({ where: paymentsWhere });
+    const bookings = await prisma.booking.deleteMany({ where: bookingsWhere });
+
+    revalidateBookingSurfaces();
+
+    return ok({ bookings: bookings.count, payments: payments.count });
+  } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
+    return failure("clearOldBookings", error);
   }
 }

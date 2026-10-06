@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatInquiryMessage,
+  parseInquiryMessage,
   truncateSubject,
 } from "@/features/public/shared/inquiry-message";
 import { inquirySchema } from "@/server/validation/inquiry";
@@ -105,6 +106,38 @@ describe("formatInquiryMessage", () => {
     });
 
     expect(result.success).toBe(true);
+  });
+});
+
+describe("parseInquiryMessage", () => {
+  it("rebuilds headings and labelled answers", () => {
+    const message = formatInquiryMessage([
+      {
+        heading: "Organization",
+        fields: [
+          ["Company", "Recro Group"],
+          ["Contact", "Asha Wanjiru"],
+        ],
+      },
+      {
+        heading: "Notes",
+        fields: [["Comment", "line one\nline two"]],
+      },
+    ]);
+
+    expect(parseInquiryMessage(message)).toEqual([
+      {
+        heading: "Organization",
+        fields: [
+          { label: "Company", value: "Recro Group" },
+          { label: "Contact", value: "Asha Wanjiru" },
+        ],
+      },
+      {
+        heading: "Notes",
+        fields: [{ label: "Comment", value: "line one\nline two" }],
+      },
+    ]);
   });
 });
 

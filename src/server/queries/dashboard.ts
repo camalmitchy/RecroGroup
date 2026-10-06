@@ -108,6 +108,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 }
 
 export async function getRecentActivity(take = 5) {
+  const { ensureSlotColumns } = await import("@/server/booking-slots");
+  await ensureSlotColumns();
+
   const [bookings, payments, applications, inquiries] = await Promise.all([
     prisma.booking
       .findMany({
