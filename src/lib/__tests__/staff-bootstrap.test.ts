@@ -26,8 +26,7 @@ describe("parseEmailList", () => {
 describe("bootstrapRoleForEmail", () => {
   it("defaults the locally granted admin and receptionist", () => {
     vi.unstubAllEnvs();
-    expect(bootstrapRoleForEmail("info@recrogroup.org
-")).toBe("admin");
+    expect(bootstrapRoleForEmail("info@recrogroup.org")).toBe("admin");
     expect(bootstrapRoleForEmail("carolinehawi91@gmail.com")).toBe(
       "receptionist",
     );
@@ -39,8 +38,7 @@ describe("bootstrapRoleForEmail", () => {
     vi.stubEnv("BOOTSTRAP_RECEPTIONIST_EMAILS", "desk@recrogroup.org");
 
     expect(bootstrapRoleForEmail("owner@recrogroup.org")).toBe("admin");
-    expect(bootstrapRoleForEmail("info@recrogroup.org
-")).toBeNull();
+    expect(bootstrapRoleForEmail("info@recrogroup.org")).toBeNull();
     expect(bootstrapRoleForEmail("desk@recrogroup.org")).toBe("receptionist");
 
     vi.unstubAllEnvs();
@@ -58,8 +56,7 @@ describe("syncBootstrapStaffRole", () => {
 
     const role = await syncBootstrapStaffRole({
       id: "u1",
-      email: "info@recrogroup.org
-",
+      email: "info@recrogroup.org",
       role: "customer",
     });
 
@@ -83,14 +80,12 @@ describe("syncBootstrapStaffRole", () => {
 
   it("does not restore a role that was explicitly removed", async () => {
     prismaMock.siteSetting.findUnique.mockResolvedValueOnce({
-      value: JSON.stringify(["info@recrogroup.org
-"]),
+      value: JSON.stringify(["info@recrogroup.org"]),
     });
 
     const role = await syncBootstrapStaffRole({
       id: "u1",
-      email: "info@recrogroup.org
-",
+      email: "info@recrogroup.org",
       role: "customer",
     });
 

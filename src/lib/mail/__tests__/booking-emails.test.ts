@@ -29,8 +29,7 @@ describe("paid booking emails", () => {
 
   it("alerts the admin with client and session details", () => {
     const message = staffBookingAlert({
-      recipientEmail: "info@recrogroup.org
-",
+      recipientEmail: "info@recrogroup.org",
       reference: "RB-TEST",
       clientName: "Ada Lovelace",
       clientEmail: "ada@example.com",
@@ -43,8 +42,7 @@ describe("paid booking emails", () => {
     });
 
     expect(message.subject).toContain("Paid booking RB-TEST");
-    expect(message.to).toBe("info@recrogroup.org
-");
+    expect(message.to).toBe("info@recrogroup.org");
     expect(message.html).toContain("Ada Lovelace");
     expect(message.html).toContain("Individual Therapy");
   });

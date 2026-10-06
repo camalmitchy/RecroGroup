@@ -188,8 +188,7 @@ export function HomeBookingForm({
         <Link href="/contact" className="font-semibold text-primary-deep">
           contact us
         </Link>{" "}
-        or email info@recrogroup.org
-.
+        or email info@recrogroup.org.
       </p>
       <button
         type="submit"
