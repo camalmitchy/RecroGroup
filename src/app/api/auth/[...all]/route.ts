@@ -1,3 +1,4 @@
+// Better Auth HTTP entry: sign-in, sign-up, Google callback, and password reset.
 import { toNextJsHandler } from "better-auth/next-js";
 
 import { publicAuthErrorMessage } from "@/lib/auth-runtime";

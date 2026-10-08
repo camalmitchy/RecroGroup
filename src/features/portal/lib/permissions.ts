@@ -23,7 +23,9 @@ export type PortalNavItem = {
   group: string;
 };
 
-/** MVP portal navigation — scoped by role */
+// Sidebar for /dashboard. A route is allowed when it matches one of these
+// hrefs for the signed-in role. Child program pages stay allowed because
+// /dashboard/programs matches first.
 export const PORTAL_NAV: PortalNavItem[] = [
   {
     href: "/dashboard",

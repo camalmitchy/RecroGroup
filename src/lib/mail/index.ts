@@ -1,3 +1,6 @@
+// Resend when RESEND_API_KEY is set (forced on Vercel). Otherwise messages
+// are logged. Form alerts always include info@recrogroup.org. A send failure
+// must not fail the form that triggered it. See HANDOVER.md.
 import "server-only";
 
 import { consoleMailDriver } from "./drivers/console";

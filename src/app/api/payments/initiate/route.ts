@@ -1,3 +1,5 @@
+// Browser starts an M-Pesa STK push here. One target only: booking, grief
+// application, or donation. See src/lib/payments/checkout.ts.
 import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";

@@ -1,3 +1,5 @@
+// Stored values stay admin | receptionist | customer.
+// Screens say Director, Admin, and Customer. See HANDOVER.md.
 export const APP_ROLES = ["admin", "customer", "receptionist"] as const;
 
 export type AppRole = (typeof APP_ROLES)[number];

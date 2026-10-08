@@ -1,3 +1,8 @@
+// Sign-in for the whole site. Email/password does not confirm the inbox.
+// Google sign-in does, because Google already verified that address.
+// A new user is given Director or Admin here when their email is on the
+// bootstrap list; every later request re-checks that in customSession.
+// See HANDOVER.md.
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";

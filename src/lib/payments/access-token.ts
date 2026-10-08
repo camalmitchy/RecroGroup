@@ -1,3 +1,5 @@
+// Secret stored on the payment so the status page can show the amount and
+// M-Pesa receipt. A bare reference returns status only. Staff skip this check.
 import "server-only";
 
 import { randomBytes, timingSafeEqual } from "node:crypto";

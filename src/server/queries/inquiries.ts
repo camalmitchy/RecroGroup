@@ -1,3 +1,5 @@
+// Splits form rows onto the messages list or a program list by subject.
+// See the table in HANDOVER.md.
 import "server-only";
 
 import type { InquiryStatus, InquiryType, Prisma } from "@prisma/client";
@@ -82,6 +84,13 @@ export function buildInquiryWhere(filters: InquiryFilters): Prisma.InquiryWhereI
   return and.length > 0 ? { AND: and } : {};
 }
 
+/** New inquiries inside the same program, type, and search filters as the list. */
+export function buildNewInquiryCountWhere(
+  filters: InquiryFilters,
+): Prisma.InquiryWhereInput {
+  return { AND: [buildInquiryWhere(filters), { status: "NEW" }] };
+}
+
 export async function listInquiries(filters: InquiryFilters = {}) {
   const where = buildInquiryWhere(filters);
 
@@ -93,7 +102,7 @@ export async function listInquiries(filters: InquiryFilters = {}) {
       skip: filters.skip ?? 0,
     }),
     prisma.inquiry.count({ where }),
-    prisma.inquiry.count({ where: { status: "NEW" } }),
+    prisma.inquiry.count({ where: buildNewInquiryCountWhere(filters) }),
   ]);
 
   return { items, total, newCount: unread };

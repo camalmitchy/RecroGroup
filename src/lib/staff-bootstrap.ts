@@ -1,3 +1,8 @@
+// Grants Director (stored role "admin") and Admin (stored role "receptionist")
+// on sign-in. Production uses a different database from a laptop, so this list
+// is what makes info@recrogroup.org a Director there. An existing Director is
+// not demoted, except the retired address minanicalm@gmail.com, once.
+// See HANDOVER.md.
 import { prisma } from "@/lib/prisma";
 import {
   parseAppRole,

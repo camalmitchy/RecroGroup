@@ -1,3 +1,5 @@
+// Second staff shell. requireAdminArea allows Director and Admin; individual
+// pages such as customers and settings then restrict themselves to Director.
 import { Metadata } from "next";
 
 import { requireAdminArea } from "@/features/admin/lib/admin-guard";

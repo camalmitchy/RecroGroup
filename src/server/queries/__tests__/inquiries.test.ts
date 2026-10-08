@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildInquiryWhere } from "@/server/queries/inquiries";
+import {
+  buildInquiryWhere,
+  buildNewInquiryCountWhere,
+} from "@/server/queries/inquiries";
 
 describe("buildInquiryWhere", () => {
   it("keeps team building and therapist applications out of corporate speaking", () => {
@@ -70,5 +73,18 @@ describe("buildInquiryWhere", () => {
         },
       ],
     });
+  });
+
+  it("counts new inquiries inside the same program and search filters", () => {
+    const filters = {
+      program: "therapist" as const,
+      search: "Ada",
+      type: "CORPORATE" as const,
+    };
+
+    expect(buildNewInquiryCountWhere(filters)).toEqual({
+      AND: [buildInquiryWhere(filters), { status: "NEW" }],
+    });
+    expect(buildNewInquiryCountWhere(filters)).not.toEqual({ status: "NEW" });
   });
 });

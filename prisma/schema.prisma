@@ -1,7 +1,8 @@
-// Recro Group — Neon PostgreSQL + Better Auth
-// Core auth tables map to Better Auth (`user`, `session`, `account`, `verification`).
-// Admin plugin adds: role, banned, banReason, banExpires on user; impersonatedBy on session.
-// App roles (string): admin | customer | receptionist
+// Recro Group — PostgreSQL + Better Auth.
+// Auth tables: user, session, account, verification.
+// Stored roles: admin (shown as Director), receptionist (shown as Admin), customer.
+// Production does not run migrations on deploy; payment columns are also
+// created at runtime. Table notes: prisma/SCHEMA_MAP.md. Flow: HANDOVER.md.
 
 generator client {
   provider = "prisma-client-js"

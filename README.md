@@ -4,6 +4,8 @@ Web platform for **Recro Group** — behavioral health and relationship-focused 
 
 The app combines a public marketing site, customer/staff portal, and authentication backed by **Better Auth** and **PostgreSQL**.
 
+For how the live site is hosted, who the Director is, and how a booking or form moves through the code, read [HANDOVER.md](./HANDOVER.md).
+
 ## Tech stack
 
 | Layer | Tools |

@@ -1,3 +1,5 @@
+// Bell items are not their own table. They are bookings and newsletter
+// signups from the last 7 days. Older ones disappear from the bell only.
 import "server-only";
 
 import { prisma } from "@/lib/prisma";

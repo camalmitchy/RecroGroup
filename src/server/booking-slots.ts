@@ -1,3 +1,6 @@
+// A paid booking owns its weekday + start time in Nairobi until it is
+// COMPLETED or CANCELLED. "Free time" completes the booking; it does not
+// delete it. See HANDOVER.md.
 import type { Prisma, PrismaClient } from "@prisma/client";
 
 import { TIME_SLOTS } from "@/features/public/booking/lib/schedule";

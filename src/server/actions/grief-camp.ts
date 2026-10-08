@@ -1,5 +1,9 @@
 "use server";
 
+// Camper applications. Price comes from camp tiers, the row is
+// grief_applications (not inquiries), staff are emailed, and a copy goes
+// to the Grief camp sheet. Payment happens in a later step.
+
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 

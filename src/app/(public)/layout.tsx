@@ -1,3 +1,4 @@
+// Public marketing pages. No sign-in required.
 import { SiteShell } from "@/shared/components/site-shell/site-shell";
 
 export default function PublicLayout({

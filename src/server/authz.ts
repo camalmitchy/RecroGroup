@@ -1,3 +1,5 @@
+// Gates for server actions. requireStaff allows Director and Admin.
+// requireAdmin is Director only (stored role "admin").
 import "server-only";
 
 import type { PortalSession } from "@/features/portal/lib/session";

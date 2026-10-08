@@ -1,5 +1,9 @@
 "use server";
 
+// Staff changes to bookings, messages, and grief-camp applications:
+// status, free a slot, delete one booking (Director only), clear old
+// bookings, and delete an inquiry. See HANDOVER.md.
+
 import { revalidatePath } from "next/cache";
 
 import type {

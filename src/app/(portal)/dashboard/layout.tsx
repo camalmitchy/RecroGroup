@@ -1,3 +1,5 @@
+// Staff portal. Customers are sent home. The bell loads the last week of
+// booking and newsletter notifications.
 import { PortalShell } from "@/features/portal/components/portal-shell";
 import { getRequiredSession } from "@/features/portal/lib/portal-guard";
 import { isStaff } from "@/features/portal/lib/roles";

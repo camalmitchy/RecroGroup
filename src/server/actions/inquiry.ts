@@ -1,5 +1,9 @@
 "use server";
 
+// Saves contact, consortium, corporate, team-building, and therapist forms
+// into inquiries, then emails staff and copies a matching Google Sheet tab.
+// Grief-camp camper applications do not come through here.
+
 import { revalidatePath } from "next/cache";
 
 import { recordGoogleSheetRow, sheetTabForInquiry } from "@/lib/google-sheets";

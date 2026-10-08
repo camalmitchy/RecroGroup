@@ -1,3 +1,7 @@
+// Starts an M-Pesa charge for a booking, grief-camp application, or donation.
+// The amount is read from the database here. The browser cannot choose it.
+// allowStoredContact is true only for staff or the account that owns the record.
+// See HANDOVER.md.
 import "server-only";
 
 import { Prisma } from "@prisma/client";

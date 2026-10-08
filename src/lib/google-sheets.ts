@@ -1,3 +1,5 @@
+// Optional copy of a form into a Google Sheet. Therapist applications return
+// no tab, so they stay in the database only. Missing webhook config is a no-op.
 import "server-only";
 
 export const GOOGLE_SHEET_TABS = [
