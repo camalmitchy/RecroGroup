@@ -20,6 +20,7 @@ import {
     Mail,
 } from "lucide-react";
 
+import { paymentPagePath, paymentStatusPath } from "@/lib/payments/payment-access-url";
 import { createBooking, listSlotAvailability } from "@/server/actions/booking";
 import { sessionEndLabel } from "@/features/public/booking/lib/slots";
 import { RescheduleSlotForm } from "./reschedule-slot-form";
@@ -69,6 +70,7 @@ type InitiateResponse = {
     reference: string;
     status: PaymentStatus;
     amountKes: number;
+    accessToken?: string | null;
     redirectUrl?: string | null;
     customerMessage?: string | null;
 };
@@ -157,7 +159,9 @@ export function BookingPage({
         reference: string;
         amountKes: number;
         message: string | null;
+        accessToken: string | null;
     } | null>(null);
+    const [paymentAccessToken, setPaymentAccessToken] = useState<string | null>(null);
     const [secondsLeft, setSecondsLeft] = useState(0);
     const [timedOut, setTimedOut] = useState(false);
     const [payError, setPayError] = useState<string | null>(null);
@@ -300,7 +304,7 @@ export function BookingPage({
     };
 
     const pollUntilSettled = useCallback(
-        (reference: string) => {
+        (reference: string, accessToken: string | null) => {
             stopPolling();
             const deadline = Date.now() + POLL_TIMEOUT_MS;
             setSecondsLeft(Math.round(POLL_TIMEOUT_MS / 1000));
@@ -318,7 +322,7 @@ export function BookingPage({
 
                 let status: StatusResponse;
                 try {
-                    const response = await fetch(`/api/payments/status/${reference}`, {
+                    const response = await fetch(paymentStatusPath(reference, accessToken), {
                         cache: "no-store",
                     });
                     if (!response.ok) return;
@@ -404,6 +408,9 @@ export function BookingPage({
             const result = await initiatePayment(`254${mpesaPhone}`);
             if (!result) return;
 
+            const accessToken = result.accessToken ?? null;
+            setPaymentAccessToken(accessToken);
+
             if (result.status === "PAID") {
                 setPaidAmountKes(result.amountKes);
                 setBusy(false);
@@ -415,8 +422,9 @@ export function BookingPage({
                 reference: result.reference,
                 amountKes: result.amountKes,
                 message: result.customerMessage ?? null,
+                accessToken,
             });
-            pollUntilSettled(result.reference);
+            pollUntilSettled(result.reference, accessToken);
         } catch (error) {
             setBusy(false);
             toast.error(
@@ -581,6 +589,7 @@ export function BookingPage({
                         needsReschedule={needsReschedule}
                         rescheduleReason={rescheduleReason}
                         durationMin={selectedService.durationMin}
+                        accessToken={paymentAccessToken}
                     />
                 )}
             </div>
@@ -1042,7 +1051,12 @@ function PaymentStep({
     mpesaPhone: string;
     setMpesaPhone: (v: string) => void;
     busy: boolean;
-    pending: { reference: string; amountKes: number; message: string | null } | null;
+    pending: {
+        reference: string;
+        amountKes: number;
+        message: string | null;
+        accessToken: string | null;
+    } | null;
     secondsLeft: number;
     timedOut: boolean;
     payError: string | null;
@@ -1111,7 +1125,7 @@ function PaymentStep({
                         </p>
                         <div className="mt-3 flex flex-wrap items-center gap-4">
                             <Link
-                                href={`/payments/${pending.reference}`}
+                                href={paymentPagePath(pending.reference, pending.accessToken)}
                                 className="text-sm font-semibold text-primary-deep underline"
                             >
                                 Check payment status
@@ -1318,6 +1332,7 @@ function ConfirmationStep({
     needsReschedule = false,
     rescheduleReason = null,
     durationMin = 60,
+    accessToken = null,
 }: {
     clientName: string;
     date: Date;
@@ -1328,6 +1343,7 @@ function ConfirmationStep({
     needsReschedule?: boolean;
     rescheduleReason?: string | null;
     durationMin?: number;
+    accessToken?: string | null;
 }) {
     const weekdayLabel = date.toLocaleDateString("en-US", { weekday: "long" });
     const isManual = method === "bank";
@@ -1371,12 +1387,19 @@ function ConfirmationStep({
                     <strong className="font-mono text-foreground">{reference}</strong>
                 </p>
             )}
-            {needsReschedule && reference ? (
+            {needsReschedule && reference && accessToken ? (
                 <RescheduleSlotForm
                     reference={reference}
                     durationMin={durationMin}
                     reason={rescheduleReason}
+                    accessToken={accessToken}
                 />
+            ) : needsReschedule ? (
+                <p className="mt-4 max-w-md mx-auto rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-950">
+                    {rescheduleReason ??
+                        "This day and time was taken by an earlier M-Pesa payment. Contact the office to choose a different slot."}{" "}
+                    Your payment is kept.
+                </p>
             ) : (
             <p className="mt-4 max-w-md mx-auto rounded-2xl bg-surface px-4 py-3 text-sm leading-relaxed text-foreground">
                 Your permanent slot is every{" "}

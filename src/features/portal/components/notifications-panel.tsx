@@ -51,7 +51,7 @@ export function NotificationsPanel({
     <div className="space-y-5">
       <PortalPageHeader
         title="Notifications"
-        description="New session bookings and newsletter subscribers."
+        description="Session bookings and newsletter signups from the past week. Older ones drop off on their own."
         actions={
           <Button
             type="button"

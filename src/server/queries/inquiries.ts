@@ -8,52 +8,82 @@ export type InquiryFilters = {
   type?: InquiryType;
   status?: InquiryStatus;
   /** Program application forms, kept off the general messages list. */
-  program?: "consortium" | "corporate";
+  program?: "consortium" | "corporate" | "team-building" | "therapist";
   excludePrograms?: boolean;
   search?: string;
   take?: number;
   skip?: number;
 };
 
-const PROGRAM_INQUIRIES: Prisma.InquiryWhereInput = {
+const TEAM_BUILDING: Prisma.InquiryWhereInput = {
   OR: [
-    { subject: { contains: "consortium", mode: "insensitive" } },
-    { type: "CORPORATE" },
-    { subject: { contains: "corporate", mode: "insensitive" } },
+    { subject: { contains: "team builder", mode: "insensitive" } },
+    { subject: { contains: "team-building", mode: "insensitive" } },
   ],
 };
 
-function inquiryWhere(filters: InquiryFilters): Prisma.InquiryWhereInput {
-  const where: Prisma.InquiryWhereInput = {};
+const THERAPIST_APPLICATION: Prisma.InquiryWhereInput = {
+  OR: [
+    { subject: { contains: "therapist application", mode: "insensitive" } },
+    { subject: { contains: "facilitator application", mode: "insensitive" } },
+  ],
+};
 
-  if (filters.type) where.type = filters.type;
-  if (filters.status) where.status = filters.status;
-  if (filters.program === "consortium") {
-    where.subject = { contains: "consortium", mode: "insensitive" };
-  }
-  if (filters.program === "corporate") {
-    where.OR = [
-      { type: "CORPORATE" },
-      { subject: { contains: "corporate", mode: "insensitive" } },
-    ];
-  }
-  if (filters.excludePrograms) where.NOT = PROGRAM_INQUIRIES;
+const CONSORTIUM: Prisma.InquiryWhereInput = {
+  subject: { contains: "consortium", mode: "insensitive" },
+};
+
+const CORPORATE_SPEAKING: Prisma.InquiryWhereInput = {
+  AND: [
+    {
+      OR: [
+        { type: "CORPORATE" },
+        { subject: { contains: "corporate", mode: "insensitive" } },
+      ],
+    },
+    { NOT: TEAM_BUILDING },
+    { NOT: THERAPIST_APPLICATION },
+  ],
+};
+
+const PROGRAM_INQUIRIES: Prisma.InquiryWhereInput = {
+  OR: [
+    CONSORTIUM,
+    { type: "CORPORATE" },
+    { subject: { contains: "corporate", mode: "insensitive" } },
+    TEAM_BUILDING,
+    THERAPIST_APPLICATION,
+  ],
+};
+
+export function buildInquiryWhere(filters: InquiryFilters): Prisma.InquiryWhereInput {
+  const and: Prisma.InquiryWhereInput[] = [];
+
+  if (filters.type) and.push({ type: filters.type });
+  if (filters.status) and.push({ status: filters.status });
+  if (filters.program === "consortium") and.push(CONSORTIUM);
+  if (filters.program === "corporate") and.push(CORPORATE_SPEAKING);
+  if (filters.program === "team-building") and.push(TEAM_BUILDING);
+  if (filters.program === "therapist") and.push(THERAPIST_APPLICATION);
+  if (filters.excludePrograms) and.push({ NOT: PROGRAM_INQUIRIES });
 
   const search = filters.search?.trim();
   if (search) {
-    where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { email: { contains: search, mode: "insensitive" } },
-      { subject: { contains: search, mode: "insensitive" } },
-      { message: { contains: search, mode: "insensitive" } },
-    ];
+    and.push({
+      OR: [
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        { subject: { contains: search, mode: "insensitive" } },
+        { message: { contains: search, mode: "insensitive" } },
+      ],
+    });
   }
 
-  return where;
+  return and.length > 0 ? { AND: and } : {};
 }
 
 export async function listInquiries(filters: InquiryFilters = {}) {
-  const where = inquiryWhere(filters);
+  const where = buildInquiryWhere(filters);
 
   const [items, total, unread] = await Promise.all([
     prisma.inquiry.findMany({

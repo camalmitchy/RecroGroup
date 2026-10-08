@@ -61,6 +61,13 @@ export async function submitInquiry(
     }
 
     revalidatePath("/dashboard/inquiries");
+    revalidatePath("/dashboard/programs/corporate");
+    revalidatePath("/dashboard/programs/consortium");
+    revalidatePath("/dashboard/programs/team-building");
+    revalidatePath("/dashboard/programs/therapist-applications");
+    revalidatePath("/admin/messages");
+    revalidatePath("/admin/grief-camp/team-building");
+    revalidatePath("/admin/grief-camp/therapist-applications");
     revalidatePath("/dashboard");
 
     return ok({ inquiryId: inquiry.id });

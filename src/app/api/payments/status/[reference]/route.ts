@@ -1,21 +1,37 @@
 import { NextResponse } from "next/server";
 
+import { isStaff } from "@/features/portal/lib/roles";
+import { paymentAccessMatches } from "@/lib/payments/access-token";
 import { refreshPaymentStatus } from "@/lib/payments/checkout";
 import { PaymentError } from "@/lib/payments/types";
 import { prisma } from "@/lib/prisma";
+import { getOptionalSession } from "@/server/authz";
 import { ensureSlotColumns } from "@/server/booking-slots";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ reference: string }> },
 ) {
   const { reference } = await params;
+  const token = new URL(request.url).searchParams.get("token");
 
   try {
     const payment = await refreshPaymentStatus(reference);
+    const session = await getOptionalSession();
+    const detailed =
+      (session ? isStaff(session.role) : false) ||
+      paymentAccessMatches(payment.providerMeta, token);
+
+    if (!detailed) {
+      return NextResponse.json({
+        reference: payment.reference,
+        status: payment.status,
+      });
+    }
+
     await ensureSlotColumns();
     const booking = payment.bookingId
       ? await prisma.booking.findUnique({

@@ -207,6 +207,8 @@ export async function recordBankTransfer(input: {
   proof?: File | null;
 }): Promise<ActionResult<BankTransferResult>> {
   try {
+    await requireStaff();
+
     const booking = await prisma.booking.findUnique({
       where: { id: input.bookingId },
     });
@@ -248,6 +250,7 @@ export async function recordBankTransfer(input: {
       amountKes: payment.amountKes,
     });
   } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
     return failure("recordBankTransfer", error);
   }
 }
@@ -257,6 +260,8 @@ export async function recordDonationBankTransfer(input: {
   bankReference?: string;
 }): Promise<ActionResult<BankTransferResult>> {
   try {
+    await requireStaff();
+
     const donation = await prisma.donation.findUnique({
       where: { id: input.donationId },
     });
@@ -286,6 +291,7 @@ export async function recordDonationBankTransfer(input: {
       amountKes: payment.amountKes,
     });
   } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
     return failure("recordDonationBankTransfer", error);
   }
 }

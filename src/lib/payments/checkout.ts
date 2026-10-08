@@ -5,6 +5,7 @@ import type { PaymentMethod, PaymentPurpose } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
+import { readPaymentAccessToken } from "./access-token";
 import { absoluteUrl, paymentsConfig, resolveStkCallbackUrl } from "./config";
 import { getProvider, providerForMethod } from "./index";
 import { resolveBookingChargeAmount, resolveCampPrice } from "./pricing";
@@ -21,6 +22,8 @@ export type CheckoutInput = {
   name?: string | null;
   userId?: string | null;
   idempotencyKey?: string | null;
+  /** Staff, or the signed-in owner, may reuse the phone stored on the record. */
+  allowStoredContact?: boolean;
 };
 
 export type CheckoutResult = {
@@ -28,6 +31,7 @@ export type CheckoutResult = {
   reference: string;
   status: string;
   amountKes: number;
+  accessToken: string | null;
   redirectUrl?: string | null;
   customerMessage?: string | null;
 };
@@ -38,6 +42,25 @@ type ResolvedCharge = {
   description: string;
   customer: { name?: string | null; email?: string | null; phone?: string | null };
 };
+
+function customerContact(
+  input: CheckoutInput,
+  stored: { name?: string | null; email?: string | null; phone?: string | null },
+) {
+  if (input.allowStoredContact) {
+    return {
+      name: input.name ?? stored.name ?? null,
+      email: input.email ?? stored.email ?? null,
+      phone: input.phone ?? stored.phone ?? null,
+    };
+  }
+
+  return {
+    name: input.name ?? null,
+    email: input.email ?? null,
+    phone: input.phone ?? null,
+  };
+}
 
 async function resolveCharge(input: CheckoutInput): Promise<ResolvedCharge> {
   switch (input.target.kind) {
@@ -57,11 +80,11 @@ async function resolveCharge(input: CheckoutInput): Promise<ResolvedCharge> {
         amountKes: charge.amountKes,
         purpose: charge.purpose,
         description: booking.service?.title ?? "Therapy session",
-        customer: {
-          name: input.name ?? booking.clientName,
-          email: input.email ?? booking.clientEmail,
-          phone: input.phone ?? booking.clientPhone,
-        },
+        customer: customerContact(input, {
+          name: booking.clientName,
+          email: booking.clientEmail,
+          phone: booking.clientPhone,
+        }),
       };
     }
 
@@ -86,11 +109,11 @@ async function resolveCharge(input: CheckoutInput): Promise<ResolvedCharge> {
         amountKes,
         purpose: "GRIEF_CAMP_FEE",
         description: "Grief camp fee",
-        customer: {
-          name: input.name ?? application.parentName,
-          email: input.email ?? application.parentEmail,
-          phone: input.phone ?? application.parentPhone,
-        },
+        customer: customerContact(input, {
+          name: application.parentName,
+          email: application.parentEmail,
+          phone: application.parentPhone,
+        }),
       };
     }
 
@@ -108,11 +131,11 @@ async function resolveCharge(input: CheckoutInput): Promise<ResolvedCharge> {
         amountKes: donation.amountKes,
         purpose: "DONATION",
         description: "Sponsor a child",
-        customer: {
-          name: input.name ?? donation.donorName,
-          email: input.email ?? donation.donorEmail,
-          phone: input.phone ?? donation.donorPhone,
-        },
+        customer: customerContact(input, {
+          name: donation.donorName,
+          email: donation.donorEmail,
+          phone: donation.donorPhone,
+        }),
       };
     }
   }
@@ -161,12 +184,15 @@ export async function startCheckout(
     idempotencyKey: input.idempotencyKey ?? null,
   });
 
+  const accessToken = readPaymentAccessToken(payment.providerMeta);
+
   if (payment.status !== "PENDING") {
     return {
       paymentId: payment.id,
       reference: payment.reference,
       status: payment.status,
       amountKes: payment.amountKes,
+      accessToken,
     };
   }
 
@@ -214,6 +240,7 @@ export async function startCheckout(
     reference: updated.reference,
     status: updated.status,
     amountKes: updated.amountKes,
+    accessToken,
     redirectUrl: result.redirectUrl ?? null,
     customerMessage: result.customerMessage ?? null,
   };

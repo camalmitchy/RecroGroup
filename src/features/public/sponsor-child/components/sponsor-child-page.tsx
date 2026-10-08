@@ -306,6 +306,7 @@ export function SponsorChildPage() {
                                     customerMessage={checkout.customerMessage}
                                     failureReason={checkout.failureReason}
                                     secondsLeft={checkout.secondsLeft}
+                                    accessToken={checkout.accessToken}
                                     onRetry={checkout.reset}
                                 />
                             </div>

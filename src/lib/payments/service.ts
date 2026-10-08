@@ -11,6 +11,7 @@ import type {
 import { prisma } from "@/lib/prisma";
 import { ensureSlotColumns, reconcileBookingSlots } from "@/server/booking-slots";
 
+import { createPaymentAccessToken, readPaymentAccessToken } from "./access-token";
 import { ensurePaymentsSchema } from "./ensure-schema";
 import type { NormalizedEvent, PaymentTarget, VerifyResult } from "./types";
 import { generateReference } from "./utils";
@@ -48,6 +49,22 @@ export type CreatePaymentInput = {
   proofUrl?: string | null;
 };
 
+async function ensurePaymentAccessToken<T extends { id: string; providerMeta: Prisma.JsonValue }>(
+  payment: T,
+) {
+  if (readPaymentAccessToken(payment.providerMeta)) return payment;
+
+  return prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      providerMeta: {
+        ...asJsonObject(payment.providerMeta),
+        accessToken: createPaymentAccessToken(),
+      },
+    },
+  });
+}
+
 export async function createPendingPayment(input: CreatePaymentInput) {
   await ensurePaymentsSchema();
 
@@ -55,7 +72,7 @@ export async function createPendingPayment(input: CreatePaymentInput) {
     const existing = await prisma.payment.findUnique({
       where: { idempotencyKey: input.idempotencyKey },
     });
-    if (existing) return existing;
+    if (existing) return ensurePaymentAccessToken(existing);
   }
 
   const data: Prisma.PaymentUncheckedCreateInput = {
@@ -70,6 +87,7 @@ export async function createPendingPayment(input: CreatePaymentInput) {
     userId: input.userId ?? null,
     idempotencyKey: input.idempotencyKey ?? null,
     notes: input.notes ?? null,
+    providerMeta: { accessToken: createPaymentAccessToken() },
     ...targetLink(input.target),
     ...(input.bankReference ? { bankReference: input.bankReference } : {}),
     ...(input.proofUrl ? { proofUrl: input.proofUrl } : {}),
@@ -86,7 +104,7 @@ export async function createPendingPayment(input: CreatePaymentInput) {
       const existing = await prisma.payment.findUnique({
         where: { idempotencyKey: input.idempotencyKey },
       });
-      if (existing) return existing;
+      if (existing) return ensurePaymentAccessToken(existing);
     }
     throw error;
   }
@@ -107,6 +125,11 @@ export async function markPaymentProcessing(
     providerMeta?: Prisma.InputJsonValue | null;
   },
 ) {
+  const current = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    select: { providerMeta: true },
+  });
+
   const updated = await prisma.payment.update({
     where: { id: paymentId },
     data: {
@@ -114,7 +137,14 @@ export async function markPaymentProcessing(
       providerRef: patch.providerRef ?? undefined,
       mpesaCheckoutId: patch.providerRef ?? undefined,
       expiresAt: patch.expiresAt ?? undefined,
-      ...(patch.providerMeta != null ? { providerMeta: patch.providerMeta } : {}),
+      ...(patch.providerMeta != null
+        ? {
+            providerMeta: {
+              ...asJsonObject(current?.providerMeta),
+              ...asJsonObject(patch.providerMeta),
+            } as Prisma.InputJsonValue,
+          }
+        : {}),
     },
   });
 

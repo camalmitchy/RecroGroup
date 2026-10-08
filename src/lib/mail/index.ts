@@ -1,6 +1,5 @@
 import "server-only";
 
-import { bootstrapAdminEmails } from "@/lib/staff-bootstrap";
 import { consoleMailDriver } from "./drivers/console";
 import { createResendDriver } from "./drivers/resend";
 import type { EmailMessage, MailDriver, SendResult } from "./types";
@@ -38,6 +37,8 @@ export function mailDelivers() {
   return resolveDriver() === "resend";
 }
 
+const ADMIN_FORM_EMAIL = "info@recrogroup.org";
+
 export const mailConfig = {
   get driver(): SupportedDriver {
     return resolveDriver();
@@ -59,9 +60,24 @@ export const mailConfig = {
         .map((email) => email.trim().toLowerCase())
         .filter(Boolean);
     }
-    return bootstrapAdminEmails();
+    return [ADMIN_FORM_EMAIL];
   },
 };
+
+/** Staff inboxes that should hear about a public form, always including the admin mailbox. */
+export function formAlertRecipients() {
+  const seen = new Set<string>();
+  const recipients: string[] = [];
+
+  for (const email of [...mailConfig.staffAddresses, ADMIN_FORM_EMAIL]) {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    recipients.push(normalized);
+  }
+
+  return recipients;
+}
 
 export function getMailer(): MailDriver {
   const driver = mailConfig.driver;

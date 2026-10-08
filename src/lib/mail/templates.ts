@@ -343,14 +343,53 @@ export function passwordReset(input: {
   };
 }
 
+export function staffGriefApplicationAlert(input: {
+  recipientEmail: string;
+  reference: string;
+  parentName: string;
+  parentEmail: string;
+  parentPhone?: string | null;
+  childName: string;
+  campName: string;
+  amountKes: number;
+  reviewUrl: string;
+}): EmailMessage {
+  const { html, text } = layout({
+    heading: "New grief camp application",
+    paragraphs: [
+      `${input.parentName} submitted a grief camp application for ${input.childName}.`,
+      "The full application is saved in the admin area.",
+    ],
+    details: [
+      { label: "Reference", value: input.reference },
+      { label: "Parent", value: input.parentName },
+      { label: "Email", value: input.parentEmail },
+      ...(input.parentPhone ? [{ label: "Phone", value: input.parentPhone }] : []),
+      { label: "Child", value: input.childName },
+      { label: "Camp", value: input.campName },
+      { label: "Fee", value: formatKes(input.amountKes) },
+    ],
+    cta: { label: "Open in admin", url: input.reviewUrl },
+  });
+
+  return {
+    to: input.recipientEmail,
+    subject: `New grief camp application ${input.reference}`,
+    html,
+    text,
+  };
+}
+
 export function staffInquiryAlert(input: {
   recipientEmail: string;
+  formName: string;
   name: string;
   email: string;
   phone?: string | null;
   subject?: string | null;
   type: string;
   message: string;
+  reviewUrl: string;
 }): EmailMessage {
   const preview =
     input.message.length > 600
@@ -358,9 +397,10 @@ export function staffInquiryAlert(input: {
       : input.message;
 
   const { html, text } = layout({
-    heading: "New website inquiry",
+    heading: input.formName,
     paragraphs: [
-      `${input.name} submitted a ${input.type.toLowerCase()} inquiry.`,
+      `${input.name} submitted a ${input.formName.toLowerCase()}.`,
+      "The full answers are saved in the admin area.",
     ],
     details: [
       { label: "Name", value: input.name },
@@ -369,13 +409,14 @@ export function staffInquiryAlert(input: {
       ...(input.subject ? [{ label: "Subject", value: input.subject }] : []),
       { label: "Message", value: preview },
     ],
+    cta: { label: "Open in admin", url: input.reviewUrl },
   });
 
   return {
     to: input.recipientEmail,
     subject: input.subject
-      ? `Inquiry: ${input.subject}`
-      : `New ${input.type.toLowerCase()} inquiry from ${input.name}`,
+      ? `New form: ${input.subject}`
+      : `New ${input.formName.toLowerCase()} from ${input.name}`,
     html,
     text,
   };

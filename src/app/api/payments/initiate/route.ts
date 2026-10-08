@@ -2,8 +2,12 @@ import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { isStaff } from "@/features/portal/lib/roles";
+import type { PortalSession } from "@/features/portal/lib/session";
 import { startCheckout } from "@/lib/payments/checkout";
+import type { PaymentTarget } from "@/lib/payments/types";
 import { PaymentError } from "@/lib/payments/types";
+import { prisma } from "@/lib/prisma";
 import { getOptionalSession } from "@/server/authz";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +32,36 @@ const schema = z
       ).length === 1,
     { message: "Provide exactly one payment target" },
   );
+
+async function callerMayUseStoredContact(
+  session: PortalSession | null,
+  target: PaymentTarget,
+) {
+  if (!session) return false;
+  if (isStaff(session.role)) return true;
+
+  if (target.kind === "booking") {
+    const row = await prisma.booking.findUnique({
+      where: { id: target.bookingId },
+      select: { userId: true },
+    });
+    return Boolean(row?.userId && row.userId === session.userId);
+  }
+
+  if (target.kind === "griefApplication") {
+    const row = await prisma.griefApplication.findUnique({
+      where: { id: target.griefApplicationId },
+      select: { userId: true },
+    });
+    return Boolean(row?.userId && row.userId === session.userId);
+  }
+
+  const row = await prisma.donation.findUnique({
+    where: { id: target.donationId },
+    select: { userId: true },
+  });
+  return Boolean(row?.userId && row.userId === session.userId);
+}
 
 export async function POST(request: Request) {
   let payload: unknown;
@@ -66,6 +100,7 @@ export async function POST(request: Request) {
       name: input.name ?? null,
       userId: session?.userId ?? null,
       idempotencyKey: input.idempotencyKey ?? null,
+      allowStoredContact: await callerMayUseStoredContact(session, target),
     });
 
     return NextResponse.json(result);

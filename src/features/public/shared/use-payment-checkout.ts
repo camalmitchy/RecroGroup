@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { paymentStatusPath } from "@/lib/payments/payment-access-url";
+
 export type PaymentMethod = "MPESA" | "CARD";
 
 export type PaymentStatus =
@@ -21,6 +23,7 @@ type InitiateResponse = {
     reference: string;
     status: PaymentStatus;
     amountKes: number;
+    accessToken?: string | null;
     redirectUrl?: string | null;
     customerMessage?: string | null;
 };
@@ -68,8 +71,10 @@ export function usePaymentCheckout() {
     const [customerMessage, setCustomerMessage] = useState<string | null>(null);
     const [failureReason, setFailureReason] = useState<string | null>(null);
     const [mpesaReceipt, setMpesaReceipt] = useState<string | null>(null);
+    const [accessToken, setAccessToken] = useState<string | null>(null);
     const [secondsLeft, setSecondsLeft] = useState(POLL_TIMEOUT_MS / 1000);
 
+    const accessTokenRef = useRef<string | null>(null);
     const idempotencyKeyRef = useRef<string | null>(null);
     idempotencyKeyRef.current ??= newIdempotencyKey();
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -88,6 +93,7 @@ export function usePaymentCheckout() {
     const reset = useCallback(() => {
         stopPolling();
         idempotencyKeyRef.current = newIdempotencyKey();
+        accessTokenRef.current = null;
         inFlightRef.current = false;
         setPhase("idle");
         setReference(null);
@@ -95,6 +101,7 @@ export function usePaymentCheckout() {
         setCustomerMessage(null);
         setFailureReason(null);
         setMpesaReceipt(null);
+        setAccessToken(null);
         setSecondsLeft(POLL_TIMEOUT_MS / 1000);
     }, [stopPolling]);
 
@@ -111,9 +118,10 @@ export function usePaymentCheckout() {
 
             let payload: StatusResponse;
             try {
-                const response = await fetch(`/api/payments/status/${ref}`, {
-                    cache: "no-store",
-                });
+                const response = await fetch(
+                    paymentStatusPath(ref, accessTokenRef.current),
+                    { cache: "no-store" },
+                );
                 if (!response.ok) return;
                 payload = (await response.json()) as StatusResponse;
             } catch {
@@ -178,6 +186,8 @@ export function usePaymentCheckout() {
                 }
 
                 const result = payload as InitiateResponse;
+                accessTokenRef.current = result.accessToken ?? null;
+                setAccessToken(result.accessToken ?? null);
                 setReference(result.reference);
                 setAmountKes(result.amountKes);
                 setCustomerMessage(result.customerMessage ?? null);
@@ -227,6 +237,7 @@ export function usePaymentCheckout() {
         customerMessage,
         failureReason,
         mpesaReceipt,
+        accessToken,
         secondsLeft,
         start,
         reset,

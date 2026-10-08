@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Loader2, Smartphone, XCircle, Clock } from "lucide-react";
 
+import { paymentPagePath } from "@/lib/payments/payment-access-url";
+
 import type { CheckoutPhase } from "./use-payment-checkout";
 
 export function PaymentStatusPanel({
@@ -12,6 +14,7 @@ export function PaymentStatusPanel({
     failureReason,
     secondsLeft,
     onRetry,
+    accessToken = null,
 }: {
     phase: CheckoutPhase;
     reference: string | null;
@@ -19,6 +22,7 @@ export function PaymentStatusPanel({
     failureReason: string | null;
     secondsLeft: number;
     onRetry: () => void;
+    accessToken?: string | null;
 }) {
     if (phase === "awaiting") {
         return (
@@ -78,7 +82,7 @@ export function PaymentStatusPanel({
                         <div className="mt-4 flex flex-wrap items-center gap-3">
                             {reference && (
                                 <Link
-                                    href={`/payments/${reference}`}
+                                    href={paymentPagePath(reference, accessToken)}
                                     className="inline-flex items-center rounded-full border-2 border-border px-6 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
                                 >
                                     Check payment status

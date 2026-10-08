@@ -45,8 +45,15 @@ export function PaymentStep({
     const camperTiers = pricing.tiers.filter((t) => t.attendeeType === "CAMPER");
     const parentTiers = pricing.tiers.filter((t) => t.attendeeType === "PARENT");
 
-    const { phase, reference, customerMessage, failureReason, secondsLeft, busy } =
-        checkout;
+    const {
+        phase,
+        reference,
+        customerMessage,
+        failureReason,
+        secondsLeft,
+        busy,
+        accessToken,
+    } = checkout;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -229,6 +236,7 @@ export function PaymentStep({
                     customerMessage={customerMessage}
                     failureReason={failureReason}
                     secondsLeft={secondsLeft}
+                    accessToken={accessToken}
                     onRetry={retry}
                 />
             )}

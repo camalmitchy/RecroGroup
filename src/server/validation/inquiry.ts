@@ -5,7 +5,7 @@ export const inquirySchema = z.object({
   email: z.email("Enter a valid email address"),
   phone: z.string().trim().min(7, "Enter a valid phone number").optional(),
   subject: z.string().trim().max(200).optional(),
-  message: z.string().trim().min(10, "Tell us a little more").max(5000),
+  message: z.string().trim().min(10, "Tell us a little more").max(20000),
   type: z.enum(["CONTACT", "CORPORATE"]).default("CONTACT"),
 });
 

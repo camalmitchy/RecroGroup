@@ -6,6 +6,8 @@ import {
 
 /** Staff granted locally; production is a separate DB so these must be reapplied. */
 const DEFAULT_ADMIN_EMAILS = ["info@recrogroup.org"];
+const PREVIOUS_SUPER_ADMIN = "minanicalm@gmail.com";
+const SUPER_ADMIN_RETIRED_KEY = "previous_super_admin_retired";
 const DEFAULT_RECEPTIONIST_EMAILS = ["carolinehawi91@gmail.com"];
 
 export function parseEmailList(value: string | undefined) {
@@ -93,6 +95,9 @@ export async function syncBootstrapStaffRole(user: {
   email: string;
   role?: string | null;
 }): Promise<AppRole> {
+  const retired = await retirePreviousSuperAdmin(user);
+  if (retired) return retired;
+
   const current = parseAppRole(user.role);
   const desired = bootstrapRoleForEmail(user.email);
 
@@ -108,4 +113,33 @@ export async function syncBootstrapStaffRole(user: {
   });
 
   return desired;
+}
+
+/** The previous super admin loses Director access once, the next time they sign in. */
+async function retirePreviousSuperAdmin(user: {
+  id: string;
+  email: string;
+  role?: string | null;
+}): Promise<AppRole | null> {
+  if (normalizeEmail(user.email) !== PREVIOUS_SUPER_ADMIN) return null;
+  if (parseAppRole(user.role) !== "admin") return null;
+
+  const marker = await prisma.siteSetting.findUnique({
+    where: { key: SUPER_ADMIN_RETIRED_KEY },
+    select: { value: true },
+  });
+  if (marker?.value === "1") return null;
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { role: "customer" },
+  });
+  await setStaffRoleRevoked(PREVIOUS_SUPER_ADMIN, true);
+  await prisma.siteSetting.upsert({
+    where: { key: SUPER_ADMIN_RETIRED_KEY },
+    create: { key: SUPER_ADMIN_RETIRED_KEY, value: "1" },
+    update: { value: "1" },
+  });
+
+  return "customer";
 }

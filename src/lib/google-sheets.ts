@@ -41,6 +41,12 @@ export function sheetTabForInquiry(input: {
   if (subject.includes("team builder") || subject.includes("team-building")) {
     return "Team building";
   }
+  if (
+    subject.includes("therapist application") ||
+    subject.includes("facilitator application")
+  ) {
+    return null;
+  }
   if (subject.includes("corporate")) return "Corporate speaking";
   if (input.type === "CORPORATE") return "Corporate speaking";
   return null;

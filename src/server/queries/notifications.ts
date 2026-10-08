@@ -21,6 +21,12 @@ export type StaffNotificationFeed = {
 
 const EMPTY_FEED: StaffNotificationFeed = { items: [], unreadCount: 0 };
 
+export const NOTIFICATION_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function notificationCutoff(now = new Date()) {
+  return new Date(now.getTime() - NOTIFICATION_RETENTION_MS);
+}
+
 let tablesReady = false;
 
 export async function ensureStaffInboxTables() {
@@ -83,12 +89,22 @@ export async function getStaffNotifications(
   try {
     const take = options.take ?? 50;
     const fetchTake = options.unreadOnly ? Math.max(take * 4, 40) : take;
+    const cutoff = notificationCutoff();
+
+    await ensureStaffInboxTables();
+    void prisma.$executeRaw`
+      DELETE FROM "staff_notification_reads"
+      WHERE "readAt" < ${cutoff}
+    `.catch((error) => {
+      console.error("[getStaffNotifications.pruneReads]", error);
+    });
 
     const [viewedAt, readIds, bookings, subscribers] = await Promise.all([
       getInboxViewedAt(userId),
       getReadIds(userId),
       prisma.booking
         .findMany({
+          where: { createdAt: { gte: cutoff } },
           orderBy: { createdAt: "desc" },
           take: fetchTake,
           select: {
@@ -105,7 +121,7 @@ export async function getStaffNotifications(
         }),
       prisma.newsletterSubscriber
         .findMany({
-          where: { status: "SUBSCRIBED" },
+          where: { status: "SUBSCRIBED", createdAt: { gte: cutoff } },
           orderBy: { createdAt: "desc" },
           take: fetchTake,
           select: { id: true, email: true, createdAt: true },

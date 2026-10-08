@@ -21,6 +21,15 @@ describe("sheetTabForInquiry", () => {
     ).toBe("Team building");
   });
 
+  it("keeps grief camp therapist applications out of the corporate sheet", () => {
+    expect(
+      sheetTabForInquiry({
+        type: "CORPORATE",
+        subject: "Grief camp therapist application — Jane",
+      }),
+    ).toBeNull();
+  });
+
   it("sends corporate training inquiries to the Corporate speaking tab", () => {
     expect(
       sheetTabForInquiry({

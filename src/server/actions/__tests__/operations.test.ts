@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = {
   griefApplication: { update: vi.fn() },
-  inquiry: { update: vi.fn() },
+  inquiry: { update: vi.fn(), delete: vi.fn() },
   booking: {
     update: vi.fn(),
     findUnique: vi.fn(),
@@ -43,6 +43,7 @@ const {
   clearAllBookings,
   clearOldBookings,
   deleteBooking,
+  deleteInquiry,
   linkPaymentToBooking,
   releaseBookingSlot,
   setGriefApplicationStatus,
@@ -112,6 +113,29 @@ describe("setInquiryStatus", () => {
 
     expect(result.ok).toBe(false);
     expect(prismaMock.inquiry.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("deleteInquiry", () => {
+  it("removes the message for staff", async () => {
+    prismaMock.inquiry.delete.mockResolvedValueOnce({ id: "i1" });
+
+    const result = await deleteInquiry("i1");
+
+    expect(result).toEqual({ ok: true, data: { id: "i1" } });
+    expect(prismaMock.inquiry.delete).toHaveBeenCalledWith({ where: { id: "i1" } });
+  });
+
+  it("returns the authorization message when the caller is not staff", async () => {
+    requireStaff.mockRejectedValueOnce(
+      new AuthorizationError("You do not have access to this area"),
+    );
+
+    const result = await deleteInquiry("i1");
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe("You do not have access to this area");
+    expect(prismaMock.inquiry.delete).not.toHaveBeenCalled();
   });
 });
 

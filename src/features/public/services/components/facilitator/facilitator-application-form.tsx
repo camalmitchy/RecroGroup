@@ -69,14 +69,15 @@ export function FacilitatorApplicationForm() {
         }
 
         const phone = PHONE_PATTERN.exec(contact.replace(email, ""))?.[0].trim();
-        const role = questions.applicationType || "Applicant";
 
         const result = await submitInquiry({
             type: "CORPORATE",
             name: personal.name,
             email,
             phone: phone && phone.length >= 7 ? phone : undefined,
-            subject: truncateSubject(`${role} application — ${personal.name}`),
+            subject: truncateSubject(
+                `Grief camp therapist application — ${personal.name}`,
+            ),
             message: formatInquiryMessage([
                 {
                     heading: "Personal information",

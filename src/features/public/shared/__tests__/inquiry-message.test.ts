@@ -86,10 +86,10 @@ describe("formatInquiryMessage", () => {
 
   it("truncates an oversized message and says so", () => {
     const message = formatInquiryMessage([
-      { heading: "Long", fields: [["Essay", "x".repeat(9000)]] },
+      { heading: "Long", fields: [["Essay", "x".repeat(25000)]] },
     ]);
 
-    expect(message.length).toBeLessThanOrEqual(5000);
+    expect(message.length).toBeLessThanOrEqual(20000);
     expect(message).toContain("[Truncated");
   });
 

@@ -1,4 +1,4 @@
-const MESSAGE_LIMIT = 5000;
+const MESSAGE_LIMIT = 20000;
 const SUBJECT_LIMIT = 200;
 
 export type MessageField = [label: string, value: string | boolean | null | undefined];

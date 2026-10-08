@@ -2,8 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 
+import { isStaff } from "@/features/portal/lib/roles";
+import { paymentAccessMatches } from "@/lib/payments/access-token";
 import { prisma } from "@/lib/prisma";
 import { formatKes } from "@/lib/payments/utils";
+import { getOptionalSession } from "@/server/authz";
 
 export const dynamic = "force-dynamic";
 
@@ -48,17 +51,33 @@ const COPY = {
 
 export default async function PaymentStatusPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ reference: string }>;
+  searchParams: Promise<{ token?: string }>;
 }) {
   const { reference } = await params;
+  const { token } = await searchParams;
 
   const payment = await prisma.payment.findUnique({
     where: { reference },
-    include: { booking: { include: { service: true } } },
   });
 
   if (!payment) notFound();
+
+  const session = await getOptionalSession();
+  const showDetails =
+    (session ? isStaff(session.role) : false) ||
+    paymentAccessMatches(payment.providerMeta, token);
+
+  const serviceTitle = showDetails && payment.bookingId
+    ? (
+        await prisma.booking.findUnique({
+          where: { id: payment.bookingId },
+          select: { service: { select: { title: true } } },
+        })
+      )?.service?.title ?? null
+    : null;
 
   const copy = COPY[payment.status];
   const Icon = copy.icon;
@@ -70,30 +89,32 @@ export default async function PaymentStatusPage({
         <h1 className="mt-6 font-serif text-2xl text-foreground">{copy.title}</h1>
         <p className="mt-3 text-sm text-muted-foreground">{copy.body}</p>
 
-        <dl className="mt-8 space-y-3 border-t border-border pt-6 text-left text-sm">
-          <div className="flex items-center justify-between">
-            <dt className="text-muted-foreground">Reference</dt>
-            <dd className="font-mono text-foreground">{payment.reference}</dd>
-          </div>
-          <div className="flex items-center justify-between">
-            <dt className="text-muted-foreground">Amount</dt>
-            <dd className="font-medium text-foreground">
-              {formatKes(payment.settledAmountKes ?? payment.amountKes)}
-            </dd>
-          </div>
-          {payment.mpesaReceipt && (
+        {showDetails ? (
+          <dl className="mt-8 space-y-3 border-t border-border pt-6 text-left text-sm">
             <div className="flex items-center justify-between">
-              <dt className="text-muted-foreground">M-Pesa receipt</dt>
-              <dd className="font-mono text-foreground">{payment.mpesaReceipt}</dd>
+              <dt className="text-muted-foreground">Reference</dt>
+              <dd className="font-mono text-foreground">{payment.reference}</dd>
             </div>
-          )}
-          {payment.booking?.service && (
             <div className="flex items-center justify-between">
-              <dt className="text-muted-foreground">Service</dt>
-              <dd className="text-foreground">{payment.booking.service.title}</dd>
+              <dt className="text-muted-foreground">Amount</dt>
+              <dd className="font-medium text-foreground">
+                {formatKes(payment.settledAmountKes ?? payment.amountKes)}
+              </dd>
             </div>
-          )}
-        </dl>
+            {payment.mpesaReceipt && (
+              <div className="flex items-center justify-between">
+                <dt className="text-muted-foreground">M-Pesa receipt</dt>
+                <dd className="font-mono text-foreground">{payment.mpesaReceipt}</dd>
+              </div>
+            )}
+            {serviceTitle && (
+              <div className="flex items-center justify-between">
+                <dt className="text-muted-foreground">Service</dt>
+                <dd className="text-foreground">{serviceTitle}</dd>
+              </div>
+            )}
+          </dl>
+        ) : null}
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link

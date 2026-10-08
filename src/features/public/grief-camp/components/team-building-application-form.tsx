@@ -81,7 +81,10 @@ export function TeamBuildingApplicationForm() {
                 type: "CORPORATE",
                 name: formData.name ?? "",
                 email: formData.email ?? "",
-                phone: formData.workPhone || undefined,
+                phone:
+                    formData.workPhone && formData.workPhone.trim().length >= 7
+                        ? formData.workPhone
+                        : undefined,
                 subject: truncateSubject(
                     `Team builder application — ${formData.name ?? "Unnamed applicant"}`,
                 ),

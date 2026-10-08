@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { paymentAccessMatches } from "@/lib/payments/access-token";
 import { resolveServicePrice } from "@/lib/payments/pricing";
 import { generateReference, normalizePhone } from "@/lib/payments/utils";
 import { getOptionalSession } from "@/server/authz";
@@ -119,6 +120,7 @@ export async function reschedulePaidBooking(input: {
   reference: string;
   date: string;
   time: string;
+  accessToken: string;
 }): Promise<ActionResult<{ time: string }>> {
   try {
     const booking = await prisma.booking.findUnique({
@@ -130,13 +132,16 @@ export async function reschedulePaidBooking(input: {
         service: { select: { durationMin: true } },
         payments: {
           where: { status: "PAID", method: "MPESA" },
-          select: { id: true },
-          take: 1,
+          select: { providerMeta: true },
         },
       },
     });
 
-    if (!booking || booking.payments.length === 0) {
+    const authorised = booking?.payments.some((payment) =>
+      paymentAccessMatches(payment.providerMeta, input.accessToken),
+    );
+
+    if (!booking || !authorised) {
       return fail("That paid booking could not be found");
     }
     if (!booking.rescheduleReason) {

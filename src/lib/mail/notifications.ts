@@ -1,6 +1,8 @@
 import "server-only";
 
-import { mailConfig, mailDelivers, sendEmail } from "./index";
+import { absoluteUrl } from "@/lib/payments/config";
+
+import { formAlertRecipients, mailConfig, mailDelivers, sendEmail } from "./index";
 import {
   bookingBalanceReminder,
   bookingConfirmation,
@@ -9,6 +11,7 @@ import {
   paymentFailed,
   paymentReceipt,
   staffBookingAlert,
+  staffGriefApplicationAlert,
   staffInquiryAlert,
   staffPaymentAlert,
 } from "./templates";
@@ -139,6 +142,62 @@ export async function notifyGriefApplicationReceived(input: {
   await dispatch("griefApplicationReceived", () => sendEmail(griefCampApplicationReceived(input)));
 }
 
+export function inquiryFormName(subject?: string | null) {
+  const value = (subject ?? "").toLowerCase();
+  if (value.includes("team builder") || value.includes("team-building")) {
+    return "Team building application";
+  }
+  if (
+    value.includes("therapist application") ||
+    value.includes("facilitator application")
+  ) {
+    return "Therapist application";
+  }
+  if (value.includes("consortium")) return "Consortium application";
+  if (value.includes("corporate")) return "Corporate speaking inquiry";
+  return "Website inquiry";
+}
+
+function inquiryReviewPath(subject?: string | null) {
+  const value = (subject ?? "").toLowerCase();
+  if (value.includes("team builder") || value.includes("team-building")) {
+    return "/admin/grief-camp/team-building";
+  }
+  if (
+    value.includes("therapist application") ||
+    value.includes("facilitator application")
+  ) {
+    return "/admin/grief-camp/therapist-applications";
+  }
+  if (value.includes("consortium")) return "/dashboard/programs/consortium";
+  if (value.includes("corporate")) return "/dashboard/programs/corporate";
+  return "/admin/messages";
+}
+
+export async function notifyStaffGriefApplication(input: {
+  reference: string;
+  parentName: string;
+  parentEmail: string;
+  parentPhone?: string | null;
+  childName: string;
+  campName: string;
+  amountKes: number;
+}): Promise<void> {
+  await dispatch("staffGriefApplication", () =>
+    Promise.all(
+      formAlertRecipients().map((recipientEmail) =>
+        sendEmail(
+          staffGriefApplicationAlert({
+            recipientEmail,
+            reviewUrl: absoluteUrl("/admin/grief-camp"),
+            ...input,
+          }),
+        ),
+      ),
+    ),
+  );
+}
+
 export async function notifyInquiryReceived(input: {
   name: string;
   email: string;
@@ -148,10 +207,17 @@ export async function notifyInquiryReceived(input: {
   message: string;
 }): Promise<void> {
   await dispatch("inquiryReceived", async () => {
-    const staffAddresses = mailConfig.staffAddresses;
+    const formName = inquiryFormName(input.subject);
     await Promise.all(
-      staffAddresses.map((recipientEmail) =>
-        sendEmail(staffInquiryAlert({ recipientEmail, ...input })),
+      formAlertRecipients().map((recipientEmail) =>
+        sendEmail(
+          staffInquiryAlert({
+            recipientEmail,
+            formName,
+            reviewUrl: absoluteUrl(inquiryReviewPath(input.subject)),
+            ...input,
+          }),
+        ),
       ),
     );
   });

@@ -30,7 +30,7 @@ import {
   inquiryStatusTone,
 } from "@/features/portal/components/status-badge";
 import { parseInquiryMessage } from "@/features/public/shared/inquiry-message";
-import { setInquiryStatus } from "@/server/actions/operations";
+import { deleteInquiry, setInquiryStatus } from "@/server/actions/operations";
 
 export type InquiryRow = {
   id: string;
@@ -73,20 +73,48 @@ export function InquiriesPanel({
   emptyDescription?: string;
   showTypeFilters?: boolean;
 }) {
+  const router = useRouter();
   const [typeFilter, setTypeFilter] = useState<"all" | "CONTACT" | "CORPORATE">("all");
   const [openId, setOpenId] = useState<string | null>(null);
   const [statuses, setStatuses] = useState<Record<string, string>>({});
+  const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleting, startDelete] = useTransition();
+
+  const visibleInquiries = useMemo(
+    () => inquiries.filter((inquiry) => !removedIds.includes(inquiry.id)),
+    [inquiries, removedIds],
+  );
 
   const rows = useMemo(
     () =>
-      inquiries.filter(
+      visibleInquiries.filter(
         (inquiry) => typeFilter === "all" || inquiry.type === typeFilter,
       ),
-    [inquiries, typeFilter],
+    [visibleInquiries, typeFilter],
   );
 
-  const open = rows.find((row) => row.id === openId) ?? inquiries.find((row) => row.id === openId) ?? null;
-  const newCount = inquiries.filter(
+  const removeInquiry = (inquiry: InquiryRow) => {
+    const label = inquiry.subject || inquiry.name;
+    if (!window.confirm(`Delete “${label}”? This cannot be undone.`)) return;
+
+    setDeletingId(inquiry.id);
+    startDelete(async () => {
+      const result = await deleteInquiry(inquiry.id);
+      setDeletingId(null);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      setRemovedIds((current) => [...current, inquiry.id]);
+      setOpenId((current) => (current === inquiry.id ? null : current));
+      toast.success("Message deleted");
+      router.refresh();
+    });
+  };
+
+  const open = rows.find((row) => row.id === openId) ?? visibleInquiries.find((row) => row.id === openId) ?? null;
+  const newCount = visibleInquiries.filter(
     (inquiry) => (statuses[inquiry.id] ?? inquiry.status) === "NEW",
   ).length;
 
@@ -112,8 +140,8 @@ export function InquiriesPanel({
         ).map(([key, label]) => {
           const count =
             key === "all"
-              ? inquiries.length
-              : inquiries.filter((inquiry) => inquiry.type === key).length;
+              ? visibleInquiries.length
+              : visibleInquiries.filter((inquiry) => inquiry.type === key).length;
           const active = typeFilter === key;
           return (
             <button
@@ -140,7 +168,7 @@ export function InquiriesPanel({
             <Empty className="py-12">
               <EmptyHeader>
                 <EmptyTitle>
-                  {inquiries.length === 0 ? emptyTitle : "Nothing in this group"}
+                  {visibleInquiries.length === 0 ? emptyTitle : "Nothing in this group"}
                 </EmptyTitle>
                 <EmptyDescription>{emptyDescription}</EmptyDescription>
               </EmptyHeader>
@@ -152,11 +180,11 @@ export function InquiriesPanel({
           {rows.map((row) => {
             const status = statuses[row.id] ?? row.status;
             return (
-              <li key={row.id}>
+              <li key={row.id} className="flex items-start gap-3">
                 <button
                   type="button"
                   onClick={() => setOpenId(row.id)}
-                  className="flex w-full items-start gap-4 rounded-2xl border border-border bg-card p-4 text-left shadow-[var(--shadow-soft)] transition hover:border-primary/40 hover:bg-muted/30"
+                  className="flex min-w-0 flex-1 items-start gap-4 rounded-2xl border border-border bg-card p-4 text-left shadow-[var(--shadow-soft)] transition hover:border-primary/40 hover:bg-muted/30"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -186,6 +214,16 @@ export function InquiriesPanel({
                     <ChevronRight className="size-4" />
                   </span>
                 </button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  disabled={isDeleting && deletingId === row.id}
+                  onClick={() => removeInquiry(row)}
+                  className="mt-4"
+                >
+                  {isDeleting && deletingId === row.id ? "Deleting…" : "Delete"}
+                </Button>
               </li>
             );
           })}
@@ -202,6 +240,10 @@ export function InquiriesPanel({
         onOpenChange={(next) => {
           if (!next) setOpenId(null);
         }}
+        onDelete={() => {
+          if (open) removeInquiry(open);
+        }}
+        deleting={isDeleting && open !== null && deletingId === open.id}
       />
     </div>
   );
@@ -212,11 +254,15 @@ function InquiryDetail({
   status,
   onStatus,
   onOpenChange,
+  onDelete,
+  deleting,
 }: {
   inquiry: InquiryRow | null;
   status: string;
   onStatus: (status: string) => void;
   onOpenChange: (open: boolean) => void;
+  onDelete: () => void;
+  deleting: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -342,7 +388,15 @@ function InquiryDetail({
               )}
             </div>
 
-            <div className="flex justify-end border-t border-border px-6 py-4">
+            <div className="flex items-center justify-between gap-3 border-t border-border px-6 py-4">
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={deleting}
+                onClick={onDelete}
+              >
+                {deleting ? "Deleting…" : "Delete"}
+              </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Close
               </Button>

@@ -83,14 +83,40 @@ export async function setInquiryStatus(
       select: { id: true, status: true },
     });
 
-    revalidatePath("/dashboard/inquiries");
-    revalidatePath("/admin/messages");
+    revalidateInquiryPaths();
 
     return ok(inquiry);
   } catch (error) {
     if (error instanceof AuthorizationError) return fail(error.message);
     return failure("setInquiryStatus", error);
   }
+}
+
+export async function deleteInquiry(
+  inquiryId: string,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireStaff();
+
+    await prisma.inquiry.delete({ where: { id: inquiryId } });
+    revalidateInquiryPaths();
+
+    return ok({ id: inquiryId });
+  } catch (error) {
+    if (error instanceof AuthorizationError) return fail(error.message);
+    return failure("deleteInquiry", error);
+  }
+}
+
+function revalidateInquiryPaths() {
+  revalidatePath("/dashboard/inquiries");
+  revalidatePath("/dashboard/programs/consortium");
+  revalidatePath("/dashboard/programs/corporate");
+  revalidatePath("/dashboard/programs/team-building");
+  revalidatePath("/dashboard/programs/therapist-applications");
+  revalidatePath("/admin/messages");
+  revalidatePath("/admin/grief-camp/team-building");
+  revalidatePath("/admin/grief-camp/therapist-applications");
 }
 
 export async function setBookingStatus(

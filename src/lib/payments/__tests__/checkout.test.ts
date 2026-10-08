@@ -67,7 +67,11 @@ describe("startCheckout", () => {
     });
 
     await expect(
-      startCheckout({ target: { kind: "booking", bookingId: "bk_1" }, method: "MPESA" }),
+      startCheckout({
+        target: { kind: "booking", bookingId: "bk_1" },
+        method: "MPESA",
+        phone: "0712345678",
+      }),
     ).rejects.toThrow("not configured");
 
     expect(createPendingPayment).not.toHaveBeenCalled();
@@ -83,7 +87,11 @@ describe("startCheckout", () => {
     });
 
     await expect(
-      startCheckout({ target: { kind: "booking", bookingId: "bk_1" }, method: "MPESA" }),
+      startCheckout({
+        target: { kind: "booking", bookingId: "bk_1" },
+        method: "MPESA",
+        phone: "0712345678",
+      }),
     ).rejects.toThrow("Daraja unreachable");
 
     expect(failPayment).toHaveBeenCalledWith("pay_1", "Daraja unreachable");
@@ -100,6 +108,7 @@ describe("startCheckout", () => {
         method: "MPESA",
         status: "PROCESSING",
         providerRef: "ws_CO_1",
+        meta: { checkoutRequestId: "ws_CO_1" },
       }),
       verify: vi.fn(),
     });
@@ -108,13 +117,38 @@ describe("startCheckout", () => {
     const result = await startCheckout({
       target: { kind: "booking", bookingId: "bk_1" },
       method: "MPESA",
+      phone: "0712345678",
     });
 
     expect(createPendingPayment).toHaveBeenCalledWith(
-      expect.objectContaining({ amountKes: 2500, purpose: "BOOKING_DEPOSIT" }),
+      expect.objectContaining({
+        amountKes: 2500,
+        purpose: "BOOKING_DEPOSIT",
+        phone: "254712345678",
+      }),
     );
     expect(result.reference).toBe("RP-ABCD2345");
     expect(failPayment).not.toHaveBeenCalled();
+  });
+
+  it("does not use the phone stored on the booking unless that is allowed", async () => {
+    await expect(
+      startCheckout({ target: { kind: "booking", bookingId: "bk_1" }, method: "MPESA" }),
+    ).rejects.toMatchObject({ code: "missing_phone" });
+
+    expect(createPendingPayment).not.toHaveBeenCalled();
+
+    getProvider.mockImplementation(() => {
+      throw new PaymentError("provider_unconfigured", "not configured");
+    });
+
+    await expect(
+      startCheckout({
+        target: { kind: "booking", bookingId: "bk_1" },
+        method: "MPESA",
+        allowStoredContact: true,
+      }),
+    ).rejects.toThrow("not configured");
   });
 
   it("rejects card and bank while they are coming soon", async () => {

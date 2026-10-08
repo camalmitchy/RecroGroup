@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
-import { Phone, Mail, MapPin, Clock, Send, AlertCircle, CheckCircle } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, Send, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -417,33 +417,6 @@ export function ContactPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium">info@recrogroup.org</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Crisis Notice */}
-            <div className="rounded-2xl bg-orange-50/70 border border-orange-100 p-6">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="size-5 text-orange-500 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-2">
-                    In Crisis Right Now?
-                  </h4>
-                  <p className="text-sm text-foreground/80 mb-3">
-                    If you or someone you love is in immediate danger, please
-                    reach out now:
-                  </p>
-                  <div className="space-y-1 text-sm text-foreground">
-                    <p>
-                      <strong>Befrienders Kenya:</strong> +254 722 178 177
-                    </p>
-                    <p>
-                      <strong>Niskize:</strong> 0800 620 800
-                    </p>
-                    <p>
-                      <strong>Emergency:</strong> 999
-                    </p>
                   </div>
                 </div>
               </div>

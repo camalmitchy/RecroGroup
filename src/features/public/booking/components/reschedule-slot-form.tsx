@@ -14,10 +14,12 @@ export function RescheduleSlotForm({
   reference,
   durationMin,
   reason,
+  accessToken,
 }: {
   reference: string;
   durationMin: number;
   reason: string | null;
+  accessToken: string;
 }) {
   const [dates, setDates] = useState<Date[]>([]);
   const [date, setDate] = useState<Date | null>(null);
@@ -112,6 +114,7 @@ export function RescheduleSlotForm({
             reference,
             date: toDateOnly(date),
             time,
+            accessToken,
           })
             .then((result) => {
               if (result.ok) {

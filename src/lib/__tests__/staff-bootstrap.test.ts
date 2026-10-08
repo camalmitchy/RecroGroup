@@ -93,6 +93,39 @@ describe("syncBootstrapStaffRole", () => {
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 
+  it("retires the previous super admin once", async () => {
+    prismaMock.siteSetting.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
+    prismaMock.user.update.mockResolvedValueOnce({ id: "u1" });
+    prismaMock.siteSetting.upsert.mockResolvedValue({});
+
+    const role = await syncBootstrapStaffRole({
+      id: "u1",
+      email: "minanicalm@gmail.com",
+      role: "admin",
+    });
+
+    expect(role).toBe("customer");
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: "u1" },
+      data: { role: "customer" },
+    });
+  });
+
+  it("leaves a later grant to the previous super admin in place", async () => {
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ value: "1" });
+
+    const role = await syncBootstrapStaffRole({
+      id: "u1",
+      email: "minanicalm@gmail.com",
+      role: "admin",
+    });
+
+    expect(role).toBe("admin");
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
   it("leaves unlisted customers unchanged", async () => {
     const role = await syncBootstrapStaffRole({
       id: "u1",

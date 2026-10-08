@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 
 import { recordGoogleSheetRow } from "@/lib/google-sheets";
+import { notifyStaffGriefApplication } from "@/lib/mail/notifications";
 import { prisma } from "@/lib/prisma";
 import { resolveCampPrice } from "@/lib/payments/pricing";
 import { generateReference, normalizePhone } from "@/lib/payments/utils";
@@ -97,6 +98,16 @@ export async function submitGriefApplication(
       phone: application.parentPhone ?? "",
       subject: `${application.reference} — ${values.registration.childName}`,
       message: JSON.stringify(formData),
+    });
+
+    await notifyStaffGriefApplication({
+      reference: application.reference,
+      parentName: values.parentQuestionnaire.parentName,
+      parentEmail: values.parentQuestionnaire.parentEmail,
+      parentPhone: application.parentPhone,
+      childName: values.registration.childName,
+      campName: price.campName,
+      amountKes: price.totalKes,
     });
 
     return ok({
