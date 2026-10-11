@@ -263,7 +263,7 @@ export function AboutPage() {
               <Link href="/booking" className="btn-primary">
                 Book a Session
               </Link>
-              <Link href="/contact" className="btn-secondary">
+              <Link href="/contact-us" className="btn-secondary">
                 Contact us
               </Link>
             </div>

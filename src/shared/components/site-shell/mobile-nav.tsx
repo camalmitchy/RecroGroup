@@ -84,7 +84,7 @@ export function MobileNav() {
         </SheetHeader>
         <nav className="mt-6 flex flex-col gap-1 px-1">
           <MobileNavLink href="/" label="Home" exact onNavigate={close} />
-          <MobileNavLink href="/about" label="About" onNavigate={close} />
+          <MobileNavLink href="/about-us" label="About" onNavigate={close} />
 
           <Accordion type="single" collapsible className="border-none">
             <AccordionItem value="services" className="border-none">
@@ -119,7 +119,7 @@ export function MobileNav() {
           </Accordion>
 
           {mainNavLinks
-            .filter((link) => !["/", "/about"].includes(link.href))
+            .filter((link) => !["/", "/about-us"].includes(link.href))
             .map((link) => (
               <MobileNavLink
                 key={link.href}

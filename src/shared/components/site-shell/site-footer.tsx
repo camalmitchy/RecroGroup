@@ -19,7 +19,7 @@ export function SiteFooter() {
           <h4 className="text-sm font-semibold text-foreground">Explore</h4>
           <ul className="mt-4 space-y-2.5 text-sm text-muted-foreground">
             <li>
-              <Link href="/about" className="hover:text-primary">
+              <Link href="/about-us" className="hover:text-primary">
                 About us
               </Link>
             </li>
@@ -50,12 +50,12 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link href="/contact" className="hover:text-primary">
+              <Link href="/contact-us" className="hover:text-primary">
                 Contact us
               </Link>
             </li>
             <li>
-              <Link href="/contact#faq" className="hover:text-primary">
+              <Link href="/contact-us#faq" className="hover:text-primary">
                 FAQs
               </Link>
             </li>

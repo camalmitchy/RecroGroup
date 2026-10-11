@@ -77,7 +77,7 @@ export function DesktopNav() {
     <NavigationMenu className="hidden lg:flex">
       <NavigationMenuList className="gap-0.5">
         <NavLinkItem href="/" label="Home" exact />
-        <NavLinkItem href="/about" label="About" />
+        <NavLinkItem href="/about-us" label="About" />
 
         <NavigationMenuItem>
           <NavigationMenuTrigger
@@ -114,7 +114,7 @@ export function DesktopNav() {
         </NavigationMenuItem>
 
         {mainNavLinks
-          .filter((link) => !["/", "/about"].includes(link.href))
+          .filter((link) => !["/", "/about-us"].includes(link.href))
           .map((link) => (
             <NavLinkItem
               key={link.href}

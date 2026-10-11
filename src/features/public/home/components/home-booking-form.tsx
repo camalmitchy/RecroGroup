@@ -185,7 +185,7 @@ export function HomeBookingForm({
 
       <p className="text-xs leading-relaxed text-muted-foreground">
         Online booking is for Nairobi clinic visits. Diaspora clients:{" "}
-        <Link href="/contact" className="font-semibold text-primary-deep">
+        <Link href="/contact-us" className="font-semibold text-primary-deep">
           contact us
         </Link>{" "}
         or email info@recrogroup.org.

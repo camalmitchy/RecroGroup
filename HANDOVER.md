@@ -21,6 +21,49 @@ Money is in Kenyan shillings. Card checkout through Paystack is wired but not th
 3. The production database is Vercel Postgres. The local `.env` database is a different database. A role or booking changed locally does not appear on the live site.
 4. The build command is `prisma generate && next build`. It does **not** run `prisma migrate deploy`. New columns that production needs are added at runtime by `src/lib/payments/ensure-schema.ts` when a payment or booking path runs. Keep that in mind before relying on a migration alone.
 
+## Safe transfer order
+
+Daraja and GoDaddy are already on the client account. Leave both alone. Do not change DNS records, Daraja keys, the till, or callback URLs.
+
+Do this while the current site is still live. The goal is to add the client first and remove yourself last. Do not create a second Vercel project, a second database, or a new set of API keys.
+
+**Leave these values as they are on handover day.** Changing them takes the site down or signs people out:
+
+- `BETTER_AUTH_SECRET` (a new value signs every user out)
+- `DATABASE_URL` and the Vercel Postgres store
+- `BLOB_READ_WRITE_TOKEN` and the Blob store `recro-group-blob`
+- Every `MPESA_` variable, including the passkey and consumer key
+- `RESEND_API_KEY`, unless the client has already created a replacement key in the same Resend team
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
+- GoDaddy DNS for `recrogroup.org`
+
+**Day of the transfer**
+
+1. Open the live site, the Vercel project, and a recent successful deployment. Do not redeploy yet.
+2. Invite the client into each account below as an owner or admin. Do not transfer or delete anything in this step.
+3. Sit with them and confirm they can open the repo, the Vercel project (including Postgres, Blob, the domain, and the environment variables), Resend, and the Google Cloud project. They should sign in on the site as `info@recrogroup.org` and see the Director role.
+4. Only after that, transfer ownership one account at a time. After each transfer, reload `https://recrogroup.org` and confirm the latest Vercel deployment is still Ready.
+5. Stay on the accounts for a few days. Remove yourself only after the client has logged in alone and a normal page, a staff page, and a form email still work.
+
+**Order**
+
+1. **Mailbox.** The domain is already theirs. Confirm they can open `info@recrogroup.org` itself (GoDaddy email, or Google Workspace if that is where the mailbox lives). That address is the Director login and the inbox for form alerts. Do not create a second mailbox.
+2. **Vercel, project `recro-group`.** This account is Hobby, so it cannot invite a member. If the account contains only this project, add the client's email under Account Settings, make it the primary email, and let them set the password. The project, database, Blob store, domain, and secrets stay where they are. If the account also has personal projects, do not share the login. The client creates their own Vercel account, upgrades it to Pro for the transfer, invites you, and you move the project, Blob store, and database across. Do not use Transfer while the database and Blob store are still only on your account.
+3. **GitHub `camalmitchy/RecroGroup`.** Invite the client as an admin first. Transfer the repo to their account only when you are both online. Immediately afterwards, open Vercel → Settings → Git and reconnect the repo if Vercel lost it. Wait until a deployment finishes and the site still loads. Do not push code during this step.
+4. **Resend.** Invite the client to the existing team that owns the verified domain `recrogroup.org`. Do not delete the API key and do not verify the domain a second time. A new Resend account would stop booking and form email until a new key is saved in Vercel and the domain is verified again.
+5. **Google sign-in.** Add the client as an owner of the existing Google Cloud project. Leave the current OAuth client in place. The redirect URI stays `https://recrogroup.org/api/auth/callback/google`. A new OAuth client breaks Google sign-in until Vercel is updated and redeployed.
+6. **Google Sheet.** Share the spreadsheet and the Apps Script project with the client. The current webhook keeps working while your Google login still owns the script. After they are in, they can redeploy the web app as themselves and you can update `GOOGLE_SHEETS_WEBHOOK_URL` in Vercel. Do that only after a test form lands in the sheet. The database still keeps every form if the sheet copy fails.
+7. **Daraja and GoDaddy.** Already on the client. Do not regenerate the consumer key, consumer secret, or passkey. Callbacks must keep pointing at `https://recrogroup.org/api/payments/webhooks/mpesa`.
+
+**Do not**
+
+- Email or WhatsApp the `.env` file, API keys, or the database URL. The client reads those inside Vercel after they are an Owner.
+- Run `prisma db push` or `prisma migrate` against the production database.
+- Delete the Vercel project, Postgres store, or Blob store.
+- Rotate secrets on the same day as the transfer.
+
+Your laptop `.env` is a different database. Deleting it does not affect the live site. Keep it until you are finished helping them.
+
 ## Accounts to hand over
 
 Transfer ownership. Do not email `.env`, API keys, or the database URL.
@@ -82,7 +125,7 @@ Browser page  →  server action or /api route  →  Prisma  →  Postgres
 | `/grief-camp/team-building` | Team-building application |
 | `/services/consortium/apply` | Consortium application |
 | `/services/corporate/inquiry` | Corporate speaking inquiry |
-| `/contact` | Contact form |
+| `/contact-us` | Contact form |
 | `/sponsor-child` | Donation |
 | `/payments/[reference]` | Payment result. Amount and receipt stay hidden unless the link has the payment token or the viewer is staff. |
 

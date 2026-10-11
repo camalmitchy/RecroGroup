@@ -686,7 +686,7 @@ function EmptyServicesState() {
                 <a href="mailto:info@recrogroup.org" className="btn-primary">
                     Email info@recrogroup.org
                 </a>
-                <Link href="/contact" className="btn-secondary">
+                <Link href="/contact-us" className="btn-secondary">
                     Contact us
                 </Link>
             </div>
@@ -857,7 +857,7 @@ function TimeStep({
                                 <Mail size={14} /> info@recrogroup.org
                             </a>
                             <Link
-                                href="/contact"
+                                href="/contact-us"
                                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-deep"
                             >
                                 Contact us <ArrowRight size={13} />

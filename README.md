@@ -232,7 +232,7 @@ their own administrator access.
 
 ## Key routes
 
-**Public:** `/`, `/about`, `/grief-camp`, `/insights`, `/faq`, `/contact`
+**Public:** `/`, `/about-us`, `/grief-camp`, `/insights`, `/faq`, `/contact-us`
 
 **Portal:** `/dashboard`, `/dashboard/bookings`, `/dashboard/payments`, `/dashboard/programs`, `/dashboard/inquiries`, `/dashboard/content`, `/dashboard/people`, `/dashboard/settings`
 

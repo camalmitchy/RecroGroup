@@ -42,7 +42,7 @@ export function ServicesPage({ services = serviceList }: { services?: ServiceLis
                   Book a Session
                 </Link>
                 <Link
-                  href="/contact"
+                  href="/contact-us"
                   className="inline-flex items-center gap-2 rounded-full border-2 border-white/40 bg-white/20 px-8 py-3 font-semibold text-white backdrop-blur-sm transition hover:bg-white/30"
                 >
                   Help Me Choose

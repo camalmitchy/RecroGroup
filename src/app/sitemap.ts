@@ -13,14 +13,14 @@ function origin() {
 
 const PUBLIC_PATHS = [
   "/",
-  "/about",
+  "/about-us",
   "/services",
   "/grief-camp",
   "/resources",
   "/insights",
   "/media",
   "/merchandise",
-  "/contact",
+  "/contact-us",
   "/faq",
   "/booking",
   "/sponsor-child",

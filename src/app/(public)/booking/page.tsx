@@ -38,7 +38,7 @@ const PROGRAM_REDIRECTS: Record<string, string> = {
   children: "/grief-camp/apply",
   corporate: "/services/corporate/inquiry",
   consortium: "/services/consortium/apply",
-  supervision: "/contact",
+  supervision: "/contact-us",
 };
 
 async function loadServices(): Promise<ServiceOption[]> {

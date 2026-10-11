@@ -105,7 +105,7 @@ export function FaqPage() {
                         </p>
                         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                             <Button asChild size="lg" className="rounded-full">
-                                <Link href="/contact">Contact us</Link>
+                                <Link href="/contact-us">Contact us</Link>
                             </Button>
                             <Button
                                 asChild

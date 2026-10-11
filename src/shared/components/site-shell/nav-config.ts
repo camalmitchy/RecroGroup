@@ -13,12 +13,12 @@ export type ServiceNavItem = {
 
 export const mainNavLinks: NavLink[] = [
   { href: "/", label: "Home", exact: true },
-  { href: "/about", label: "About" },
+  { href: "/about-us", label: "About" },
   { href: "/grief-camp", label: "Grief Camp" },
   { href: "/resources", label: "Resources" },
   { href: "/media", label: "Media" },
   { href: "/merchandise", label: "Merchandise" },
-  { href: "/contact", label: "Contact" },
+  { href: "/contact-us", label: "Contact" },
   { href: "/faq", label: "FAQ" },
 ];
 

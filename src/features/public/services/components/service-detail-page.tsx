@@ -49,7 +49,7 @@ function getServiceCta(service: ServiceDetail): ServiceCta {
   }
   if (service.key === "supervision") {
     return {
-      href: "/contact",
+      href: "/contact-us",
       heroLabel: service.ctaLabel,
       glanceLabel: "Contact us",
     };
@@ -95,7 +95,7 @@ export function ServiceDetailPage({ service }: { service: ServiceDetail }) {
                   {cta.heroLabel}
                 </Link>
                 {service.key === "supervision" ? null : (
-                  <Link href="/contact" className="btn-secondary rounded-full px-7">
+                  <Link href="/contact-us" className="btn-secondary rounded-full px-7">
                     Ask a question
                   </Link>
                 )}
