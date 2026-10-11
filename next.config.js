@@ -34,6 +34,7 @@ const nextConfig = {
             { source: "/about", destination: "/about-us", permanent: true },
             { source: "/dr-michelle", destination: "/about-us", permanent: true },
             { source: "/contact", destination: "/contact-us", permanent: true },
+            { source: "/blog", destination: "/resources", permanent: true },
         ];
     },
     async headers() {
