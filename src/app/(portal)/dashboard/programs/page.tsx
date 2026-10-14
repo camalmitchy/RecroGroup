@@ -18,7 +18,7 @@ export default async function ProgramsPage() {
 
   const rows: GriefApplicationRow[] = applications.items.map((application) => ({
     id: application.id,
-    reference: application.reference,
+    reference: application.reference, 
     childName: application.childName,
     childAge: application.childAge,
     parentName: application.parentName,

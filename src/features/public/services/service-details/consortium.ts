@@ -15,9 +15,9 @@ export const consortiumService: ServiceDetail = {
     titleRest: "",
     ctaLabel: "Apply for Membership",
     icon: Users,
-    heroImage: "/assets/services.jpg",
-    glanceImage: "/assets/services.jpg",
-    ctaImage: "/assets/services.jpg",
+    heroImage: "/assets/consotium.jpeg",
+    glanceImage: "/assets/consotium.jpeg",
+    ctaImage: "/assets/consotium.jpeg",
     intro:
       "A behavioral health consortium bringing together diverse behavioral health professionals (mental and medical health) for sharpening clinical and research skills, providing ethically sound services, and collaboration with professionals who uphold high levels of professionalism.",
     overview: [

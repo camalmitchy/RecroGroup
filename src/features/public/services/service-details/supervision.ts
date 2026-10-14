@@ -15,9 +15,9 @@ export const supervisionService: ServiceDetail = {
   titleRest: "",
   ctaLabel: "Contact us to schedule",
   icon: Users,
-  heroImage: "/assets/services.jpg",
-  glanceImage: "/assets/services.jpg",
-  ctaImage: "/assets/services.jpg",
+  heroImage: "/assets/supervision.jpeg",
+  glanceImage: "/assets/supervision.jpeg",
+  ctaImage: "/assets/supervision.jpeg",
   intro:
     "We provide supervision on both levels: Individual and Group. Whether you are a novice therapist or a seasoned one and need Supervision, kindly contact us to schedule your sessions.",
   overview: [
